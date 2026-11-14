@@ -4,4 +4,36 @@ updates:
     directory: /
     schedule:
       interval: weekly
-  # Add an entry for the app's package manager (npm, pip, ...) once the stack is chosen.
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      # One PR for all action bumps, so they don't conflict in security.yml.
+      github-actions:
+        patterns: ["*"]
+
+  # Uncomment the entry for our stack once its manifest (package.json / requirements.txt) exists.
+  # Dependabot fails if the manifest isn't there yet.
+  #
+  # - package-ecosystem: npm
+  #   directory: /
+  #   schedule:
+  #     interval: weekly
+  #   commit-message:
+  #     prefix: chore(deps)
+  #   groups:
+  #     dev-dependencies:
+  #       dependency-type: development
+  #       update-types: [minor, patch]
+  #     prod-dependencies:
+  #       dependency-type: production
+  #       update-types: [minor, patch]
+  #
+  # - package-ecosystem: pip
+  #   directory: /
+  #   schedule:
+  #     interval: weekly
+  #   commit-message:
+  #     prefix: chore(deps)
+  #   groups:
+  #     python:
+  #       update-types: [minor, patch]
