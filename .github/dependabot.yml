@@ -1,0 +1,7 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  # Add an entry for the app's package manager (npm, pip, ...) once the stack is chosen.
