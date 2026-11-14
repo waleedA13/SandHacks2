@@ -1,6 +1,6 @@
 # 05 Verifier with Gemini
 
-**Owner:** Aditya · **Priority:** P0 · **Time box:** 2 h · **Depends on:** 01 (works on fixture evidence)
+**Owner:** Aditya · **Priority:** P0 · **Time box:** 2 h · **Depends on:** 01 (works on fixture evidence) · **Do this after 06 and 07**, which unblock Tracy
 
 ## User stories
 - US-F1-M, US-F1-R, US-F1-E, US-F1-D: the score that orders the list.
@@ -17,6 +17,7 @@ The three facts, each `yes`, `no` or `unknown`:
 Rules:
 - Gemini must answer `unknown` when the evidence does not say. Silence is not a `no`.
 - The reason is one sentence, at most 140 characters, at a plain reading level, and names the source. Example: "Their own website says they are not taking new clients."
+- **Web score only.** The verifier writes the score from web evidence and never reads or writes call results. Calls are applied when data is read (see "Where scores live" in the plan), so a re-check cannot erase one.
 - **No evidence (Review Focus 2):** do not call Gemini. Write all `unknown`, score 50, reason "We found no other information about this listing."
 
 ## Files

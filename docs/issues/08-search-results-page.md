@@ -22,7 +22,7 @@ States to design:
 - **Empty (Review Focus 4):** "We don't have listings for that insurer and city yet. Try Aetna in San Diego."
 - **Loading and error:** plain text, no spinner-only screens.
 
-Use the label wording from the plan exactly: `Likely available`, `Unclear`, `Likely dead end`, `Confirmed by phone`, `Confirmed unavailable`.
+Use the label wording from the plan exactly: `Likely available`, `Unclear`, `Likely dead end`, `Demo call: available`, `Demo call: unavailable`.
 
 ## Files
 - Create: `app/page.tsx`, `components/SearchForm.tsx`, `components/ListingCard.tsx`, `components/AccuracyBanner.tsx`, `components/LabelBadge.tsx`, `app/globals.css`
@@ -34,7 +34,7 @@ Use the label wording from the plan exactly: `Likely available`, `Unclear`, `Lik
 ## Acceptance check
 - The page is server-rendered: with JavaScript disabled in the browser, a search still returns results.
 - At 320px wide there is no sideways scrolling and every tap target is at least 44px tall.
-- With the fixtures, 12 cards appear in descending score, and a `Confirmed` listing shows its badge.
+- With the fixtures, 12 cards appear in descending score, and the fixture with a call shows its `Demo call` badge.
 - A search for an insurer with no data shows the empty message.
 - Phone numbers open the dialler on a real phone.
 - Lighthouse accessibility score of 95 or more on the results page.

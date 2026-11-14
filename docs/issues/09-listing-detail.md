@@ -21,7 +21,7 @@ The page for one listing, top to bottom:
    - Lists this insurer?
    - Taking new patients?
 4. **Sources:** each evidence item as the source's name, a short excerpt, the date fetched, and a link that opens the original page.
-5. **Confirm by phone:** the `<VoiceWidget mode="confirm" />` from issue 07 with a one-line explanation: "Our assistant will ask the office two questions for you." When the call finishes, the badge and score on the page update without a reload, and the result appears as "Confirmed by phone on {date}: {summary}".
+5. **Confirm by phone:** the `<VoiceWidget mode="confirm" />` from issue 07 with a one-line explanation: "Our assistant will ask the office two questions for you." When the call finishes, the badge and score on the page update without a reload, and the result appears as "Demo call on {date}: {summary}", followed by "No real office was contacted."
 6. **Back to results** link that keeps the search.
 
 States to design:
@@ -39,7 +39,7 @@ States to design:
 ## Acceptance check
 - A fixture listing with evidence shows three fact rows and its sources; each source link opens in a new tab.
 - A fixture listing with no evidence shows the no-information message and no empty sections.
-- After a confirm call that ends "we're full", the badge changes to `Confirmed unavailable` on this page without a reload, and the results page shows the listing at the bottom.
+- After a confirm call that ends "we're full", the badge changes to `Demo call: unavailable` on this page without a reload, and the results page shows the listing at the bottom.
 - The page reads sensibly with a screen reader: heading order is correct and the badge change is announced.
 - At 320px wide there is no sideways scrolling.
 

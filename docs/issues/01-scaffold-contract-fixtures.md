@@ -11,6 +11,7 @@ Enables all of them. Nobody can start until this is merged.
 - `db/seed.sql` with 12 made-up fixture listings for insurer `Aetna`, city `San Diego`, state `CA`. Give them a spread of verdicts: 4 that score 70 or more, 4 between 40 and 69, 4 below 40. Add 2 evidence rows each for at least 6 of them, and one `done` call for one listing. Fill the fit, fee and licence columns for at least 8 of them: a mix of specialties from the plan's fixed list, at least two with `spanish`, some with a fee range and some with none, one `inactive` licence and two `not_found`. Use obviously fake names and `555` phone numbers.
 - `lib/db.ts`, `lib/types.ts`, `lib/score.ts` exactly as the contract says.
 - `.env.example` with the variable names from the plan; `.env.local` git-ignored.
+- **A live deployment.** Deploy the placeholder app to Vercel, set `DATABASE_URL` and `CALLS_WEBHOOK_SECRET` there, and post the URL to the team. The voice agent in issue 07 needs a public URL to save call results, so this cannot wait.
 
 ## Files
 - Create: `package.json`, `app/layout.tsx`, `app/page.tsx` (placeholder), `db/schema.sql`, `db/seed.sql`, `lib/db.ts`, `lib/types.ts`, `lib/score.ts`, `lib/score.test.ts`, `.env.example`, `.gitignore`
@@ -24,11 +25,12 @@ Enables all of them. Nobody can start until this is merged.
   - all `yes` → score 100, label `Likely available`
   - all `no` → score 0, label `Likely dead end`
   - `yes`, `yes`, `unknown` → score 85
-  - any web verdict plus call `{ takesPlan: yes, acceptingNew: yes }` → 100, `Confirmed by phone`
-  - any web verdict plus call with either `no` → 0, `Confirmed unavailable`
+  - any web verdict plus call `{ takesPlan: yes, acceptingNew: yes }` → 100, `Demo call: available`
+  - any web verdict plus call with either `no` → 0, `Demo call: unavailable`
   - call with an `unknown` and no `no` → web score kept
 - `npm run db:reset` then `select count(*) from listings` returns 12.
 - `npm run dev` serves the placeholder page.
+- The Vercel URL serves the same page, and the team has the URL.
 - Teammates can clone, copy `.env.example` to `.env.local`, add `DATABASE_URL`, and run.
 
 ## Prompt for your Claude

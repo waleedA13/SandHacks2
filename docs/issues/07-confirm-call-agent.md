@@ -21,6 +21,7 @@ The conversation:
 Rules:
 - **Vague answers (Review Focus 3):** "call back Monday", "I'm not sure", voicemail or silence are recorded as `unknown`. The agent asks each question at most twice and never argues.
 - The agent gives no patient details and no medical information.
+- **Every call is a demo call.** The person answering is a teammate, not the office, and the page is public. The widget always shows "Demo call. No real office was contacted.", and results use the `Demo call: ...` labels, so nobody reads a staged answer as a fact about a real therapist.
 - Total call under 60 seconds.
 - Therapist name, insurer and listing id are passed in when the conversation starts.
 
@@ -34,8 +35,8 @@ Rules:
 
 ## Acceptance check
 Run each by speaking as the receptionist:
-- "Yes we take that plan, and yes we're taking new patients" → call saved with `yes`, `yes`; listing shows `Confirmed by phone`.
-- "We take it, but we're full" → `yes`, `no`; listing shows `Confirmed unavailable` and drops to the bottom.
+- "Yes we take that plan, and yes we're taking new patients" → call saved with `yes`, `yes`; listing shows `Demo call: available`.
+- "We take it, but we're full" → `yes`, `no`; listing shows `Demo call: unavailable` and drops to the bottom.
 - "You'd have to call back Monday" → `unknown`, `unknown`; score unchanged.
 - The agent's first sentence says it is an automated assistant.
 - `voice/README.md` lets a teammate recreate the agent from scratch.
