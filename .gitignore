@@ -5,6 +5,12 @@
 *.pem
 *.key
 
+# Local Claude instructions (each teammate keeps their own)
+CLAUDE.md
+
+# Real listings copied by hand must not be published
+db/demo-listings.csv
+
 # Dependencies
 node_modules/
 .venv/
@@ -16,6 +22,7 @@ __pycache__/
 dist/
 build/
 .next/
+.vercel/
 out/
 coverage/
 *.egg-info/
