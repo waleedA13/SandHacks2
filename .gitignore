@@ -1,17 +1,41 @@
-# secrets
+# Secrets
 .env
 .env.*
 !.env.example
+*.pem
+*.key
 
-# local Claude instructions (each teammate keeps their own)
+# Local Claude instructions (each teammate keeps their own)
 CLAUDE.md
 
-# dependencies and build output
-node_modules/
-.next/
-.vercel/
-
-# real listings copied by hand must not be published
+# Real listings copied by hand must not be published
 db/demo-listings.csv
 
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Build output
+dist/
+build/
+.next/
+.vercel/
+out/
+coverage/
+*.egg-info/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# OS / editor
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp

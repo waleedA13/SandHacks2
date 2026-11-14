@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest a new feature or improvement
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve, and for which persona?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (MoSCoW)
+      options:
+        - Must
+        - Should
+        - Could
+        - Won't (this time)
+    validations:
+      required: true
