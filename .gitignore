@@ -1,0 +1,17 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# local Claude instructions (each teammate keeps their own)
+CLAUDE.md
+
+# dependencies and build output
+node_modules/
+.next/
+.vercel/
+
+# real listings copied by hand must not be published
+db/demo-listings.csv
+
+.DS_Store
