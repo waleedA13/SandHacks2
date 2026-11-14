@@ -1,4 +1,4 @@
-# Ghost Network Check: which therapists in your insurer's directory are real
+# TheraCheck: which therapists in your insurer's directory are real
 
 Planning and market research only: no code, no schemas. Researched 2026-11-14.
 
@@ -6,7 +6,7 @@ Planning and market research only: no code, no schemas. Researched 2026-11-14.
 
 ## 1. Project Title & Track Hierarchy
 
-- **Project:** Ghost Network Check
+- **Project:** TheraCheck
 - **Scope:** national problem; demo on one insurer in one city.
 - **Main Track:** Bright Data ("Data for Good")
 - **Stacked Tracks:** Gemini API (read each therapist's own website and judge whether they take that plan and new patients), ElevenLabs (voice agent that phones an office to confirm). Neon is optional, as a store of checked listings; add it only if it appears in the demo.
