@@ -30,6 +30,7 @@ Decide at the Sat 9 PM checkpoint whether to do this. It is also the one live lo
 - With the worker running, pressing the button on a real listing finishes with a fresh "Last checked" time, and the time taken is written down for the pitch.
 - With the worker stopped, the button shows the could-not-check message after 120 seconds and the old result is still there.
 - Pressing the button twice quickly creates one job.
+- A listing with a demo-call result keeps its `Demo call` label and score after a re-check finishes.
 - Killing the worker mid-job and restarting it does not leave the page stuck: jobs `running` for more than 3 minutes are marked `failed` when the worker starts.
 - The status text is announced by a screen reader.
 

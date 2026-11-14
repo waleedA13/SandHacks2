@@ -11,6 +11,7 @@ The hacker guide says the demo is the most important part of the video, and reco
 - Write down the numbers for the pitch: listings checked, how many are `Likely dead end`, Bright Data requests used, seconds for one live re-check.
 - Pick the three listings used in the demo: one `Likely available`, one `Likely dead end` with a clear reason, and one to confirm by voice.
 - Query the database once just before recording so it is awake.
+- Empty the `calls` table before recording and again before judging, so the only call results on the public site are the ones made on stage.
 
 **Pitch (all), 3 minutes, then 2 minutes of questions**
 1. **Problem, 30 s.** A Senate study could book an appointment from insurer directories 18% of the time. Open the linked source if asked.

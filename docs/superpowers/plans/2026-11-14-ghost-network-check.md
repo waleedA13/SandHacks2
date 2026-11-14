@@ -16,7 +16,7 @@
 - **No commits after Sun 12:00 PM.** The guide says this means immediate disqualification. Feature freeze is Sun 9:30 AM.
 - **Scope:** California, one insurer, therapists only. Six cities, about 30 listings each (about 180 in total): San Diego, Los Angeles, San Francisco, San Jose, Sacramento, Fresno. San Diego is scraped first and is the demo city. The other five are added only after San Diego works end to end.
 - **Answer from the database.** No page or API route may call Bright Data or Gemini while a user waits. Slow work goes through the `jobs` table.
-- **Never claim network status from web evidence.** Use the labels in "Score and labels" below. Only a call result may say "Confirmed".
+- **Never claim network status from web evidence.** Use the labels in "Score and labels" below. Call results are labelled as demo calls, because no real office is contacted during the hackathon.
 - **No real offices are called.** The voice agent calls a teammate or runs in the browser. The agent always opens with: "This is an automated assistant calling for a patient."
 - **Use the NPI Registry API, do not scrape it.**
 - **Secrets live in `.env.local` only.** Never commit keys. `.env.example` lists the names.
@@ -146,7 +146,7 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 | `GET /api/stats?insurer=&city=` | `{ total, likelyAvailable, unclear, likelyDeadEnd, deadEndPct }` |
 | `POST /api/listings/[id]/recheck` | `{ jobId }`; inserts a `queued` job |
 | `GET /api/jobs/[id]` | `{ status }` |
-| `POST /api/calls/result` | body `{ listingId, takesPlan, acceptingNew, summary }`; inserts a `done` call and rescores; returns `{ score, label }` |
+| `POST /api/calls/result` | body `{ listingId, takesPlan, acceptingNew, summary }`; inserts a `done` call and changes nothing else; returns the listing's final `{ score, label }` |
 
 ### Score and labels (`lib/score.ts`)
 
@@ -154,7 +154,10 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 
 - Start at 50. `stillPractising`: yes +20, no -30. `listsInsurer`: yes +15, no -25. `acceptingNew`: yes +15, no -25. `unknown` adds 0. Clamp to 0-100.
 - A call overrides web evidence: both `yes` gives 100; either `no` gives 0; otherwise keep the web score.
-- Labels: 70 and above `Likely available`; 40-69 `Unclear`; below 40 `Likely dead end`. With a call: `Confirmed by phone` (100) or `Confirmed unavailable` (0).
+- Labels: 70 and above `Likely available`; 40-69 `Unclear`; below 40 `Likely dead end`. With a call: `Demo call: available` (100) or `Demo call: unavailable` (0).
+- **Where scores live.** `verdicts.score` holds the web-evidence score only. The final score and label are worked out each time data is read, as `scoreVerdict(verdict, latestDoneCall)`. Nothing writes a call-based score into `verdicts`, so a re-check cannot erase a call result.
+- **Stats buckets** use the final score: 70 and above `likelyAvailable`, 40-69 `unclear`, below 40 `likelyDeadEnd`.
+- **Every call is a demo call.** The person answering is a teammate, not the office, so the page always shows "Demo call. No real office was contacted." beside a call result.
 
 ### Environment (`.env.example`)
 
@@ -206,6 +209,8 @@ The columns for issues 16-18 are in the contract from the start, so issue 01 cre
 
 Issues 05, 06 and 08 start from the fixtures in issue 01, so nobody waits for real scrapes.
 
+**Aditya's order is 06, then 07, then 05.** Tracy's pages and the voice agent both wait on 06. The verifier (05) runs on fixtures and only has to be finished before real evidence arrives in the evening.
+
 ## Schedule
 
 | When | Checkpoint |
@@ -220,7 +225,7 @@ Issues 05, 06 and 08 start from the fixtures in issue 01, so nobody waits for re
 
 ## Review Focus
 
-1. **Two therapists with the same name.** Evidence for one must not be attached to the other. Match on name plus phone or address; when unsure, store nothing. Test in issue 04.
+1. **Two therapists with the same name.** Evidence for one must not be attached to the other. Match on name plus phone or address; when unsure, store nothing. When two listings share a name, only a phone match counts. Test in issue 04.
 2. **A listing with no evidence at all.** It must score 50 and read "Unclear", not crash or show as a dead end. Test in issue 05.
 3. **A caller's answer that is vague** ("call back Monday"). The agent must record `unknown`, not guess. Checked in issue 07.
 4. **Empty search result** (insurer and city with no listings). The page must say so and suggest the demo city. Checked in issue 08.
