@@ -1,4 +1,4 @@
-# Ghost Network Check Implementation Plan
+# TheraCheck Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement your issue task-by-task. Each issue in `docs/issues/` is one task with its own prompt.
 
