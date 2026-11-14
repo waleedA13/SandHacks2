@@ -13,7 +13,7 @@
 The home page. One screen, top to bottom:
 
 1. **Headline and one line of explanation.** For example: "Find a therapist who will actually pick up."
-2. **Search:** an insurer select and a city input, both labelled, and one button. For the demo the options are the insurer from issue 02 and San Diego. The search is a normal link with query parameters so results can be shared.
+2. **Search:** an insurer select and a city select, both labelled, and one button. The insurer is the one from issue 02. The cities are the six California cities in the plan's "Scope", with San Diego first; only list a city once it has listings in the database. The search is a normal link with query parameters so results can be shared.
 3. **Accuracy sentence (F6):** "Of 40 Aetna listings in San Diego, 12 look reachable." Plain sentence, not a chart.
 4. **Results:** one card per listing, highest score first. Each card shows name and credential, the label as text with a colour and an icon (never colour alone), the one-line reason, office phone as a `tel:` link, "Last checked" date, and a link to the detail page.
 5. **Honesty note** under the list: "Based on public web pages. Only the office can confirm."

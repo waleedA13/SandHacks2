@@ -14,7 +14,7 @@
 
 - **Deadlines (hacker guide):** hacking space closes Sat 9:00 PM, reopens Sun 7:00 AM. Initial submission Sun 11:00 AM. Final submission Sun 12:00 PM.
 - **No commits after Sun 12:00 PM.** The guide says this means immediate disqualification. Feature freeze is Sun 9:30 AM.
-- **Demo scope:** one insurer, one city (San Diego, CA), therapists only, about 30-50 listings.
+- **Scope:** California, one insurer, therapists only. Six cities, about 30 listings each (about 180 in total): San Diego, Los Angeles, San Francisco, San Jose, Sacramento, Fresno. San Diego is scraped first and is the demo city. The other five are added only after San Diego works end to end.
 - **Answer from the database.** No page or API route may call Bright Data or Gemini while a user waits. Slow work goes through the `jobs` table.
 - **Never claim network status from web evidence.** Use the labels in "Score and labels" below. Only a call result may say "Confirmed".
 - **No real offices are called.** The voice agent calls a teammate or runs in the browser. The agent always opens with: "This is an automated assistant calling for a patient."
@@ -85,6 +85,38 @@ One number for the chosen insurer and city: how many listings look like dead end
 - **US-F6-E:** As Elena, I want that sentence in simple language, so that I understand the size of the problem.
 - **US-F6-D:** As Dana, I want a figure I can quote to my department, so that I can argue for better coverage.
 
+### F7. Fit filters (P1)
+Narrow the list by what the therapist treats, the languages they speak, and whether they offer telehealth.
+
+- **US-F7-M:** As Maya, I want to filter to therapists who treat anxiety and offer telehealth, so that I only see ones who fit my problem and schedule.
+- **US-F7-R:** As Robert, I want to choose "grief" from a short list of plain words, so that I do not have to read every profile.
+- **US-F7-E:** As Elena, I want to filter to Spanish-speaking therapists who see teenagers, so that my son and I can both talk to them.
+- **US-F7-D:** As Dana, I want to combine filters and share the filtered link, so that each student gets a list that fits them.
+
+### F8. Self-pay price (P1)
+Show the session fee a therapist publishes, where they publish one.
+
+- **US-F8-M:** As Maya, I want to see the posted fee, so that I know what I would pay if they turn out not to take my plan.
+- **US-F8-R:** As Robert, I want the price in one plain line, so that I am not surprised on the phone.
+- **US-F8-E:** As Elena, I want it clear that this is the therapist's own price and not what my insurance charges, so that I do not misread it.
+- **US-F8-D:** As Dana, I want to see which listings publish no fee, so that I can warn students to ask.
+
+### F9. Licence check (P1)
+Show whether the California licensing board lists the therapist's licence as active.
+
+- **US-F9-M:** As Maya, I want to see that a therapist's licence is active, so that I can trust someone I found online.
+- **US-F9-R:** As Robert, I want a plain "Licence active" line, so that I do not need to look it up myself.
+- **US-F9-E:** As Elena, I want to know the person seeing my son is licensed, in words I understand.
+- **US-F9-D:** As Dana, I want a link to the board's own record, so that I can verify before recommending.
+
+### F10. Send me my shortlist (P1)
+Share the top three results by text, messaging app or link, with no account and nothing stored about the user.
+
+- **US-F10-M:** As Maya, I want to text the top three to myself, so that I can call them after class.
+- **US-F10-R:** As Robert, I want to send the list to my daughter, so that she can help me call.
+- **US-F10-E:** As Elena, I want to share the list on WhatsApp with my husband, so that we can choose together.
+- **US-F10-D:** As Dana, I want to copy a link or print the list, so that I can hand it to a student.
+
 ## Shared contract
 
 Everything below is fixed by issue 01. Changing it needs a message to the whole team first.
@@ -94,8 +126,8 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 | Table | Columns |
 |---|---|
 | `listings` | `id` uuid pk, `insurer` text, `plan` text, `city` text, `state` text, `name` text, `credential` text null, `address` text null, `phone` text null, `npi` text null, `source_url` text, `scraped_at` timestamptz |
-| `evidence` | `id` uuid pk, `listing_id` uuid fk, `source` text (`psychology_today`, `practice_site`, `zocdoc`, `headway`, `npi`), `url` text, `raw_text` text, `fetched_at` timestamptz |
-| `verdicts` | `listing_id` uuid pk fk, `still_practising` tri, `lists_insurer` tri, `accepting_new` tri, `score` int, `reason` text, `checked_at` timestamptz |
+| `evidence` | `id` uuid pk, `listing_id` uuid fk, `source` text (`psychology_today`, `practice_site`, `zocdoc`, `headway`, `license_board`), `url` text, `raw_text` text, `fetched_at` timestamptz |
+| `verdicts` | `listing_id` uuid pk fk, `still_practising` tri, `lists_insurer` tri, `accepting_new` tri, `score` int, `reason` text, `checked_at` timestamptz, `specialties` text[], `languages` text[], `telehealth` tri, `self_pay_min` int null, `self_pay_max` int null, `license_status` text (`active`, `inactive`, `not_found`, `unchecked`), `license_discipline` tri |
 | `calls` | `id` uuid pk, `listing_id` uuid fk, `status` text (`in_progress`, `done`, `failed`), `takes_plan` tri null, `accepting_new` tri null, `summary` text null, `called_at` timestamptz |
 | `jobs` | `id` uuid pk, `listing_id` uuid fk, `kind` text (`recheck`), `status` text (`queued`, `running`, `done`, `failed`), `created_at` timestamptz, `finished_at` timestamptz null |
 
@@ -103,13 +135,13 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 
 ### Types (`lib/types.ts`)
 
-`Tri`, `Listing`, `Evidence`, `Verdict`, `Call`, `Job` mirror the tables in camelCase. `ListingSummary` is `{ id, name, credential, address, phone, score, label, reason, checkedAt, call: { takesPlan, acceptingNew, summary, calledAt } | null }`.
+`Tri`, `Listing`, `Evidence`, `Verdict`, `Call`, `Job` mirror the tables in camelCase. `ListingSummary` is `{ id, name, credential, address, phone, score, label, reason, checkedAt, specialties, languages, telehealth, selfPayMin, selfPayMax, licenseStatus, call: { takesPlan, acceptingNew, summary, calledAt } | null }`.
 
 ### API (Next.js routes)
 
 | Route | Returns |
 |---|---|
-| `GET /api/listings?insurer=&city=` | `ListingSummary[]`, highest score first |
+| `GET /api/listings?insurer=&city=` | `ListingSummary[]`, highest score first. Optional filters: `specialty=`, `language=`, `telehealth=yes` |
 | `GET /api/listings/[id]` | `{ listing, verdict, evidence[], calls[] }` |
 | `GET /api/stats?insurer=&city=` | `{ total, likelyAvailable, unclear, likelyDeadEnd, deadEndPct }` |
 | `POST /api/listings/[id]/recheck` | `{ jobId }`; inserts a `queued` job |
@@ -164,6 +196,13 @@ Stay inside your own paths. If you need a change elsewhere, ask the owner.
 | 13 | Real phone call through Twilio | Aditya | P2 | F3 | 07 | 1.5 h |
 | 14 | Spanish page text and voice | Tracy, Aditya | P2 | all for E | 10 | 1 h |
 | 15 | Demo data, pitch, video and Devpost | All | P0 | none | all P0 | 2 h |
+| 16 | Fit, fee and licence facts in the verifier and API | Aditya | P1 | F7, F8, F9 | 05, 06 | 1 h |
+| 17 | Filters, fee, licence and share on the pages | Tracy | P1 | F7, F8, F9, F10 | 08, 09, 16 | 2 h |
+| 18 | Licence evidence collector | Waleed | P1 | F9 | 02, 04 | 1.5 h |
+
+The columns for issues 16-18 are in the contract from the start, so issue 01 creates them and nobody changes the schema later. Until 16 and 18 run, those columns are empty and the pages hide the matching lines.
+
+**Fixed vocabularies.** Specialties: `anxiety`, `depression`, `trauma`, `grief`, `teens`, `children`, `couples`, `addiction`, `adhd`. Languages: stored as lower-case English names, such as `spanish`.
 
 Issues 05, 06 and 08 start from the fixtures in issue 01, so nobody waits for real scrapes.
 

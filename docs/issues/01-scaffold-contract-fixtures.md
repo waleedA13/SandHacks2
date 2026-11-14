@@ -8,7 +8,7 @@ Enables all of them. Nobody can start until this is merged.
 ## What to build
 - A Next.js (App Router, TypeScript) app at the repo root, deployable to Vercel.
 - A Neon database with the five tables from the plan's "Shared contract".
-- `db/seed.sql` with 12 made-up fixture listings for insurer `Aetna`, city `San Diego`, state `CA`. Give them a spread of verdicts: 4 that score 70 or more, 4 between 40 and 69, 4 below 40. Add 2 evidence rows each for at least 6 of them, and one `done` call for one listing. Use obviously fake names and `555` phone numbers.
+- `db/seed.sql` with 12 made-up fixture listings for insurer `Aetna`, city `San Diego`, state `CA`. Give them a spread of verdicts: 4 that score 70 or more, 4 between 40 and 69, 4 below 40. Add 2 evidence rows each for at least 6 of them, and one `done` call for one listing. Fill the fit, fee and licence columns for at least 8 of them: a mix of specialties from the plan's fixed list, at least two with `spanish`, some with a fee range and some with none, one `inactive` licence and two `not_found`. Use obviously fake names and `555` phone numbers.
 - `lib/db.ts`, `lib/types.ts`, `lib/score.ts` exactly as the contract says.
 - `.env.example` with the variable names from the plan; `.env.local` git-ignored.
 

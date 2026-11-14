@@ -7,7 +7,20 @@
 - US-F6-M, US-F6-R, US-F6-E, US-F6-D: the accuracy number is counted over these listings.
 
 ## What to build
-A script that scrapes the insurer directory chosen in issue 02 for therapists in San Diego and writes 30-50 rows to `listings`. Run it by hand; it is never called by the web app.
+A script that scrapes the insurer directory chosen in issue 02 for therapists near one ZIP code and writes about 30 rows to `listings`. Run it by hand, once per city; it is never called by the web app.
+
+Scope is California. Run San Diego first and get it working end to end before the others:
+
+| City | ZIP |
+|---|---|
+| San Diego | 92101 |
+| Los Angeles | 90012 |
+| San Francisco | 94102 |
+| San Jose | 95113 |
+| Sacramento | 95814 |
+| Fresno | 93721 |
+
+Store the city name from the table above, not whatever the directory prints, so searches match.
 
 - Capture name, credential, office address, office phone, and the URL the listing came from.
 - Look up each person in the NPI Registry API by name, city and state. Store the NPI only when exactly one result matches; otherwise leave it null.
@@ -23,7 +36,8 @@ A script that scrapes the insurer directory chosen in issue 02 for therapists in
 
 ## Acceptance check
 - `npm test` passes: `normalizePhone("(619) 555-0142")` is `"6195550142"`; `normalizePhone("ext 4")` is `null`; `normalizeName("Dr. Ana Ruiz, LMFT")` equals `normalizeName("ana ruiz")`.
-- After one run, `select count(*) from listings where insurer = '<name>'` is between 30 and 50.
+- After one run for San Diego, `select count(*) from listings where city = 'San Diego'` is between 25 and 50.
+- After all six runs, every city has at least 20 listings, or `docs/smoke-test.md` says which city fell short and why.
 - After a second run the count is unchanged.
 - Every row has a name and a `source_url`; at least 80% have a phone.
 
