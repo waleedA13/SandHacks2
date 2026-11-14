@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-11-14
-- **Deciders:** SandHacks2 team
+- **Deciders:** TheraCheck team
 
 ## Context
 

@@ -1,6 +1,6 @@
-# SandHacks2
+# TheraCheck
 
-[![Security](https://github.com/waleedA13/SandHacks2/actions/workflows/security.yml/badge.svg)](https://github.com/waleedA13/SandHacks2/actions/workflows/security.yml)
+[![Security](https://github.com/waleedA13/TheraCheck/actions/workflows/security.yml/badge.svg)](https://github.com/waleedA13/TheraCheck/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
@@ -36,8 +36,8 @@ _To be filled in once chosen._
 ## Getting started
 
 ```bash
-git clone https://github.com/waleedA13/SandHacks2.git
-cd SandHacks2
+git clone https://github.com/waleedA13/TheraCheck.git
+cd TheraCheck
 cp .env.example .env   # then fill in your own keys; never commit .env
 ```
 

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping build SandHacks2. This guide keeps the team working fast in one repo without stepping on each other.
+Thanks for helping build TheraCheck. This guide keeps the team working fast in one repo without stepping on each other.
 
 ## Workflow
 

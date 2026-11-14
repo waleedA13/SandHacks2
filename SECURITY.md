@@ -13,7 +13,7 @@ Only the latest commit on `main` receives security fixes.
 
 **Please do not report security vulnerabilities through public issues, discussions, or pull requests.**
 
-Report them privately through GitHub: open the **Security** tab of this repository and click **Report a vulnerability** ([direct link](https://github.com/waleedA13/SandHacks2/security/advisories/new)).
+Report them privately through GitHub: open the **Security** tab of this repository and click **Report a vulnerability** ([direct link](https://github.com/waleedA13/TheraCheck/security/advisories/new)).
 
 Please include:
 
