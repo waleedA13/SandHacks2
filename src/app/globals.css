@@ -40,6 +40,9 @@
   --space-5: 1.5rem;
   --space-6: 2.5rem;
 
+  /* The one card: white, one radius, one border. */
+  --radius: 16px;
+
   color-scheme: light;
 }
 
@@ -293,9 +296,9 @@ h2 {
   gap: var(--space-3);
   max-width: 760px;
   padding: var(--space-4);
-  border-radius: 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
   background: var(--card);
-  box-shadow: 0 10px 30px rgba(28, 43, 45, 0.1);
 }
 
 .field {
@@ -506,12 +509,6 @@ h2 {
 }
 
 /* ---------- Sections and grid ---------- */
-.start {
-  padding: var(--space-4);
-  border-radius: 28px;
-  background: var(--sun-pale);
-}
-
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -525,9 +522,9 @@ h2 {
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-4);
-  border-radius: 26px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
   background: var(--card);
-  box-shadow: 0 2px 0 var(--line-soft);
 }
 
 .card h3 {
@@ -546,8 +543,6 @@ h2 {
 .card-compact {
   gap: var(--space-1);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line-soft);
-  box-shadow: none;
 }
 
 .card-compact h3 {
@@ -700,7 +695,8 @@ h2 {
   align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-5);
-  border-radius: 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
   background: var(--card);
 }
 
@@ -752,9 +748,9 @@ h2 {
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  border-radius: 26px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
   background: var(--card);
-  box-shadow: 0 2px 0 var(--line-soft);
 }
 
 .panel h2 {
@@ -858,10 +854,14 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-4) var(--space-4) var(--space-2);
-  border-radius: 18px;
-  background: var(--sage);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-soft);
   overflow-wrap: anywhere;
+}
+
+.source:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .source-name {
@@ -879,9 +879,8 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-4);
-  border-radius: 18px;
-  background: var(--sun-pale);
+  padding-left: var(--space-4);
+  border-left: 4px solid var(--teal);
 }
 
 /* VoiceWidget sets only size inline; colour and shape come from here. */
@@ -1085,7 +1084,6 @@ h2 {
     font-size: var(--step-2);
   }
 
-  .start,
   .card {
     padding: var(--space-2) 0;
     background: none;
@@ -1161,10 +1159,6 @@ h2 {
 
   .crisis {
     margin-left: auto;
-  }
-
-  .start {
-    padding: var(--space-4);
   }
 }
 
