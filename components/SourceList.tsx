@@ -15,6 +15,16 @@ function excerpt(text: string) {
   return `${text.slice(0, 160).replace(/\s+\S*$/, "")}…`;
 }
 
+// Evidence URLs come from scraped pages; only link plain web addresses.
+function isWebUrl(url: string) {
+  try {
+    const { protocol } = new URL(url);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function SourceList({ evidence }: { evidence: Detail["evidence"] }) {
   return (
     <ul className="sources">
@@ -23,14 +33,16 @@ export function SourceList({ evidence }: { evidence: Detail["evidence"] }) {
           <p className="source-name">{NAME[e.source] ?? e.source}</p>
           <p>&ldquo;{excerpt(e.rawText)}&rdquo;</p>
           <p className="muted">Fetched {checkedDate(e.fetchedAt)}</p>
-          <a
-            className="link"
-            href={e.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open the {NAME[e.source] ?? "source"} page (opens in a new tab)
-          </a>
+          {isWebUrl(e.url) && (
+            <a
+              className="link"
+              href={e.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open the {NAME[e.source] ?? "source"} page (opens in a new tab)
+            </a>
+          )}
         </li>
       ))}
     </ul>
