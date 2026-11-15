@@ -418,6 +418,21 @@ export async function claimCallSlot(listingId: string): Promise<string | null> {
   return row?.id ?? null;
 }
 
+// A result is only accepted for a call this server started for that listing in the last
+// 5 minutes; anyone can open a voice session, so the agent's webhook alone proves nothing.
+// Removes the start marker so one call yields one result. Returns false when there is none.
+export async function takeStartedCall(listingId: string): Promise<boolean> {
+  if (!isUuid(listingId)) return false;
+  const rows = await sql`
+    delete from calls where id = (
+      select id from calls
+      where listing_id = ${listingId} and status = 'in_progress'
+        and called_at > now() - interval '5 minutes'
+      order by called_at desc limit 1)
+    returning id`;
+  return rows.length > 0;
+}
+
 // Marks a call that never started so it no longer holds the slot.
 export async function failCall(id: string) {
   await sql`update calls set status = 'failed' where id = ${id}`;

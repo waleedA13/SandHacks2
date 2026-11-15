@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { sql } from "@/backend/db/client";
+import { isUuid } from "@/backend/queries";
 import { GET as listings } from "./listings/route";
 import { GET as detail } from "./listings/[id]/route";
 import { POST as recheck } from "./listings/[id]/recheck/route";
@@ -8,6 +9,7 @@ import { GET as job } from "./jobs/[id]/route";
 import { GET as stats } from "./stats/route";
 import { POST as callResult } from "./calls/result/route";
 import { POST as callStart } from "./calls/start/route";
+import { POST as voiceToken } from "./voice/token/route";
 
 const base = "http://localhost/api";
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -29,7 +31,25 @@ afterAll(async () => {
   await sql`delete from listings where insurer like 'RouteCo %'`;
 });
 
-const post = (body: unknown, secret: string | null = SECRET) =>
+// Results are accepted only for a call the server started, so record one first.
+// It is 61 seconds old so it does not hold the global one-call-per-minute slot.
+async function startedCall(listingId: string, age = "61 seconds") {
+  await sql`
+    insert into calls (listing_id, status, called_at)
+    select id, 'in_progress', now() - ${age}::interval from listings where id = ${listingId}`;
+}
+
+const post = async (
+  body: unknown,
+  secret: string | null = SECRET,
+  start = true,
+) => {
+  const id = (body as { listingId?: unknown } | null)?.listingId;
+  if (start && typeof id === "string" && isUuid(id)) await startedCall(id);
+  return rawPost(body, secret);
+};
+
+const rawPost = (body: unknown, secret: string | null = SECRET) =>
   callResult(
     new Request(`${base}/calls/result`, {
       method: "POST",
@@ -151,20 +171,41 @@ describe("POST /api/calls/result", () => {
       "not json",
       [],
     ]) {
-      expect((await post(body)).status, JSON.stringify(body)).toBe(400);
+      expect((await rawPost(body)).status, JSON.stringify(body)).toBe(400);
     }
     const [{ n }] =
       await sql`select count(*)::int as n from calls where listing_id = ${id}`;
     expect(n).toBe(0);
   });
 
-  it("returns 404 for an unknown listing", async () => {
+  it("returns 409 for an unknown listing, which can have no started call", async () => {
     const res = await post({
       listingId: crypto.randomUUID(),
       takesPlan: "no",
       acceptingNew: "no",
     });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(409);
+  });
+
+  it("returns 409 and stores nothing without a call the server started", async () => {
+    const { id } = await newListing();
+    const body = { listingId: id, takesPlan: "yes", acceptingNew: "yes" };
+    expect((await post(body, SECRET, false)).status).toBe(409);
+    await startedCall(id, "6 minutes");
+    expect((await rawPost(body)).status).toBe(409);
+    const [{ n }] =
+      await sql`select count(*)::int as n from calls where listing_id = ${id} and status = 'done'`;
+    expect(n).toBe(0);
+  });
+
+  it("accepts one result per started call", async () => {
+    const { id } = await newListing();
+    const body = { listingId: id, takesPlan: "yes", acceptingNew: "yes" };
+    expect((await post(body)).status).toBe(200);
+    expect((await rawPost(body)).status).toBe(409);
+    const rows =
+      await sql`select status from calls where listing_id = ${id} order by called_at`;
+    expect(rows.map((r) => r.status)).toEqual(["done"]);
   });
 
   it("a both-no call returns score 0, moves the listing to the bottom, and leaves verdicts alone", async () => {
@@ -537,5 +578,88 @@ describe("POST /api/calls/start with connectTo never stores the patient's number
       consoles.forEach((c) => c.mockRestore());
       vi.unstubAllEnvs();
     }
+  });
+});
+
+describe("POST /api/voice/token for the confirm agent", () => {
+  async function token(body: unknown, upstreamOk = true) {
+    const realFetch = globalThis.fetch;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) =>
+        String(input).includes("elevenlabs")
+          ? Promise.resolve(
+              upstreamOk
+                ? Response.json({ token: "tok_test" })
+                : new Response("no", { status: 500 }),
+            )
+          : realFetch(input, init),
+      );
+    vi.stubEnv("ELEVENLABS_API_KEY", "sk_test_key");
+    vi.stubEnv("NEXT_ELEVENLABS_AGENT_ID", "agent_test_id");
+    try {
+      return await voiceToken(
+        new Request(`${base}/voice/token`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      );
+    } finally {
+      fetchSpy.mockRestore();
+      vi.unstubAllEnvs();
+    }
+  }
+  const freeSlot = () =>
+    sql`update calls set status = 'failed' where status = 'in_progress'`;
+
+  it("needs a real listing", async () => {
+    expect((await token({})).status).toBe(400);
+    expect((await token({ agent: "confirm", listingId: "x" })).status).toBe(
+      400,
+    );
+    expect(
+      (await token({ agent: "confirm", listingId: crypto.randomUUID() }))
+        .status,
+    ).toBe(400);
+  });
+
+  it("starts a call for the listing, so its result is accepted once", async () => {
+    await freeSlot();
+    const { id } = await newListing();
+    const res = await token({ agent: "confirm", listingId: id });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ token: "tok_test" });
+    const body = { listingId: id, takesPlan: "yes", acceptingNew: "yes" };
+    expect((await rawPost(body)).status).toBe(200);
+    expect((await rawPost(body)).status).toBe(409);
+  });
+
+  it("refuses with 429 while another call holds the slot", async () => {
+    await freeSlot();
+    const a = await newListing();
+    const b = await newListing();
+    expect((await token({ agent: "confirm", listingId: a.id })).status).toBe(
+      200,
+    );
+    expect((await token({ agent: "confirm", listingId: b.id })).status).toBe(
+      429,
+    );
+  });
+
+  it("frees the slot when ElevenLabs refuses", async () => {
+    await freeSlot();
+    const { id } = await newListing();
+    expect(
+      (await token({ agent: "confirm", listingId: id }, false)).status,
+    ).toBe(502);
+    const [{ n }] =
+      await sql`select count(*)::int as n from calls where listing_id = ${id} and status = 'in_progress'`;
+    expect(n).toBe(0);
+  });
+
+  it("the helper agent needs no listing and starts no call", async () => {
+    vi.stubEnv("NEXT_ELEVENLABS_HELPER_AGENT_ID", "helper_test_id");
+    const res = await token({ agent: "helper" });
+    expect(res.status).toBe(200);
   });
 });
