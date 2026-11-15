@@ -1,27 +1,27 @@
 # Personas
 
-_Placeholder. Replace with real personas once the idea is final. Two or three are enough._
+Four people shaped the features. The plan in `docs/superpowers/plans/` holds one user story for each persona and feature.
 
-## Persona 1: _Name_, _Role_
+## Maya, 24, grad student
 
-|                             |                                                         |
-| --------------------------- | ------------------------------------------------------- |
-| **Background**              | _Who they are, where they work, how technical they are_ |
-| **Goals**                   | _What they are trying to get done_                      |
-| **Pain points**             | _What gets in their way today_                          |
-| **Current tools**           | _What they use now, and why it falls short_             |
-| **What success looks like** | _How our product changes their day_                     |
+- **Situation:** first time looking for a therapist on her student plan; three dead numbers so far.
+- **Device:** phone only, between classes.
+- **Needs:** an answer in under a minute and a first call that works.
 
-> _A quote that captures their frustration._
+## Robert, 67, retiree
 
-## Persona 2: _Name_, _Role_
+- **Situation:** looking for a therapist after his wife's death; low vision, tires of phone trees.
+- **Device:** older Android phone with large text, or a voice conversation.
+- **Needs:** a short list in large type and someone else to ask the awkward questions.
 
-|                             |     |
-| --------------------------- | --- |
-| **Background**              |     |
-| **Goals**                   |     |
-| **Pain points**             |     |
-| **Current tools**           |     |
-| **What success looks like** |     |
+## Elena, 41, parent
 
-> _Quote._
+- **Situation:** finding care for her teenage son; more comfortable in Spanish.
+- **Device:** phone on a slow connection.
+- **Needs:** plain words, and a therapist who speaks Spanish and sees teenagers.
+
+## Dana, 35, campus care navigator
+
+- **Situation:** helps dozens of students a month find in-network care.
+- **Device:** laptop.
+- **Needs:** a list she can check and share, with links to the sources behind each result.
