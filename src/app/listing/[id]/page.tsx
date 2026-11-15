@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CallPanel, LabelProvider, LiveBadge } from "@/frontend/CallPanel";
 import { FactRow, LicenseRow } from "@/frontend/FactRow";
+import { fitFromParams, withFit, type FitValues } from "@/frontend/FitFilters";
 import { Header } from "@/frontend/Header";
 import { Icon } from "@/frontend/Icon";
 import { checkedDate, priceText, telHref } from "@/frontend/format";
@@ -18,12 +19,12 @@ const NO_INFO = "We found no other information about this listing.";
 const saysNoInfo = (reason?: string) =>
   /^we found no other information/i.test(reason?.trim() ?? "");
 
-function backHref(insurer?: string, city?: string) {
-  if (!insurer && !city) return "/";
+function backHref(insurer?: string, city?: string, fit: FitValues = {}) {
   const q = new URLSearchParams();
   if (insurer) q.set("insurer", insurer);
   if (city) q.set("city", city);
-  return `/?${q}`;
+  withFit(q, fit);
+  return q.size ? `/?${q}` : "/";
 }
 
 export default async function ListingPage({
@@ -36,7 +37,11 @@ export default async function ListingPage({
 
   const { listing, verdict, label, evidence, calls } = detail;
   const lastCall = calls.find((c) => c.status === "done") ?? null;
-  const back = backHref(first(query.insurer), first(query.city));
+  const back = backHref(
+    first(query.insurer),
+    first(query.city),
+    fitFromParams(query),
+  );
   const boardUrl = evidence.find(
     (e) => e.source === "license_board" && isWebUrl(e.url),
   )?.url;

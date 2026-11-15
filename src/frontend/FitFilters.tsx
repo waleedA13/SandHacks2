@@ -1,3 +1,4 @@
+import { first } from "./params";
 import { Select } from "./Select";
 
 // The plan's fixed specialties, in plain words.
@@ -21,6 +22,27 @@ export type FitValues = {
   language?: string;
   telehealth?: "yes";
 };
+
+type Params = Record<string, string | string[] | undefined>;
+
+// Read the filters from the URL, dropping values that aren't on the fixed lists.
+export function fitFromParams(params: Params): FitValues {
+  const specialty = first(params.specialty);
+  return {
+    specialty:
+      specialty && Object.hasOwn(SPECIALTIES, specialty)
+        ? specialty
+        : undefined,
+    language: first(params.language)?.toLowerCase(),
+    telehealth: first(params.telehealth) === "yes" ? "yes" : undefined,
+  };
+}
+
+// Add the filters that are set to a query string.
+export function withFit(q: URLSearchParams, fit: FitValues) {
+  for (const [k, v] of Object.entries(fit)) if (v) q.set(k, v);
+  return q;
+}
 
 // Plain controls inside the search form, so filters live in the URL and work without JavaScript.
 export function FitFilters({

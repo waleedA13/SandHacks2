@@ -39,6 +39,20 @@ test("choosing a filter and submitting puts it in the URL", async ({
   await expect(page.locator("main article")).toHaveCount(2);
 });
 
+test("Back to results keeps the filters", async ({ page }) => {
+  const filtered = `${SD}&specialty=anxiety&language=spanish&telehealth=yes`;
+  await page.goto(filtered);
+  await page
+    .getByRole("link", { name: "View details for Avery Example" })
+    .click();
+  await expect(page).toHaveURL(
+    `${listing(1)}?insurer=Aetna&city=San+Diego&specialty=anxiety&language=spanish&telehealth=yes`,
+  );
+  await page.getByRole("link", { name: "Back to results" }).click();
+  await expect(page).toHaveURL(filtered);
+  await expect(page.locator("main article")).toHaveCount(1);
+});
+
 test("filters with no matches say so", async ({ page }) => {
   await page.goto(`${SD}&specialty=teens&language=vietnamese`);
   await expect(

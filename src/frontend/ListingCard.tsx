@@ -11,13 +11,14 @@ export function ListingCard({
   rank,
   variant,
   insurer,
-  city,
+  query,
 }: {
   listing: ListingSummary;
   rank: number;
   variant: "full" | "compact";
   insurer: string;
-  city: string;
+  // The results page's query string, so "Back to results" can return to it.
+  query: string;
 }) {
   const { id, name, credential, phone, label } = listing;
   const headingId = `listing-${id}`;
@@ -64,7 +65,7 @@ export function ListingCard({
         {/* No prefetch: 12 cards would each load a detail page (5 queries each). */}
         <Link
           className="link"
-          href={`/listing/${id}?${new URLSearchParams({ insurer, city })}`}
+          href={`/listing/${id}?${query}`}
           prefetch={false}
         >
           View details<span className="sr-only"> for {name}</span>

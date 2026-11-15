@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-import { SPECIALTIES } from "@/frontend/FitFilters";
+import { fitFromParams, withFit } from "@/frontend/FitFilters";
 import { Header } from "@/frontend/Header";
 import { Icon } from "@/frontend/Icon";
 import { ListingCard } from "@/frontend/ListingCard";
@@ -23,12 +23,12 @@ function CardList({
   items,
   variant,
   insurer,
-  city,
+  query,
 }: {
   items: Ranked[];
   variant: "full" | "compact";
   insurer: string;
-  city: string;
+  query: string;
 }) {
   return (
     <ol className="grid">
@@ -39,7 +39,7 @@ function CardList({
             rank={rank}
             variant={variant}
             insurer={insurer}
-            city={city}
+            query={query}
           />
         </li>
       ))}
@@ -52,16 +52,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const insurer = first(params.insurer) ?? "Aetna";
   const city = first(params.city) ?? "San Diego";
 
-  const specialty = first(params.specialty);
-  const fit = {
-    specialty:
-      specialty && Object.hasOwn(SPECIALTIES, specialty)
-        ? specialty
-        : undefined,
-    language: first(params.language)?.toLowerCase(),
-    telehealth:
-      first(params.telehealth) === "yes" ? ("yes" as const) : undefined,
-  };
+  const fit = fitFromParams(params);
   const filtering = Boolean(fit.specialty || fit.language || fit.telehealth);
 
   const [all, stats, h, filtered] = await Promise.all([
@@ -75,8 +66,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const languages = [...new Set(all.flatMap((l) => l.languages))].sort();
 
   const base = new URLSearchParams({ insurer, city });
-  const query = new URLSearchParams(base);
-  for (const [k, v] of Object.entries(fit)) if (v) query.set(k, v);
+  const query = withFit(new URLSearchParams(base), fit);
   const proto = h.get("x-forwarded-proto") ?? "http";
   const shareUrl = `${proto}://${h.get("host")}/?${query}`;
 
@@ -190,7 +180,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                       items={startWith}
                       variant="full"
                       insurer={insurer}
-                      city={city}
+                      query={query.toString()}
                     />
                   </section>
                 )}
@@ -202,7 +192,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                       items={alsoTry}
                       variant="full"
                       insurer={insurer}
-                      city={city}
+                      query={query.toString()}
                     />
                   </section>
                 )}
@@ -214,7 +204,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                       items={deadEnds}
                       variant="compact"
                       insurer={insurer}
-                      city={city}
+                      query={query.toString()}
                     />
                   </section>
                 )}
