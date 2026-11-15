@@ -24,6 +24,8 @@ build/
 .next/
 .vercel/
 out/
+*.tsbuildinfo
+next-env.d.ts
 coverage/
 *.egg-info/
 
@@ -39,3 +41,4 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.swp
+.neon
