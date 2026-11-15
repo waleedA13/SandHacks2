@@ -1,10 +1,12 @@
 import { sql } from "./db/client";
 import { scoreVerdict } from "@/shared/score";
 import type {
+  BookingPath,
   Call,
   Evidence,
   Label,
   Listing,
+  PhoneLineType,
   Job,
   ListingSummary,
   Tri,
@@ -22,7 +24,25 @@ const iso = (d: unknown) =>
   d == null ? null : new Date(d as string).toISOString();
 const tri = (t: Tri | null): Tri => t ?? "unknown";
 
+// The report route saves exactly this summary when nobody picked up.
+export const NO_ANSWER_SUMMARY = "Someone called and nobody answered.";
+
+// Which booking buttons a listing can show, in this order. The agent only calls landlines:
+// the FCC treats AI voices as artificial voices, and calls to mobiles need consent.
+export function bookingPaths(l: {
+  bookingUrl: string | null;
+  phone: string | null;
+  phoneLineType: PhoneLineType;
+}): BookingPath[] {
+  const paths: BookingPath[] = [];
+  if (l.bookingUrl) paths.push("book_online");
+  if (l.phone && l.phoneLineType === "landline") paths.push("agent_check");
+  if (l.phone) paths.push("call_yourself");
+  return paths;
+}
+
 // Final score: the web facts, overridden by the latest done call. Never read verdicts.score.
+// Three "nobody answered" reports in 7 days, all after the latest answered call, count as unavailable.
 function finalScore(r: Row): { score: number; label: Label } {
   const facts = {
     stillPractising: tri(r.still_practising),
@@ -30,6 +50,12 @@ function finalScore(r: Row): { score: number; label: Label } {
     acceptingNew: tri(r.v_accepting_new),
     seesSelfPay: tri(r.sees_self_pay),
   };
+  if (r.no_answers >= 3)
+    return scoreVerdict(facts, {
+      takesPlan: "unknown",
+      acceptingNew: "no",
+      source: "caller",
+    });
   return r.called_at
     ? scoreVerdict(facts, {
         takesPlan: tri(r.takes_plan),
@@ -61,12 +87,18 @@ function summaryRows(
            v.still_practising, v.lists_insurer, v.accepting_new as v_accepting_new,
            v.reason, v.checked_at, v.specialties, v.languages, v.telehealth,
            v.self_pay_min, v.self_pay_max, v.license_status,
-           c.takes_plan, c.accepting_new as c_accepting_new, c.summary, c.called_at, c.source as c_source
+           c.takes_plan, c.accepting_new as c_accepting_new, c.summary, c.called_at, c.source as c_source,
+           (select count(*)::int from calls n
+            where n.listing_id = l.id and n.status = 'done' and n.source = 'caller'
+              and n.summary = ${NO_ANSWER_SUMMARY} and n.called_at > now() - interval '7 days'
+              and n.called_at > coalesce(c.called_at, '-infinity')) as no_answers
     from listings l
     left join verdicts v on v.listing_id = l.id
     left join lateral (
+      -- A "nobody answered" report says nothing about the plan or openings, so it never counts as the latest call.
       select takes_plan, accepting_new, summary, called_at, source from calls
       where listing_id = l.id and status = 'done'
+        and not (source = 'caller' and summary is not distinct from ${NO_ANSWER_SUMMARY})
       order by called_at desc limit 1
     ) c on true
     where (${where.id ?? null}::uuid is null or l.id = ${where.id ?? null}::uuid)
@@ -103,6 +135,11 @@ function toSummary(r: Row): ListingSummary {
     plan: r.plan,
     seesSelfPay: tri(r.sees_self_pay),
     sourceCount: r.source_count,
+    paths: bookingPaths({
+      bookingUrl: r.booking_url,
+      phone: r.phone,
+      phoneLineType: r.phone_line_type,
+    }),
     call: r.called_at
       ? {
           takesPlan: r.takes_plan,
@@ -156,6 +193,8 @@ export type Detail = {
   verdict: Verdict | null;
   score: number;
   label: Label;
+  sourceCount: number;
+  paths: BookingPath[];
   evidence: Pick<Evidence, "source" | "url" | "fetchedAt" | "rawText">[];
   calls: Call[];
 };
@@ -209,6 +248,12 @@ export async function getDetail(id: string): Promise<Detail | null> {
         }
       : null,
     ...finalScore(s),
+    sourceCount: s.source_count,
+    paths: bookingPaths({
+      bookingUrl: l.booking_url,
+      phone: l.phone,
+      phoneLineType: l.phone_line_type,
+    }),
     evidence: evidence.map((e) => ({
       source: e.source,
       url: e.url,
@@ -273,6 +318,39 @@ export async function recordCall(input: CallInput) {
   return finalScore(s);
 }
 
+// A report from someone who called the office themselves. Stores nothing about the reporter.
+// Returns the final score, "too_soon" inside the 60-second window, or null for an unknown listing.
+// shortcut: two truly concurrent reports can both insert; an advisory lock would close that.
+export async function recordReport(
+  listingId: string,
+  answered: "yes" | "no",
+  acceptingNew: Tri,
+): Promise<{ score: number; label: Label } | "too_soon" | null> {
+  if (!isUuid(listingId)) return null;
+  const picked = answered === "yes";
+  // They searched by this insurer and the office is booking them in, so it takes the plan.
+  const takesPlan = picked && acceptingNew === "yes" ? "yes" : "unknown";
+  const [row] = await sql`
+    with l as (select id from listings where id = ${listingId}),
+    ins as (
+      insert into calls (listing_id, status, takes_plan, accepting_new, summary, source)
+      select id, 'done', ${takesPlan}, ${picked ? acceptingNew : "unknown"},
+             ${picked ? "Reported by someone who called." : NO_ANSWER_SUMMARY}, 'caller'
+      from l
+      where not exists (
+        select 1 from calls
+        where listing_id = ${listingId} and source = 'caller'
+          and called_at > now() - interval '60 seconds'
+      )
+      returning id
+    )
+    select exists (select 1 from l) as found, exists (select 1 from ins) as inserted`;
+  if (!row.found) return null;
+  if (!row.inserted) return "too_soon";
+  const [s] = await summaryRows({ id: listingId });
+  return finalScore(s);
+}
+
 // shortcut: two truly concurrent requests can both insert; a partial unique index on jobs would close that.
 export async function enqueueRecheck(
   listingId: string,
@@ -302,18 +380,26 @@ export async function getJob(
 }
 
 // Name, insurer and the opt-out flag only: the phone is never returned, so it can never be dialled.
-export async function getCallTarget(
-  id: string,
-): Promise<{ name: string; insurer: string; optedOut: boolean } | null> {
+export async function getCallTarget(id: string): Promise<{
+  name: string;
+  insurer: string;
+  optedOut: boolean;
+  lineType: PhoneLineType;
+} | null> {
   if (!isUuid(id)) return null;
   const [row] = await sql`
-    select name, insurer, exists (
+    select name, insurer, phone_line_type, exists (
       select 1 from do_not_call
       where phone = right(regexp_replace(listings.phone, '[^0-9]', '', 'g'), 10)
     ) as opted_out
     from listings where id = ${id}`;
   return row
-    ? { name: row.name, insurer: row.insurer, optedOut: row.opted_out }
+    ? {
+        name: row.name,
+        insurer: row.insurer,
+        optedOut: row.opted_out,
+        lineType: row.phone_line_type,
+      }
     : null;
 }
 
