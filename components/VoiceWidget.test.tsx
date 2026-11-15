@@ -210,3 +210,67 @@ describe("VoiceWidget", () => {
     expect(status().textContent).toMatch(/could not be saved/i);
   });
 });
+
+describe("VoiceWidget helper mode", () => {
+  const helper = () => <VoiceWidget mode="helper" />;
+  const startTalking = () =>
+    screen.getByRole("button", { name: /start talking/i });
+
+  it("shows the public-web-pages notice instead of the demo-call notice", () => {
+    render(helper());
+
+    expect(screen.getByRole("region", { name: /ask out loud/i })).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Answers come from public web pages. Only the office can confirm.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/demo call/i)).toBeNull();
+    expect(startTalking().hasAttribute("disabled")).toBe(false);
+    expect(
+      screen
+        .getByRole("button", { name: /end conversation/i })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    expect(status().textContent).toMatch(/ready/i);
+  });
+
+  it("asks for a helper token and starts without listing variables", async () => {
+    fetchMock.mockResolvedValue(Response.json({ token: "tok_h" }));
+    render(helper());
+
+    fireEvent.click(startTalking());
+
+    await waitFor(() => expect(sdk.startSession).toHaveBeenCalled());
+    expect(fetchMock).toHaveBeenCalledWith("/api/voice/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: '{"agent":"helper"}',
+    });
+    expect(sdk.startSession).toHaveBeenCalledWith({
+      conversationToken: "tok_h",
+      connectionType: "webrtc",
+    });
+  });
+
+  it("shows what the assistant last said and ignores tool results", () => {
+    sdk.status = "connected";
+    render(helper());
+
+    act(() => {
+      sdk.opts.onMessage({
+        role: "agent",
+        message: "Avery Example. 6 1 9, 5 5 5, 0 1 0 0.",
+      });
+      sdk.opts.onAgentToolResponse?.({
+        tool_name: "find_therapists",
+        is_error: true,
+      });
+    });
+
+    expect(
+      screen.getByText("Avery Example. 6 1 9, 5 5 5, 0 1 0 0."),
+    ).toBeTruthy();
+    expect(status().textContent).toMatch(/listening/i);
+  });
+});

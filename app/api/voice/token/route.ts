@@ -1,15 +1,34 @@
 // Issues a short-lived ElevenLabs conversation token so the browser never sees
 // the API key or the agent id. POST, not GET: with Cache Components a GET
 // handler can be prerendered at build time and its response cached.
+// The body picks the agent: none or { agent: "confirm" } for the office call,
+// { agent: "helper" } for the patient helper.
 const fail = (status: number, error: string) =>
   Response.json(
     { error },
     { status, headers: { "Cache-Control": "no-store" } },
   );
 
-export async function POST() {
+export async function POST(request: Request) {
+  const text = await request.text();
+  let body: unknown = {};
+  try {
+    if (text) body = JSON.parse(text);
+  } catch {
+    body = null;
+  }
+  const { agent = "confirm" } =
+    body && typeof body === "object" && !Array.isArray(body)
+      ? (body as { agent?: unknown })
+      : { agent: null };
+  if (agent !== "confirm" && agent !== "helper")
+    return fail(400, "Unknown voice agent.");
+
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  const agentId = process.env.NEXT_ELEVENLABS_AGENT_ID;
+  const agentId =
+    agent === "helper"
+      ? process.env.NEXT_ELEVENLABS_HELPER_AGENT_ID
+      : process.env.NEXT_ELEVENLABS_AGENT_ID;
   if (!apiKey || !agentId) return fail(500, "Voice is not configured.");
 
   const url = new URL("https://api.elevenlabs.io/v1/convai/conversation/token");

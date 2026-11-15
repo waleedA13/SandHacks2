@@ -7,23 +7,46 @@ import { useEffect, useRef, useState } from "react";
 
 type Result = { score: number; label: string };
 
-type Props = {
-  mode: "confirm";
-  listingId: string;
-  name: string;
-  insurer: string;
-  onDone: (r: Result) => void;
+// "confirm" plays a caller to one office; "helper" talks to the patient and
+// reads the ranked list from its find_therapists tool.
+type Props =
+  | {
+      mode: "confirm";
+      listingId: string;
+      name: string;
+      insurer: string;
+      onDone: (r: Result) => void;
+    }
+  | { mode: "helper" };
+
+const TEXT = {
+  confirm: {
+    notice: "Demo call. No real office was contacted.",
+    start: "Start demo call",
+    stop: "Stop call",
+    dropped: "The call dropped. You can start it again.",
+    failed: "Could not start the call. Try again in a moment.",
+  },
+  helper: {
+    notice: "Answers come from public web pages. Only the office can confirm.",
+    start: "Start talking",
+    stop: "End conversation",
+    dropped: "The conversation dropped. You can start again.",
+    failed: "Could not start. Try again in a moment.",
+  },
 };
 
 export function VoiceWidget(props: Props) {
   return (
     <ConversationProvider>
-      <ConfirmCall {...props} />
+      <Conversation {...props} />
     </ConversationProvider>
   );
 }
 
-function ConfirmCall({ listingId, name, insurer, onDone }: Props) {
+function Conversation(props: Props) {
+  const confirm = props.mode === "confirm" ? props : null;
+  const text = TEXT[props.mode];
   const [starting, setStarting] = useState(false);
   const [note, setNote] = useState("");
   const [lastLine, setLastLine] = useState("");
@@ -35,7 +58,7 @@ function ConfirmCall({ listingId, name, insurer, onDone }: Props) {
     onDisconnect: () => setStarting(false),
     onError: () => {
       setStarting(false);
-      setNote("The call dropped. You can start it again.");
+      setNote(text.dropped);
     },
     onMessage: ({ role, message }) => {
       if (role === "agent") setLastLine(message);
@@ -43,7 +66,7 @@ function ConfirmCall({ listingId, name, insurer, onDone }: Props) {
     // Needs the agent_tool_response_full_payload client event enabled; the
     // tool result is the { score, label } that POST /api/calls/result returns.
     onAgentToolResponse: (r) => {
-      if (r.tool_name !== "save_call_result") return;
+      if (!confirm || r.tool_name !== "save_call_result") return;
       if (r.is_error) return setNote("The answer could not be saved.");
       if (!("full_tool_result" in r)) return;
       let result: Partial<Result> = {};
@@ -54,7 +77,7 @@ function ConfirmCall({ listingId, name, insurer, onDone }: Props) {
       if (typeof score !== "number" || typeof label !== "string")
         return setNote("The answer could not be saved.");
       setNote(`Saved. ${label}.`);
-      onDone({ score, label });
+      confirm.onDone({ score, label });
     },
   });
 
@@ -74,21 +97,32 @@ function ConfirmCall({ listingId, name, insurer, onDone }: Props) {
     setNote("");
     setLastLine("");
     try {
-      const res = await fetch("/api/voice/token", { method: "POST" });
+      const res = await fetch(
+        "/api/voice/token",
+        confirm
+          ? { method: "POST" }
+          : {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ agent: "helper" }),
+            },
+      );
       if (!res.ok) throw new Error();
       const { token } = (await res.json()) as { token: string };
       conversation.startSession({
         conversationToken: token,
         connectionType: "webrtc",
-        dynamicVariables: {
-          listing_id: listingId,
-          therapist_name: name,
-          insurer,
-        },
+        ...(confirm && {
+          dynamicVariables: {
+            listing_id: confirm.listingId,
+            therapist_name: confirm.name,
+            insurer: confirm.insurer,
+          },
+        }),
       });
     } catch {
       setStarting(false);
-      setNote("Could not start the call. Try again in a moment.");
+      setNote(text.failed);
     }
   }
 
@@ -102,10 +136,11 @@ function ConfirmCall({ listingId, name, insurer, onDone }: Props) {
         : "Ready to start";
 
   return (
-    <section aria-label={`Confirm call for ${name}`} style={box}>
-      <p style={{ margin: 0, fontWeight: 700 }}>
-        Demo call. No real office was contacted.
-      </p>
+    <section
+      aria-label={confirm ? `Confirm call for ${confirm.name}` : "Ask out loud"}
+      style={box}
+    >
+      <p style={{ margin: 0, fontWeight: 700 }}>{text.notice}</p>
       <p role="status" aria-live="polite" style={{ margin: 0 }}>
         {note || `${state}.`}
       </p>
@@ -123,7 +158,7 @@ function ConfirmCall({ listingId, name, insurer, onDone }: Props) {
           disabled={busy}
           style={button}
         >
-          Start demo call
+          {text.start}
         </button>
         <button
           ref={stopRef}
@@ -135,7 +170,7 @@ function ConfirmCall({ listingId, name, insurer, onDone }: Props) {
           disabled={!busy}
           style={button}
         >
-          Stop call
+          {text.stop}
         </button>
       </div>
     </section>
