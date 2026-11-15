@@ -569,6 +569,10 @@ h2 {
   gap: 6px 14px;
 }
 
+.price {
+  font-weight: 700;
+}
+
 .no-phone {
   display: inline-flex;
   align-items: center;

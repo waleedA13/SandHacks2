@@ -4,7 +4,7 @@ import { CallPanel, LabelProvider, LiveBadge } from "@/frontend/CallPanel";
 import { FactRow } from "@/frontend/FactRow";
 import { Header } from "@/frontend/Header";
 import { Icon } from "@/frontend/Icon";
-import { checkedDate, telHref } from "@/frontend/format";
+import { checkedDate, priceText, telHref } from "@/frontend/format";
 import { first } from "@/frontend/params";
 import { SourceList } from "@/frontend/SourceList";
 import { getDetail } from "@/backend/queries";
@@ -37,6 +37,10 @@ export default async function ListingPage({
   const { listing, verdict, label, evidence, calls } = detail;
   const lastCall = calls.find((c) => c.status === "done") ?? null;
   const back = backHref(first(query.insurer), first(query.city));
+  const price = priceText(
+    verdict?.selfPayMin ?? null,
+    verdict?.selfPayMax ?? null,
+  );
 
   return (
     <div className="page">
@@ -67,6 +71,18 @@ export default async function ListingPage({
               </a>
             ) : (
               <p className="muted no-phone">No phone number listed</p>
+            )}
+            {price ? (
+              <div>
+                <p className="price">Their posted price: {price}</p>
+                <p className="muted">
+                  {
+                    "This is the therapist's own price if you pay yourself. It is not what your insurance charges."
+                  }
+                </p>
+              </div>
+            ) : (
+              <p className="muted">No price posted</p>
             )}
           </section>
 
