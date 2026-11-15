@@ -33,15 +33,34 @@ export async function POST(request: Request) {
     typeof body !== "object" ||
     Array.isArray(body) ||
     !isUuid(body.listingId) ||
-    typeof body.toNumber !== "string"
+    typeof body.toNumber !== "string" ||
+    (body.connectTo !== undefined && typeof body.connectTo !== "string")
   )
     return reply(400, {
-      error: "body must be { listingId: uuid, toNumber: string }",
+      error:
+        "body must be { listingId: uuid, toNumber: string, connectTo?: string }",
+    });
+
+  // The listing's own line type, never the body or the number dialled: the agent only calls landlines.
+  const target = await getCallTarget(body.listingId);
+  if (!target) return reply(404, { error: "listing not found" });
+  if (target.lineType !== "landline")
+    return reply(403, {
+      error: "We only place assistant calls to office landlines.",
     });
 
   const toNumber = allowed(body.toNumber);
   if (!toNumber)
     return reply(403, { error: "That number is not on the demo allow-list." });
+
+  // The patient's number lives only in this request and the agent's dynamic variables.
+  // Never log it, store it or echo it: the messages below are fixed strings.
+  const connectTo =
+    body.connectTo === undefined ? null : allowed(body.connectTo);
+  if (body.connectTo !== undefined && (!connectTo || connectTo === toNumber))
+    return reply(403, {
+      error: "Your number is not on the demo allow-list.",
+    });
 
   const apiKey = process.env.ELEVENLABS_API_KEY;
   const agentId = process.env.NEXT_ELEVENLABS_AGENT_ID;
@@ -49,8 +68,6 @@ export async function POST(request: Request) {
   if (!apiKey || !agentId || !phoneNumberId)
     return reply(500, { error: "Phone calls are not configured." });
 
-  const target = await getCallTarget(body.listingId);
-  if (!target) return reply(404, { error: "listing not found" });
   if (target.optedOut)
     return reply(403, { error: "This office asked not to be called." });
 
@@ -77,6 +94,9 @@ export async function POST(request: Request) {
               listing_id: body.listingId,
               therapist_name: target.name,
               insurer: target.insurer,
+              // The transfer tool dials {{patient_number}}; the prompt only sees connect_patient.
+              connect_patient: connectTo ? "yes" : "no",
+              patient_number: connectTo ?? "",
             },
           },
         }),

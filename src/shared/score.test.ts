@@ -2,10 +2,21 @@ import { describe, expect, it } from "vitest";
 import { scoreVerdict } from "./score";
 import type { Tri } from "./types";
 
-const web = (stillPractising: Tri, listsInsurer: Tri, acceptingNew: Tri) => ({
-  stillPractising,
-  listsInsurer,
+const web = (
+  stillPractising: Tri,
+  listsInsurer: Tri,
+  acceptingNew: Tri,
+  seesSelfPay: Tri = "unknown",
+) => ({ stillPractising, listsInsurer, acceptingNew, seesSelfPay });
+const agent = (takesPlan: Tri, acceptingNew: Tri) => ({
+  takesPlan,
   acceptingNew,
+  source: "agent" as const,
+});
+const caller = (takesPlan: Tri, acceptingNew: Tri) => ({
+  takesPlan,
+  acceptingNew,
+  source: "caller" as const,
 });
 
 describe("scoreVerdict from web evidence", () => {
@@ -55,12 +66,7 @@ describe("scoreVerdict from web evidence", () => {
 
 describe("scoreVerdict with a demo call", () => {
   it("gives 100, Demo call: available, when the call says yes to both", () => {
-    expect(
-      scoreVerdict(web("no", "no", "no"), {
-        takesPlan: "yes",
-        acceptingNew: "yes",
-      }),
-    ).toEqual({
+    expect(scoreVerdict(web("no", "no", "no"), agent("yes", "yes"))).toEqual({
       score: 100,
       label: "Demo call: available",
     });
@@ -68,24 +74,63 @@ describe("scoreVerdict with a demo call", () => {
 
   it("gives 0, Demo call: unavailable, when the call says no to either", () => {
     const unavailable = { score: 0, label: "Demo call: unavailable" };
-    expect(
-      scoreVerdict(web("yes", "yes", "yes"), {
-        takesPlan: "no",
-        acceptingNew: "yes",
-      }),
-    ).toEqual(unavailable);
-    expect(
-      scoreVerdict(web("yes", "yes", "yes"), {
-        takesPlan: "yes",
-        acceptingNew: "no",
-      }),
-    ).toEqual(unavailable);
+    expect(scoreVerdict(web("yes", "yes", "yes"), agent("no", "yes"))).toEqual(
+      unavailable,
+    );
+    expect(scoreVerdict(web("yes", "yes", "yes"), agent("yes", "no"))).toEqual(
+      unavailable,
+    );
   });
 
   it("keeps the web score when the call has an unknown and no no", () => {
     const v = web("yes", "yes", "unknown");
+    expect(scoreVerdict(v, agent("unknown", "yes"))).toEqual(scoreVerdict(v));
+  });
+});
+
+describe("scoreVerdict with a caller report", () => {
+  it("gives 100, Caller reported: available, when the caller says yes to both", () => {
+    expect(scoreVerdict(web("no", "no", "no"), caller("yes", "yes"))).toEqual({
+      score: 100,
+      label: "Caller reported: available",
+    });
+  });
+
+  it("gives 0, Caller reported: unavailable, when the caller says no to either", () => {
+    const unavailable = { score: 0, label: "Caller reported: unavailable" };
+    expect(scoreVerdict(web("yes", "yes", "yes"), caller("no", "yes"))).toEqual(
+      unavailable,
+    );
+    expect(scoreVerdict(web("yes", "yes", "yes"), caller("yes", "no"))).toEqual(
+      unavailable,
+    );
+  });
+});
+
+describe("scoreVerdict for self-pay", () => {
+  it("labels no insurer plus self-pay as Pay yourself and keeps the score", () => {
+    const v = web("unknown", "no", "unknown", "yes");
+    expect(scoreVerdict(v)).toEqual({
+      score: scoreVerdict(web("unknown", "no", "unknown")).score,
+      label: "Pay yourself",
+    });
+  });
+
+  it("keeps Likely dead end when they are no longer practising", () => {
+    expect(scoreVerdict(web("no", "no", "unknown", "yes")).label).toBe(
+      "Likely dead end",
+    );
+  });
+
+  it("keeps the normal label when they take the insurer", () => {
+    expect(scoreVerdict(web("yes", "yes", "yes", "yes")).label).toBe(
+      "Likely available",
+    );
+  });
+
+  it("lets a call override Pay yourself", () => {
     expect(
-      scoreVerdict(v, { takesPlan: "unknown", acceptingNew: "yes" }),
-    ).toEqual(scoreVerdict(v));
+      scoreVerdict(web("unknown", "no", "unknown", "yes"), agent("no", "no")),
+    ).toEqual({ score: 0, label: "Demo call: unavailable" });
   });
 });

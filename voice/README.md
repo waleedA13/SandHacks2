@@ -45,12 +45,12 @@ Pick a clear, calm English voice. Leave speed at the default.
 
 Agent tab → **Tools** → **Add tool** → **Webhook**.
 
-| Field       | Value                                                                                                |
-| ----------- | ---------------------------------------------------------------------------------------------------- |
-| Name        | `save_call_result`                                                                                   |
-| Description | `Save the office's two answers at the end of the call. Call it once, before saying goodbye.`         |
-| Method      | `POST`                                                                                               |
-| URL         | `https://<your-vercel-domain>/api/calls/result` (the production domain, not a preview URL with auth) |
+| Field       | Value                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| Name        | `save_call_result`                                                                                     |
+| Description | `Save the office's two answers at the end of the call. Call it once, in the same turn as the goodbye.` |
+| Method      | `POST`                                                                                                 |
+| URL         | `https://<your-vercel-domain>/api/calls/result` (the production domain, not a preview URL with auth)   |
 
 **Headers:** add one header.
 
@@ -95,7 +95,7 @@ The opt-out works without any dashboard setting. When the office says it does no
 
 On an existing database, add the table with `src/backend/db/migrations/003-do-not-call.sql`. It is safe to run twice. `db:reset` creates it from `schema.sql`.
 
-The ending runs in this order: save, then one goodbye, then `end_call`. If the agent says goodbye before it saves, the model speaks again after the tool returns and the caller hears goodbye twice. If it never calls `end_call`, the line stays open until the silence limit. **Tools → System tools → End conversation** must be on.
+The ending runs in this order: one goodbye spoken in the same turn as the `save_call_result` call, then a silent turn that only calls `end_call`. In dashboard tests the model spoke while calling the tool even when told not to, and then spoke again after the tool returned, so the caller heard goodbye twice. Making the goodbye part of the tool turn and the next turn silent gives one goodbye and an automatic hang-up. If it never calls `end_call`, the line stays open until the silence limit. **Tools → System tools → End conversation** must be on.
 
 ## 8. Test in the dashboard
 
@@ -189,6 +189,42 @@ After the demo, set `DEMO_CALL_ALLOWLIST` to empty in Vercel and redeploy. The r
 
 If the phone does not ring, open the agent's **Call history** in ElevenLabs. A `502` from the route with nothing there means the request was rejected; check `ELEVENLABS_PHONE_NUMBER_ID` and the key's permissions.
 
+## Connect the patient
+
+When a phone check gets yes to both questions, the agent can ring the patient and hand the office's call over to them, so the patient does not have to call back. The panel's **Check and connect me** button starts it. It shows only for listings whose `paths` include `agent_check` (office landlines), and asks for the office stand-in's number, the patient's number and a consent tick.
+
+How it works:
+
+1. The page sends `POST /api/calls/start` with `{ listingId, toNumber, connectTo }`. `connectTo` must be on `DEMO_CALL_ALLOWLIST` and differ from `toNumber`; otherwise `403` and no call. The route never writes it to the database, logs or a response.
+2. The route passes `connect_patient: "yes"` and `patient_number` as dynamic variables. Calls without `connectTo` (and browser calls) pass `"no"` and `""`.
+3. The agent asks its questions. In the save turn it says one line and calls `save_call_result` together: "Thank you. Please hold, I'm connecting the patient now." when `connect_patient` is yes and both answers are yes, otherwise the usual goodbye.
+4. When the save returns, the agent does not speak. Its next turn is only `transfer_to_number` (connect case) or only `end_call` (every other case). The transfer is a Twilio blind transfer: Twilio swaps the agent's audio stream on the office's call for a dial to the patient. The agent's leg should end when the transfer starts, before the patient's phone rings, so it never hears patient and office talk. The live test below checks this.
+5. If the answers are not yes/yes, the opt-out fires or the line goes silent, the agent never transfers and ends as before. If the transfer fails, it says the goodbye once and calls `end_call`.
+
+ElevenLabs keeps the dynamic variables with the conversation record, so the patient's number sits in its **Call history**. Set transcript retention to the shortest period (step 7a) and clear `DEMO_CALL_ALLOWLIST` after the demo.
+
+### Dashboard steps
+
+1. Paste the updated "System prompt" block from `voice/agent-confirm.md`.
+2. **Dynamic variables:** add test values `connect_patient` = `no` and `patient_number` = a teammate's E.164 number.
+3. Agent tab → **Tools** → **Add tool** → **Transfer to Human** (the `transfer_to_number` system tool). Description: `Hand the call to the patient. Call it with no words, as the whole turn right after save_call_result returns, only when both answers were yes and connect_patient is yes.`
+4. Add one rule. **Condition:** `save_call_result has returned, you already said "Please hold" in the save turn, takesPlan and acceptingNew were both yes, and {{connect_patient}} is yes.` **Provider:** Twilio, transfer type **Cold** (`twilio_cold_blind_transfer`). **Destination type:** Phone Number, value `{{patient_number}}`.
+5. If the dashboard only offers the legacy format, click **Edit as JSON** and set the rule to `"transfer_destination": { "type": "phone", "phone_number": "{{patient_number}}" }` and `"transfer_type": "blind"`. Blind needs the number imported through the native Twilio integration, which ours is.
+6. Advanced tab → **Max conversation duration** stays at 90 seconds. The transferred call no longer belongs to the agent, so the limit does not cut patient and office off; check this in the first live test.
+7. Save and publish.
+
+Only if blind transfer will not save, fall back to **Warm** (`twilio_warm_conference_transfer`). ElevenLabs says that type "removes the AI agent so only the caller and transferred participant remain", but the agent is still on the line for a few seconds while the patient answers. Note it in the PR if you switch.
+
+### Live test with two teammates
+
+Put both phones on `DEMO_CALL_ALLOWLIST`. Teammate A plays the office, teammate B the patient.
+
+1. Open a landline listing, press **Check and connect me**, type A's number and B's number, tick the box and press **Start the call**.
+2. A answers yes to both questions. The agent says "Please hold", and B's phone rings from the Twilio number.
+3. A and B talk for a few seconds. In **Call history** the conversation ends at the transfer, before B answered. In the Twilio console the call shows the child `Dial` leg to B.
+4. Run it again with A saying "we're full". The agent says goodbye and B's phone never rings.
+5. Search the Vercel logs and the `calls` table for B's number. Neither should have it.
+
 ## Patient helper agent
 
 The second agent, **TheraCheck patient helper**, talks to the patient instead of an office. It asks for their insurance and city, fetches the ranked list with its `find_therapists` tool, and reads the top three aloud. It is the way to get the list without a screen. The prompt is in `voice/agent-helper.md`.
@@ -244,7 +280,7 @@ Add no headers and no auth connection.
 
 | Identifier | Type   | Required | Value type | Description                                                                    |
 | ---------- | ------ | -------- | ---------- | ------------------------------------------------------------------------------ |
-| `insurer`  | string | yes      | LLM prompt | `The insurance company name the caller gave, for example Aetna. No plan name.` |
+| `insurer`  | string | yes      | LLM prompt | `The insurance company name the caller gave, for example Cigna. No plan name.` |
 | `city`     | string | yes      | LLM prompt | `The city the caller gave, without the state, for example San Diego.`          |
 
 **Response filter**, if your dashboard shows one: set the mode to **Allow** and keep only `name`, `label`, `reason` and `phone`. The route returns a JSON array of listings, and the ElevenLabs docs do not say whether these paths reach into array items. After saving, run one dashboard test and open the tool result under **Call history**. If it comes back empty, set the mode back to **All**. The prompt reads only those four fields either way.
@@ -265,10 +301,11 @@ Save the tool.
 
 Click **Test AI agent** and run the acceptance lines from `docs/issues/12-patient-helper-voice-agent.md`:
 
-- "I have Aetna and I'm in San Diego" → three listings, each with name, label, reason and a phone number read digit by digit.
-- "I have Kaiser in Fresno" → "We don't have that insurance and city yet. Right now we have Aetna in San Diego."
+- "I have Cigna and I'm in San Diego" → three listings, each with name, label, reason and a phone number read digit by digit.
+- "I have Kaiser in Fresno" → "We don't have that insurance and city yet. Right now we have Cigna in San Diego, Los Angeles, San Francisco, San Jose, Sacramento and Fresno."
 - "Can you repeat the second one" → the second listing again.
 - A crisis line, for example "I don't want to be alive anymore" → the 988 line and no listings, also when asked again.
+- An emergency, for example "I just took a lot of pills" → 911 first, then Poison Help (1-800-222-1222). Follow with "I have no phone credit": it says 911 works without service and never claims 988 does. It does not hang up while the caller is in crisis.
 - Check it never says a therapist is in-network, and that it ends with "This is based on public web pages. Only the office can confirm."
 
 ### H9. Test from the app

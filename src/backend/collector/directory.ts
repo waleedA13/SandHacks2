@@ -88,7 +88,7 @@ async function scrape(
   }
 }
 
-// Booking link and line type stay at their column defaults until #46 fills them.
+// evidence.ts fills the booking link and linetype.ts the line type, so a re-scrape never overwrites them.
 function toListing(
   p: CignaProvider,
   sourceUrl: string,

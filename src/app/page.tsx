@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import Link from "next/link";
+import { planToAsk } from "@/frontend/BookingPanel";
 import { fitFromParams, withFit } from "@/frontend/FitFilters";
+import { checkedDate, commonPlan } from "@/frontend/format";
 import { ListingCard } from "@/frontend/ListingCard";
 import { first } from "@/frontend/params";
 import { SearchForm } from "@/frontend/SearchForm";
@@ -12,20 +14,29 @@ import type { Label, ListingSummary } from "@/shared/types";
 // A loading.tsx would stream results in hidden chunks that only JavaScript can reveal.
 export const instant = false;
 
-const REACHABLE: Label[] = ["Likely available", "Demo call: available"];
-const DEAD_END: Label[] = ["Likely dead end", "Demo call: unavailable"];
+const REACHABLE: Label[] = [
+  "Likely available",
+  "Demo call: available",
+  "Caller reported: available",
+];
+const DEAD_END: Label[] = [
+  "Likely dead end",
+  "Demo call: unavailable",
+  "Caller reported: unavailable",
+];
+const MAYBE: Label[] = ["Unclear"];
 
 type Ranked = { listing: ListingSummary; rank: number };
 
 function CardList({
   items,
   variant,
-  insurer,
+  checked,
   query,
 }: {
   items: Ranked[];
   variant: "full" | "compact";
-  insurer: string;
+  checked: string;
   query: string;
 }) {
   return (
@@ -36,7 +47,7 @@ function CardList({
             listing={listing}
             rank={rank}
             variant={variant}
-            insurer={insurer}
+            checked={checked}
             query={query}
           />
         </li>
@@ -81,11 +92,18 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const ranked = listings.map((listing, i) => ({ listing, rank: i + 1 }));
   const reachable = ranked.filter((r) => REACHABLE.includes(r.listing.label));
   const startWith = reachable.slice(0, 3);
-  const alsoTry = [
-    ...reachable.slice(3),
-    ...ranked.filter((r) => r.listing.label === "Unclear"),
-  ];
+  const alsoTry = reachable.slice(3);
+  const unclear = ranked.filter((r) => MAYBE.includes(r.listing.label));
+  const payYourself = ranked.filter((r) => r.listing.label === "Pay yourself");
   const deadEnds = ranked.filter((r) => DEAD_END.includes(r.listing.label));
+  const plan = commonPlan(all.map((l) => l.plan));
+  // Said once above the results: the most recent check. ISO strings sort by time.
+  const latest = listings
+    .map((l) => l.checkedAt)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  const checked = latest ? checkedDate(latest) : "";
 
   return (
     <main id="main">
@@ -127,27 +145,34 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       ) : (
         <>
           <section className="summary" aria-label="Summary">
-            <span className="big" aria-hidden="true">
-              {stats.likelyAvailable}
-            </span>
-            <div>
-              <p className="summary-line">
-                Of {stats.total} {insurer}{" "}
-                {stats.total === 1 ? "listing" : "listings"} in {city},{" "}
-                {stats.likelyAvailable} look reachable.
-              </p>
-              <p className="soft">
-                {
-                  "If you've hit dead numbers before, it's not you. Insurance company lists are often out of date."
-                }
-              </p>
-            </div>
+            <p className="summary-line">
+              {stats.likelyAvailable} of {stats.total} {insurer}{" "}
+              {stats.total === 1 ? "listing" : "listings"} in {city}{" "}
+              {stats.likelyAvailable === 1 ? "looks" : "look"} reachable.
+            </p>
+            <p className="soft">
+              {
+                "If you've hit dead numbers before, it's not you. Insurance company lists are often out of date."
+              }
+            </p>
           </section>
 
-          <p className="progress">
-            You narrowed {stats.total} listings to {stats.likelyAvailable} worth
-            calling.
-          </p>
+          {(plan || checked) && (
+            <div className="plan">
+              {plan && (
+                <>
+                  <p className="plan-line">
+                    Checked against {planToAsk(insurer, plan)}
+                  </p>
+                  <p className="muted">
+                    Your plan name is on your insurance card. If it says
+                    something else, these results may not apply.
+                  </p>
+                </>
+              )}
+              {checked && <p className="muted">Checked {checked}</p>}
+            </div>
+          )}
 
           {filtering && (
             <p className="showing">
@@ -166,19 +191,6 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             </p>
           ) : (
             <>
-              <ShareShortlist
-                insurer={insurer}
-                city={city}
-                top={[...startWith, ...alsoTry, ...deadEnds]
-                  .slice(0, 3)
-                  .map(({ listing: { id, name, label, phone } }) => ({
-                    id,
-                    name,
-                    label,
-                    phone,
-                  }))}
-                url={shareUrl}
-              />
               <p className="print-only print-title">
                 Therapists most likely to pick up ({insurer}, {city})
               </p>
@@ -194,11 +206,31 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <CardList
                     items={startWith}
                     variant="full"
-                    insurer={insurer}
+                    checked={checked}
                     query={query.toString()}
                   />
                 </section>
               )}
+
+              <ShareShortlist
+                insurer={insurer}
+                city={city}
+                top={[
+                  ...startWith,
+                  ...alsoTry,
+                  ...unclear,
+                  ...payYourself,
+                  ...deadEnds,
+                ]
+                  .slice(0, 3)
+                  .map(({ listing: { id, name, label, phone } }) => ({
+                    id,
+                    name,
+                    label,
+                    phone,
+                  }))}
+                url={shareUrl}
+              />
 
               {alsoTry.length > 0 && (
                 <section aria-labelledby="also-h">
@@ -206,10 +238,45 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <CardList
                     items={alsoTry}
                     variant="full"
-                    insurer={insurer}
+                    checked={checked}
                     query={query.toString()}
                   />
                 </section>
+              )}
+
+              {payYourself.length > 0 && (
+                <section aria-labelledby="pay-h">
+                  <h2 id="pay-h">If you can pay yourself</h2>
+                  <p className="section-note">
+                    {`These therapists don't seem to take ${insurer} now, but they see clients who pay for themselves.`}
+                  </p>
+                  <CardList
+                    items={payYourself}
+                    variant="full"
+                    checked={checked}
+                    query={query.toString()}
+                  />
+                </section>
+              )}
+
+              {unclear.length > 0 && (
+                // Open when nothing above it would show a card.
+                <details
+                  className="more"
+                  open={startWith.length + alsoTry.length === 0}
+                >
+                  <summary>
+                    Show {unclear.length} more{" "}
+                    {unclear.length === 1 ? "listing" : "listings"} we
+                    couldn&apos;t confirm
+                  </summary>
+                  <CardList
+                    items={unclear}
+                    variant="compact"
+                    checked={checked}
+                    query={query.toString()}
+                  />
+                </details>
               )}
 
               {deadEnds.length > 0 && (
@@ -218,7 +285,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <CardList
                     items={deadEnds}
                     variant="compact"
-                    insurer={insurer}
+                    checked={checked}
                     query={query.toString()}
                   />
                 </section>

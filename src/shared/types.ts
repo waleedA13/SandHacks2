@@ -12,6 +12,8 @@ export type Label =
 
 export type PhoneLineType = "landline" | "mobile" | "voip" | "unknown";
 
+export type BookingPath = "book_online" | "agent_check" | "call_yourself";
+
 export type BookingSource =
   "zocdoc" | "headway" | "alma" | "rula" | "practice_site";
 
@@ -108,6 +110,8 @@ export type ListingSummary = {
   seesSelfPay: Tri;
   // Distinct evidence sources checked, plus 1 for the insurer directory.
   sourceCount: number;
+  // Booking buttons to show, in order. See bookingPaths in backend/queries.ts.
+  paths: BookingPath[];
   call: {
     takesPlan: Tri | null;
     acceptingNew: Tri | null;

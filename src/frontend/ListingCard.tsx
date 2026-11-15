@@ -1,28 +1,41 @@
 import Link from "next/link";
 import type { ListingSummary } from "@/shared/types";
 import { Icon } from "./Icon";
-import { checkedDate, priceText, telHref } from "./format";
+import { checkedDate, priceText, saysNoInfo, telHref } from "./format";
 import { LabelBadge } from "./LabelBadge";
+import { isWebUrl } from "./SourceList";
 
-const DEAD_END = new Set(["Likely dead end", "Demo call: unavailable"]);
+const DEAD_END = new Set([
+  "Likely dead end",
+  "Demo call: unavailable",
+  "Caller reported: unavailable",
+]);
+
+// recordReport's summary for a caller report: that call is a person's, not a demo call.
+const CALLER_REPORT = "Reported by someone who called.";
 
 export function ListingCard({
   listing,
   rank,
   variant,
-  insurer,
+  checked,
   query,
 }: {
   listing: ListingSummary;
   rank: number;
+  // Compact rows show only the badge, name, a reason worth reading, the main action and details.
   variant: "full" | "compact";
-  insurer: string;
+  // The "Checked {date}" shown above the results; a card repeats its date only if it differs.
+  checked: string;
   // The results page's query string, so "Back to results" can return to it.
   query: string;
 }) {
   const { id, name, credential, phone, label } = listing;
+  const full = variant === "full";
+  const paths = full ? listing.paths : listing.paths.slice(0, 1);
   const headingId = `listing-${id}`;
   const price = priceText(listing.selfPayMin, listing.selfPayMax);
+  const date = checkedDate(listing.checkedAt);
   return (
     <article className={`card card-${variant}`} aria-labelledby={headingId}>
       <LabelBadge label={label} />
@@ -30,38 +43,71 @@ export function ListingCard({
         <span className="rank">{rank}.</span> {name}
         {credential && <span className="cred">, {credential}</span>}
       </h3>
-      <p>{listing.reason}</p>
-      {price && <p className="price">Their posted price: {price}</p>}
-      {listing.call && (
+      {(full || !saysNoInfo(listing.reason)) && <p>{listing.reason}</p>}
+      {full && listing.sourceCount > 0 && (
+        <p className="sources-count">
+          Checked in {listing.sourceCount}{" "}
+          {listing.sourceCount === 1 ? "place" : "places"}
+        </p>
+      )}
+      {full && price && <p className="price">Their posted price: {price}</p>}
+      {listing.call && !listing.call.summary?.startsWith(CALLER_REPORT) && (
         <p className="demo">
           <Icon name="info" />
           <span>Demo call. No real office was contacted.</span>
         </p>
       )}
-      <p className="muted">Last checked {checkedDate(listing.checkedAt)}</p>
-      <details className="script">
-        <summary>
-          <Icon name="info" size={18} />
-          What to ask when they answer
-        </summary>
-        <ol>
-          <li>&ldquo;Do you take {insurer}?&rdquo;</li>
-          <li>&ldquo;Are you accepting new patients?&rdquo;</li>
-        </ol>
-      </details>
+      {date !== checked && <p className="muted">Checked {date}</p>}
       <div className="actions">
-        {phone ? (
-          <a
-            className={`btn call${DEAD_END.has(label) ? " btn-outline" : ""}`}
-            href={telHref(phone)}
-            aria-label={`Call ${name} at ${phone}`}
-          >
-            <Icon name="phone" size={18} />
-            {phone}
-          </a>
-        ) : (
-          <span className="muted no-phone">No phone number listed</span>
+        {paths.length === 0 && (
+          <span className="muted no-phone">No way to contact listed.</span>
         )}
+        {paths.map((path, i) => {
+          // The first path is the main button; the others are smaller links.
+          const cls =
+            i > 0 ? "link" : `btn${DEAD_END.has(label) ? " btn-outline" : ""}`;
+          if (
+            path === "book_online" &&
+            listing.bookingUrl &&
+            isWebUrl(listing.bookingUrl)
+          )
+            return (
+              <a
+                key={path}
+                className={cls}
+                href={listing.bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Book online
+                <span className="sr-only">
+                  {" "}
+                  with {name} (opens in a new tab)
+                </span>
+              </a>
+            );
+          if (path === "agent_check")
+            return (
+              <Link
+                key={path}
+                className={cls}
+                href={`/listing/${id}?${query}#assistant`}
+                prefetch={false}
+              >
+                Ask the assistant to call
+                <span className="sr-only"> {name}</span>
+              </Link>
+            );
+          if (path === "call_yourself" && phone)
+            return (
+              <a key={path} className={cls} href={telHref(phone)}>
+                {i === 0 && <Icon name="phone" size={18} />}
+                Call {phone}
+                <span className="sr-only">, {name}</span>
+              </a>
+            );
+          return null;
+        })}
         {/* No prefetch: 12 cards would each load a detail page (5 queries each). */}
         <Link
           className="link"

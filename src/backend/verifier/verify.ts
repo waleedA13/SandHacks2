@@ -16,6 +16,7 @@ const NO_EVIDENCE: Facts = {
   selfPayMax: null,
   licenseStatus: "unchecked",
   licenseDiscipline: "unknown",
+  seesSelfPay: "unknown",
 };
 
 // A session fee above this is treated as a misread, not saved.
@@ -75,10 +76,10 @@ export async function verifyListing(listingId: string): Promise<Verdict> {
 
   const [row] = await sql`
     insert into verdicts (listing_id, still_practising, lists_insurer, accepting_new, score, reason, checked_at,
-      specialties, languages, telehealth, self_pay_min, self_pay_max, license_status, license_discipline)
+      specialties, languages, telehealth, self_pay_min, self_pay_max, license_status, license_discipline, sees_self_pay)
     values (${listingId}, ${facts.stillPractising}, ${facts.listsInsurer}, ${facts.acceptingNew}, ${score}, ${reason}, now(),
       ${facts.specialties}, ${facts.languages}, ${facts.telehealth}, ${facts.selfPayMin}, ${facts.selfPayMax},
-      ${facts.licenseStatus}, ${facts.licenseDiscipline})
+      ${facts.licenseStatus}, ${facts.licenseDiscipline}, ${facts.seesSelfPay})
     on conflict (listing_id) do update set
       still_practising = excluded.still_practising,
       lists_insurer = excluded.lists_insurer,
@@ -92,7 +93,8 @@ export async function verifyListing(listingId: string): Promise<Verdict> {
       self_pay_min = excluded.self_pay_min,
       self_pay_max = excluded.self_pay_max,
       license_status = excluded.license_status,
-      license_discipline = excluded.license_discipline
+      license_discipline = excluded.license_discipline,
+      sees_self_pay = excluded.sees_self_pay
     returning *`;
 
   return {

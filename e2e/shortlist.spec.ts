@@ -19,7 +19,7 @@ test("filters live in the URL and narrow the list", async ({ page }) => {
   await expect(page.getByLabel("Video or phone sessions")).toBeChecked();
   // The summary still counts every listing for the insurer and city.
   await expect(
-    page.getByText("Of 12 Aetna listings in San Diego, 4 look reachable."),
+    page.getByText("4 of 12 Aetna listings in San Diego look reachable."),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Clear filters" }),
@@ -30,6 +30,8 @@ test("choosing a filter and submitting puts it in the URL", async ({
   page,
 }) => {
   await page.goto(SD);
+  // The filters start folded; a filter in the URL opens them (checked above).
+  await page.locator(".narrow summary").click();
   await page.getByLabel("Language").selectOption("spanish");
   await page
     .locator(".filters")

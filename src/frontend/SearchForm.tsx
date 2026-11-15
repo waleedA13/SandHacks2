@@ -88,25 +88,27 @@ export function SearchForm({
       role="search"
       aria-label="Find therapists"
     >
-      <details className="search-pill">
-        <summary>
-          <span>
-            <b>{insurer}</b> <span aria-hidden="true">·</span> {city}{" "}
-            <span aria-hidden="true">·</span>{" "}
-            <span className="muted">Change</span>
-          </span>
-          <i>
-            <Icon name="search" size={18} />
-          </i>
-        </summary>
-        <div className="search search-main">
-          <Fields insurer={insurer} city={city} options={options} />
-          <button className="btn" type="submit">
-            Show therapists
-          </button>
-        </div>
-      </details>
-      <FitFilters values={fit ?? {}} languages={languages} />
+      <div className="search-row">
+        <details className="search-pill">
+          <summary>
+            <span>
+              <b>{insurer}</b> <span aria-hidden="true">·</span> {city}{" "}
+              <span aria-hidden="true">·</span>{" "}
+              <span className="muted">Change</span>
+            </span>
+            <i>
+              <Icon name="search" size={18} />
+            </i>
+          </summary>
+          <div className="search search-main">
+            <Fields insurer={insurer} city={city} options={options} />
+            <button className="btn" type="submit">
+              Show therapists
+            </button>
+          </div>
+        </details>
+        <FitFilters values={fit ?? {}} languages={languages} />
+      </div>
     </form>
   );
 }

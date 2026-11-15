@@ -85,6 +85,8 @@ describe("VoiceWidget", () => {
     await waitFor(() => expect(sdk.startSession).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenCalledWith("/api/voice/token", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: '{"agent":"confirm","listingId":"l-1"}',
     });
     expect(sdk.startSession).toHaveBeenCalledWith({
       conversationToken: "tok_1",
@@ -93,6 +95,8 @@ describe("VoiceWidget", () => {
         listing_id: "l-1",
         therapist_name: "Dr. Ana Ruiz",
         insurer: "Aetna",
+        connect_patient: "no",
+        patient_number: "",
       },
     });
   });

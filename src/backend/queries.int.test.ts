@@ -11,6 +11,7 @@ import {
   listSearchOptions,
   listSummaries,
   recordCall,
+  recordReport,
 } from "@/backend/queries";
 
 // Each test gets its own insurer so rows added here never touch the seed or other tests.
@@ -249,6 +250,35 @@ describe("recordCall and the final score", () => {
   });
 });
 
+describe("self-pay and caller reports in the final score", () => {
+  it("labels a listing off the plan that sees self-pay clients Pay yourself, score unchanged", async () => {
+    const { id, insurer } = await newListing(["unknown", "no", "unknown"], 25);
+    await sql`update verdicts set sees_self_pay = 'yes' where listing_id = ${id}`;
+    const [row] = await listSummaries(insurer, "San Diego");
+    expect(row).toMatchObject({
+      score: 25,
+      label: "Pay yourself",
+      seesSelfPay: "yes",
+    });
+    expect(await getDetail(id)).toMatchObject({
+      score: 25,
+      label: "Pay yourself",
+    });
+  });
+
+  it("labels the latest done caller report Caller reported", async () => {
+    const { id, insurer } = await newListing(["yes", "yes", "yes"], 100);
+    await sql`insert into calls (listing_id, status, takes_plan, accepting_new, source)
+      values (${id}, 'done', 'yes', 'no', 'caller')`;
+    const [row] = await listSummaries(insurer, "San Diego");
+    expect(row).toMatchObject({
+      score: 0,
+      label: "Caller reported: unavailable",
+    });
+    expect((await getDetail(id))?.label).toBe("Caller reported: unavailable");
+  });
+});
+
 describe("getDetail", () => {
   it("returns listing, verdict, final score, trimmed evidence and calls", async () => {
     const d = await getDetail("00000000-0000-4000-8000-000000000001");
@@ -337,9 +367,14 @@ describe("enqueueRecheck and getJob", () => {
 });
 
 describe("getCallTarget", () => {
-  it("returns only the name and insurer, never the phone", async () => {
+  it("returns only the name, insurer and line type, never the phone", async () => {
     const t = await getCallTarget("00000000-0000-4000-8000-000000000001");
-    expect(Object.keys(t!).sort()).toEqual(["insurer", "name", "optedOut"]);
+    expect(Object.keys(t!).sort()).toEqual([
+      "insurer",
+      "lineType",
+      "name",
+      "optedOut",
+    ]);
     expect(t!.insurer).toBe("Aetna");
     expect(t!.optedOut).toBe(false);
   });
@@ -407,5 +442,169 @@ describe("claimCallSlot and failCall", () => {
     const before = (await listSummaries(insurer, "San Diego"))[0];
     await claimCallSlot(id);
     expect((await listSummaries(insurer, "San Diego"))[0]).toEqual(before);
+  });
+});
+
+const SEED = (n: number) =>
+  `00000000-0000-4000-8000-0000000000${String(n).padStart(2, "0")}`;
+
+describe("booking paths and source count", () => {
+  it("returns each path combination on the seed data", async () => {
+    const rows = await listSummaries("Aetna", "San Diego");
+    const paths = (n: number) => rows.find((r) => r.id === SEED(n))?.paths;
+    expect(paths(1)).toEqual(["book_online", "agent_check", "call_yourself"]);
+    expect(paths(2)).toEqual(["agent_check", "call_yourself"]);
+    expect(paths(4)).toEqual(["call_yourself"]);
+  });
+
+  it("never offers agent_check for a listing that is not a landline", async () => {
+    const rows = await listSummaries("Aetna", "San Diego");
+    for (const r of rows.filter((r) => r.phoneLineType !== "landline"))
+      expect(r.paths).not.toContain("agent_check");
+  });
+
+  it("gives a listing with no phone and no link no paths", async () => {
+    const { insurer } = await newListing();
+    const [row] = await listSummaries(insurer, "San Diego");
+    expect(row.paths).toEqual([]);
+  });
+
+  it("returns paths and sourceCount on the detail too", async () => {
+    const d = await getDetail(SEED(1));
+    // Three evidence sources plus the directory.
+    expect(d).toMatchObject({
+      sourceCount: 4,
+      paths: ["book_online", "agent_check", "call_yourself"],
+    });
+  });
+});
+
+describe("recordReport", () => {
+  const backdate = (id: string) =>
+    sql`update calls set called_at = called_at - interval '2 minutes' where listing_id = ${id}`;
+
+  it("stores a done caller call with no reporter data", async () => {
+    const { id } = await newListing(["unknown", "unknown", "unknown"]);
+    await recordReport(id, "yes", "yes");
+    const rows = await sql`select * from calls where listing_id = ${id}`;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      status: "done",
+      source: "caller",
+      takes_plan: "yes",
+      accepting_new: "yes",
+      summary: "Reported by someone who called.",
+    });
+    // The calls table holds no reporter column: no IP, cookie or user agent.
+    expect(Object.keys(rows[0]).sort()).toEqual([
+      "accepting_new",
+      "called_at",
+      "id",
+      "listing_id",
+      "source",
+      "status",
+      "summary",
+      "takes_plan",
+    ]);
+  });
+
+  it("yes/yes gives Caller reported: available", async () => {
+    const { id } = await newListing(["unknown", "unknown", "unknown"]);
+    expect(await recordReport(id, "yes", "yes")).toEqual({
+      score: 100,
+      label: "Caller reported: available",
+    });
+  });
+
+  it("yes/no gives Caller reported: unavailable", async () => {
+    const { id } = await newListing(["yes", "yes", "yes"]);
+    expect(await recordReport(id, "yes", "no")).toEqual({
+      score: 0,
+      label: "Caller reported: unavailable",
+    });
+  });
+
+  it("answered yes but openings unknown stores takesPlan unknown and leaves the web label", async () => {
+    const { id } = await newListing(["yes", "yes", "unknown"]);
+    expect(await recordReport(id, "yes", "unknown")).toEqual({
+      score: 85,
+      label: "Likely available",
+    });
+    const [c] =
+      await sql`select takes_plan from calls where listing_id = ${id}`;
+    expect(c.takes_plan).toBe("unknown");
+  });
+
+  it("nobody answered: stores unknowns and changes nothing until the third in 7 days", async () => {
+    const { id } = await newListing(["yes", "yes", "yes"]);
+    const web = { score: 100, label: "Likely available" };
+    expect(await recordReport(id, "no", "yes")).toEqual(web);
+    const [c] =
+      await sql`select takes_plan, accepting_new, summary from calls where listing_id = ${id}`;
+    expect(c).toEqual({
+      takes_plan: "unknown",
+      accepting_new: "unknown",
+      summary: "Someone called and nobody answered.",
+    });
+    await backdate(id);
+    expect(await recordReport(id, "no", "unknown")).toEqual(web);
+    await backdate(id);
+    expect(await recordReport(id, "no", "unknown")).toEqual({
+      score: 0,
+      label: "Caller reported: unavailable",
+    });
+  });
+
+  it("no-answers older than 7 days do not count", async () => {
+    const { id } = await newListing(["yes", "yes", "yes"]);
+    for (let i = 0; i < 2; i++) {
+      await recordReport(id, "no", "unknown");
+      await sql`update calls set called_at = called_at - interval '8 days' where listing_id = ${id}`;
+    }
+    expect(await recordReport(id, "no", "unknown")).toMatchObject({
+      label: "Likely available",
+    });
+  });
+
+  it("a no-answer does not hide an earlier answered report", async () => {
+    const { id } = await newListing(["unknown", "unknown", "unknown"]);
+    await recordReport(id, "yes", "yes");
+    await backdate(id);
+    expect(await recordReport(id, "no", "unknown")).toEqual({
+      score: 100,
+      label: "Caller reported: available",
+    });
+  });
+
+  it("an answered report after three no-answers wins", async () => {
+    const { id } = await newListing(["unknown", "unknown", "unknown"]);
+    for (let i = 0; i < 3; i++) {
+      await recordReport(id, "no", "unknown");
+      await backdate(id);
+    }
+    expect(await recordReport(id, "yes", "yes")).toMatchObject({
+      label: "Caller reported: available",
+    });
+  });
+
+  it("refuses a second report for the same listing within 60 seconds", async () => {
+    const { id } = await newListing();
+    await recordReport(id, "yes", "yes");
+    expect(await recordReport(id, "yes", "no")).toBe("too_soon");
+    const [{ n }] =
+      await sql`select count(*)::int as n from calls where listing_id = ${id}`;
+    expect(n).toBe(1);
+  });
+
+  it("does not hold the slot for other listings", async () => {
+    const a = await newListing();
+    const b = await newListing();
+    await recordReport(a.id, "yes", "yes");
+    expect(await recordReport(b.id, "yes", "yes")).not.toBe("too_soon");
+  });
+
+  it("returns null for an unknown or malformed listing", async () => {
+    expect(await recordReport(crypto.randomUUID(), "yes", "yes")).toBeNull();
+    expect(await recordReport("nope", "yes", "yes")).toBeNull();
   });
 });

@@ -15,7 +15,8 @@ export function Footer() {
         <span>Based on public web pages. Only the office can confirm.</span>
       </p>
       <p>
-        Every call on this site is a demo call. No real office is contacted.
+        Assistant calls are demos to our team&apos;s phones. When you call
+        yourself, you reach the real office.
       </p>
       <p>
         TheraCheck is a SanD Hacks 2026 project.{" "}

@@ -35,6 +35,7 @@ const base: Facts = {
   selfPayMax: null,
   licenseStatus: "unchecked",
   licenseDiscipline: "unknown",
+  seesSelfPay: "unknown",
 };
 const run = async (id: string, extra: Partial<Facts>) => {
   mocked.mockResolvedValue({ ...base, ...extra });
@@ -117,6 +118,7 @@ describe("verifyListing", () => {
       stillPractising: "yes",
       listsInsurer: "no",
       acceptingNew: "unknown",
+      seesSelfPay: "unknown",
     } as const;
     mocked.mockResolvedValue({
       ...base,
@@ -157,6 +159,14 @@ describe("verifyListing", () => {
       self_pay_max: 160,
       license_status: "active",
       license_discipline: "no",
+    });
+  });
+
+  it("saves seesSelfPay without changing the score", async () => {
+    const row = await run(WITH, { listsInsurer: "no", seesSelfPay: "yes" });
+    expect(row).toMatchObject({
+      sees_self_pay: "yes",
+      score: scoreVerdict({ ...base, listsInsurer: "no" }).score,
     });
   });
 

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cache } from "react";
-import { CallPanel, LabelProvider, LiveBadge } from "@/frontend/CallPanel";
+import { BookingPanel } from "@/frontend/BookingPanel";
+import { LabelProvider, LiveBadge } from "@/frontend/CallPanel";
+import { CostHelp } from "@/frontend/CostHelp";
 import { FactRow, LicenseRow } from "@/frontend/FactRow";
 import { fitFromParams, withFit, type FitValues } from "@/frontend/FitFilters";
-import { Icon } from "@/frontend/Icon";
 import { ListingNotFound } from "@/frontend/ListingNotFound";
-import { checkedDate, priceText, telHref } from "@/frontend/format";
+import { checkedDate, priceText, saysNoInfo } from "@/frontend/format";
 import { first } from "@/frontend/params";
 import { isWebUrl, SourceList } from "@/frontend/SourceList";
 import { getDetail } from "@/backend/queries";
@@ -26,10 +27,6 @@ export async function generateMetadata({
 
 const NO_INFO = "We found no other information about this listing.";
 
-// Some verdicts already give this as their reason; don't say it twice.
-const saysNoInfo = (reason?: string) =>
-  /^we found no other information/i.test(reason?.trim() ?? "");
-
 function backHref(insurer?: string, city?: string, fit: FitValues = {}) {
   const q = new URLSearchParams();
   if (insurer) q.set("insurer", insurer);
@@ -48,7 +45,9 @@ export default async function ListingPage({
   if (!detail) return <ListingNotFound />;
 
   const { listing, verdict, label, evidence, calls } = detail;
-  const lastCall = calls.find((c) => c.status === "done") ?? null;
+  // Only the assistant's calls are demo calls; caller reports show in the badge.
+  const lastCall =
+    calls.find((c) => c.status === "done" && c.source === "agent") ?? null;
   const back = backHref(
     first(query.insurer),
     first(query.city),
@@ -78,91 +77,74 @@ export default async function ListingPage({
             )}
           </h1>
           {listing.address && <p className="muted">{listing.address}</p>}
-          {listing.phone ? (
-            <a
-              className="btn call"
-              href={telHref(listing.phone)}
-              aria-label={`Call ${listing.name} at ${listing.phone}`}
-            >
-              <Icon name="phone" size={18} />
-              {listing.phone}
-            </a>
-          ) : (
-            <p className="muted no-phone">No phone number listed</p>
-          )}
-          {price ? (
-            <div>
-              <p className="price">Their posted price: {price}</p>
-              <p className="muted">
-                {
-                  "This is the therapist's own price if you pay yourself. It is not what your insurance charges."
-                }
-              </p>
-            </div>
-          ) : (
-            <p className="muted">No price posted</p>
-          )}
         </section>
 
-        <section className="panel" aria-labelledby="why-h">
-          <h2 id="why-h">Why it ranks here</h2>
-          {verdict ? (
+        {/* Right after the name on a phone; a sticky right column from 1024px. */}
+        <div className="detail-side">
+          <BookingPanel
+            listing={listing}
+            paths={detail.paths}
+            lastCall={lastCall}
+            selfPay={label === "Pay yourself"}
+          />
+        </div>
+
+        <div className="detail-main">
+          <section className="panel" aria-labelledby="why-h">
+            <h2 id="why-h">Why it ranks here</h2>
+            {verdict ? (
+              <>
+                <p className="reason">{verdict.reason}</p>
+                <p className="muted">
+                  Last checked {checkedDate(verdict.checkedAt)}
+                </p>
+              </>
+            ) : (
+              <p className="reason">Not checked yet</p>
+            )}
+          </section>
+
+          {evidence.length > 0 ? (
             <>
-              <p className="reason">{verdict.reason}</p>
-              <p className="muted">
-                Last checked {checkedDate(verdict.checkedAt)}
-              </p>
+              <section className="panel" aria-labelledby="found-h">
+                <h2 id="found-h">What we found</h2>
+                <dl className="facts">
+                  <FactRow
+                    question="Still seeing patients here?"
+                    answer={verdict?.stillPractising ?? "unknown"}
+                  />
+                  <FactRow
+                    question="Takes this insurance?"
+                    answer={verdict?.listsInsurer ?? "unknown"}
+                  />
+                  <FactRow
+                    question="Taking new patients?"
+                    answer={verdict?.acceptingNew ?? "unknown"}
+                  />
+                  <LicenseRow
+                    status={verdict?.licenseStatus ?? "unchecked"}
+                    discipline={verdict?.licenseDiscipline ?? "unknown"}
+                    boardUrl={boardUrl}
+                  />
+                </dl>
+              </section>
+
+              <section className="panel" aria-labelledby="sources-h">
+                <h2 id="sources-h">Sources</h2>
+                <SourceList evidence={evidence} />
+              </section>
             </>
           ) : (
-            <p className="reason">Not checked yet</p>
+            // Some verdicts already say this as their reason; don't repeat it.
+            !saysNoInfo(verdict?.reason) && <p className="panel">{NO_INFO}</p>
           )}
-        </section>
 
-        {evidence.length > 0 ? (
-          <>
-            <section className="panel" aria-labelledby="found-h">
-              <h2 id="found-h">What we found</h2>
-              <dl className="facts">
-                <FactRow
-                  question="Still seeing patients here?"
-                  answer={verdict?.stillPractising ?? "unknown"}
-                />
-                <FactRow
-                  question="Takes this insurance?"
-                  answer={verdict?.listsInsurer ?? "unknown"}
-                />
-                <FactRow
-                  question="Taking new patients?"
-                  answer={verdict?.acceptingNew ?? "unknown"}
-                />
-                <LicenseRow
-                  status={verdict?.licenseStatus ?? "unchecked"}
-                  discipline={verdict?.licenseDiscipline ?? "unknown"}
-                  boardUrl={boardUrl}
-                />
-              </dl>
-            </section>
-
-            <section className="panel" aria-labelledby="sources-h">
-              <h2 id="sources-h">Sources</h2>
-              <SourceList evidence={evidence} />
-            </section>
-          </>
-        ) : (
-          // Some verdicts already say this as their reason; don't repeat it.
-          !saysNoInfo(verdict?.reason) && <p className="panel">{NO_INFO}</p>
-        )}
-
-        <section className="panel" aria-labelledby="call-h">
-          <h2 id="call-h">Confirm by phone</h2>
-          <CallPanel
-            listingId={listing.id}
-            name={listing.name}
+          <CostHelp
             insurer={listing.insurer}
-            hasPhone={Boolean(listing.phone)}
-            lastCall={lastCall}
+            name={listing.name}
+            price={price}
           />
-        </section>
+        </div>
       </main>
     </LabelProvider>
   );

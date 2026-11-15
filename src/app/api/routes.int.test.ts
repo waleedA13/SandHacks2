@@ -1,12 +1,15 @@
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { sql } from "@/backend/db/client";
+import { isUuid } from "@/backend/queries";
 import { GET as listings } from "./listings/route";
 import { GET as detail } from "./listings/[id]/route";
 import { POST as recheck } from "./listings/[id]/recheck/route";
+import { POST as report } from "./listings/[id]/report/route";
 import { GET as job } from "./jobs/[id]/route";
 import { GET as stats } from "./stats/route";
 import { POST as callResult } from "./calls/result/route";
 import { POST as callStart } from "./calls/start/route";
+import { POST as voiceToken } from "./voice/token/route";
 
 const base = "http://localhost/api";
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -28,7 +31,25 @@ afterAll(async () => {
   await sql`delete from listings where insurer like 'RouteCo %'`;
 });
 
-const post = (body: unknown, secret: string | null = SECRET) =>
+// Results are accepted only for a call the server started, so record one first.
+// It is 61 seconds old so it does not hold the global one-call-per-minute slot.
+async function startedCall(listingId: string, age = "61 seconds") {
+  await sql`
+    insert into calls (listing_id, status, called_at)
+    select id, 'in_progress', now() - ${age}::interval from listings where id = ${listingId}`;
+}
+
+const post = async (
+  body: unknown,
+  secret: string | null = SECRET,
+  start = true,
+) => {
+  const id = (body as { listingId?: unknown } | null)?.listingId;
+  if (start && typeof id === "string" && isUuid(id)) await startedCall(id);
+  return rawPost(body, secret);
+};
+
+const rawPost = (body: unknown, secret: string | null = SECRET) =>
   callResult(
     new Request(`${base}/calls/result`, {
       method: "POST",
@@ -150,20 +171,41 @@ describe("POST /api/calls/result", () => {
       "not json",
       [],
     ]) {
-      expect((await post(body)).status, JSON.stringify(body)).toBe(400);
+      expect((await rawPost(body)).status, JSON.stringify(body)).toBe(400);
     }
     const [{ n }] =
       await sql`select count(*)::int as n from calls where listing_id = ${id}`;
     expect(n).toBe(0);
   });
 
-  it("returns 404 for an unknown listing", async () => {
+  it("returns 409 for an unknown listing, which can have no started call", async () => {
     const res = await post({
       listingId: crypto.randomUUID(),
       takesPlan: "no",
       acceptingNew: "no",
     });
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(409);
+  });
+
+  it("returns 409 and stores nothing without a call the server started", async () => {
+    const { id } = await newListing();
+    const body = { listingId: id, takesPlan: "yes", acceptingNew: "yes" };
+    expect((await post(body, SECRET, false)).status).toBe(409);
+    await startedCall(id, "6 minutes");
+    expect((await rawPost(body)).status).toBe(409);
+    const [{ n }] =
+      await sql`select count(*)::int as n from calls where listing_id = ${id} and status = 'done'`;
+    expect(n).toBe(0);
+  });
+
+  it("accepts one result per started call", async () => {
+    const { id } = await newListing();
+    const body = { listingId: id, takesPlan: "yes", acceptingNew: "yes" };
+    expect((await post(body)).status).toBe(200);
+    expect((await rawPost(body)).status).toBe(409);
+    const rows =
+      await sql`select status from calls where listing_id = ${id} order by called_at`;
+    expect(rows.map((r) => r.status)).toEqual(["done"]);
   });
 
   it("a both-no call returns score 0, moves the listing to the bottom, and leaves verdicts alone", async () => {
@@ -203,7 +245,7 @@ describe("opting out of calls", () => {
   async function listingWithPhone() {
     const { id } = await newListing();
     const phone = `(760) 555-${String(Date.now()).slice(-4)}`;
-    await sql`update listings set phone = ${phone} where id = ${id}`;
+    await sql`update listings set phone = ${phone}, phone_line_type = 'landline' where id = ${id}`;
     return { id, digits: `760555${phone.slice(-4)}` };
   }
 
@@ -290,5 +332,334 @@ describe("opting out of calls", () => {
       fetchSpy.mockRestore();
       vi.unstubAllEnvs();
     }
+  });
+});
+
+const sendReport = (id: string, body: unknown, headers: HeadersInit = {}) =>
+  report(
+    new Request(`${base}/listings/${id}/report`, {
+      method: "POST",
+      headers,
+      body: typeof body === "string" ? body : JSON.stringify(body),
+    }),
+    ctx(id),
+  );
+
+describe("POST /api/listings/[id]/report", () => {
+  it("yes/yes moves the listing to Caller reported: available", async () => {
+    const { id, insurer } = await newListing();
+    await sql`update verdicts set accepting_new = 'unknown' where listing_id = ${id}`;
+    const res = await sendReport(id, { answered: "yes", acceptingNew: "yes" });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(await res.json()).toEqual({
+      score: 100,
+      label: "Caller reported: available",
+    });
+    const list = await listings(
+      new Request(
+        `${base}/listings?insurer=${encodeURIComponent(insurer)}&city=San%20Diego`,
+      ),
+    );
+    expect((await list.json())[0].label).toBe("Caller reported: available");
+  });
+
+  it("yes/no gives Caller reported: unavailable", async () => {
+    const { id } = await newListing();
+    const res = await sendReport(id, { answered: "yes", acceptingNew: "no" });
+    expect(await res.json()).toEqual({
+      score: 0,
+      label: "Caller reported: unavailable",
+    });
+  });
+
+  it("nobody answered leaves the label unchanged", async () => {
+    const { id } = await newListing();
+    const res = await sendReport(id, { answered: "no", acceptingNew: "yes" });
+    expect(await res.json()).toEqual({ score: 100, label: "Likely available" });
+  });
+
+  it("returns 429 for a second report within 60 seconds", async () => {
+    const { id } = await newListing();
+    await sendReport(id, { answered: "yes", acceptingNew: "yes" });
+    const res = await sendReport(id, { answered: "yes", acceptingNew: "no" });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("60");
+  });
+
+  it("stores a caller call and nothing about the reporter, whatever the request carries", async () => {
+    const { id } = await newListing();
+    const res = await sendReport(
+      id,
+      {
+        answered: "yes",
+        acceptingNew: "yes",
+        source: "agent",
+        takesPlan: "no",
+        summary: "my name is Pat, call me at 555-0199",
+      },
+      {
+        "x-forwarded-for": "203.0.113.7",
+        "user-agent": "TestAgent/1.0",
+        // Not hex, so it can never turn up inside a random uuid in the stored row.
+        cookie: "session=reporter-cookie-zq",
+      },
+    );
+    expect(res.status).toBe(200);
+    const rows = await sql`select * from calls where listing_id = ${id}`;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      source: "caller",
+      takes_plan: "yes",
+      summary: "Reported by someone who called.",
+    });
+    const stored = JSON.stringify(rows);
+    for (const s of [
+      "203.0.113.7",
+      "TestAgent",
+      "reporter-cookie-zq",
+      "Pat",
+      "555-0199",
+    ])
+      expect(stored).not.toContain(s);
+  });
+
+  it.each([
+    ["not JSON", "{"],
+    ["null", "null"],
+    ["an array", ["yes", "yes"]],
+    ["a missing answered", { acceptingNew: "yes" }],
+    ["a missing acceptingNew", { answered: "yes" }],
+    ["answered unknown", { answered: "unknown", acceptingNew: "yes" }],
+    ["acceptingNew maybe", { answered: "yes", acceptingNew: "maybe" }],
+    ["a boolean answered", { answered: true, acceptingNew: "yes" }],
+  ])("returns 400 for %s", async (_, body) => {
+    const { id } = await newListing();
+    const res = await sendReport(id, body);
+    expect(res.status).toBe(400);
+    const [{ n }] =
+      await sql`select count(*)::int as n from calls where listing_id = ${id}`;
+    expect(n).toBe(0);
+  });
+
+  it("returns 400 for a malformed id and 404 for an unknown listing", async () => {
+    const body = { answered: "yes", acceptingNew: "yes" };
+    expect((await sendReport("nope", body)).status).toBe(400);
+    expect((await sendReport(crypto.randomUUID(), body)).status).toBe(404);
+  });
+});
+
+describe("POST /api/calls/start and the office line type", () => {
+  const TEAMMATE = "+16195550123";
+
+  async function start(listingId: string) {
+    const realFetch = globalThis.fetch;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) =>
+        String(input).includes("elevenlabs")
+          ? Promise.resolve(Response.json({ success: true, callSid: "CA1" }))
+          : realFetch(input, init),
+      );
+    vi.stubEnv("DEMO_CALL_ALLOWLIST", TEAMMATE);
+    vi.stubEnv("ELEVENLABS_API_KEY", "sk_test_key");
+    vi.stubEnv("NEXT_ELEVENLABS_AGENT_ID", "agent_test_id");
+    vi.stubEnv("ELEVENLABS_PHONE_NUMBER_ID", "phnum_test_id");
+    try {
+      const res = await callStart(
+        new Request(`${base}/calls/start`, {
+          method: "POST",
+          body: JSON.stringify({ listingId, toNumber: TEAMMATE }),
+        }),
+      );
+      const dialled = fetchSpy.mock.calls.some(([url]) =>
+        String(url).includes("elevenlabs"),
+      );
+      return { res, dialled };
+    } finally {
+      fetchSpy.mockRestore();
+      vi.unstubAllEnvs();
+    }
+  }
+
+  it.each(["mobile", "voip", "unknown"])(
+    "refuses a %s office with 403 and places no call",
+    async (lineType) => {
+      const { id } = await newListing();
+      await sql`update listings set phone = '(760) 555-0000', phone_line_type = ${lineType} where id = ${id}`;
+      const { res, dialled } = await start(id);
+      expect(res.status).toBe(403);
+      expect(await res.json()).toEqual({
+        error: "We only place assistant calls to office landlines.",
+      });
+      expect(dialled).toBe(false);
+      const [{ n }] =
+        await sql`select count(*)::int as n from calls where listing_id = ${id}`;
+      expect(n).toBe(0);
+    },
+  );
+
+  it("lets a landline office through to the existing checks", async () => {
+    const { id } = await newListing();
+    await sql`update listings set phone = '(760) 555-0001', phone_line_type = 'landline' where id = ${id}`;
+    await sql`update calls set status = 'failed' where status = 'in_progress'`;
+    const { res, dialled } = await start(id);
+    expect(res.status).toBe(200);
+    expect(dialled).toBe(true);
+  });
+});
+
+describe("POST /api/calls/start with connectTo never stores the patient's number", () => {
+  const OFFICE_STANDIN = "+16195550123";
+  const PATIENT = "+16195550177";
+
+  it("leaves no trace in any table or log after a placed and a refused call", async () => {
+    const { id } = await newListing();
+    await sql`update listings set phone = '(760) 555-0002', phone_line_type = 'landline' where id = ${id}`;
+    await sql`update calls set status = 'failed' where status = 'in_progress'`;
+    const realFetch = globalThis.fetch;
+    let upstreamOk = true;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) =>
+        String(input).includes("elevenlabs")
+          ? Promise.resolve(
+              upstreamOk
+                ? Response.json({ success: true, callSid: "CA2" })
+                : new Response(`{"detail":"bad ${PATIENT}"}`, { status: 400 }),
+            )
+          : realFetch(input, init),
+      );
+    const consoles = (["log", "info", "warn", "error", "debug"] as const).map(
+      (m) => vi.spyOn(console, m).mockImplementation(() => {}),
+    );
+    vi.stubEnv("DEMO_CALL_ALLOWLIST", `${OFFICE_STANDIN},${PATIENT}`);
+    vi.stubEnv("ELEVENLABS_API_KEY", "sk_test_key");
+    vi.stubEnv("NEXT_ELEVENLABS_AGENT_ID", "agent_test_id");
+    vi.stubEnv("ELEVENLABS_PHONE_NUMBER_ID", "phnum_test_id");
+    const send = () =>
+      callStart(
+        new Request(`${base}/calls/start`, {
+          method: "POST",
+          body: JSON.stringify({
+            listingId: id,
+            toNumber: OFFICE_STANDIN,
+            connectTo: PATIENT,
+          }),
+        }),
+      );
+    try {
+      const placed = await send();
+      expect(placed.status).toBe(200);
+      await sql`update calls set status = 'failed' where status = 'in_progress'`;
+      upstreamOk = false;
+      const refused = await send();
+      expect(refused.status).toBe(502);
+
+      // Any formatting of 619 555 0177; joining all digits would match across fields.
+      const number = /619\D{0,2}555\D?0177/;
+      const bodies = (await placed.text()) + (await refused.text());
+      const tables = await sql`
+        select table_name from information_schema.tables
+        where table_schema = 'public' and table_type = 'BASE TABLE'`;
+      expect(tables.length).toBeGreaterThan(0);
+      let dump = "";
+      for (const { table_name } of tables) {
+        const rows = await sql.query(
+          `select row_to_json(t)::text as j from "${table_name}" t`,
+        );
+        dump += rows.map((r) => r.j).join("\n");
+      }
+      const logged = JSON.stringify(consoles.map((c) => c.mock.calls));
+      for (const text of [bodies, dump, logged])
+        expect(text).not.toMatch(number);
+    } finally {
+      fetchSpy.mockRestore();
+      consoles.forEach((c) => c.mockRestore());
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
+describe("POST /api/voice/token for the confirm agent", () => {
+  async function token(body: unknown, upstreamOk = true) {
+    const realFetch = globalThis.fetch;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) =>
+        String(input).includes("elevenlabs")
+          ? Promise.resolve(
+              upstreamOk
+                ? Response.json({ token: "tok_test" })
+                : new Response("no", { status: 500 }),
+            )
+          : realFetch(input, init),
+      );
+    vi.stubEnv("ELEVENLABS_API_KEY", "sk_test_key");
+    vi.stubEnv("NEXT_ELEVENLABS_AGENT_ID", "agent_test_id");
+    try {
+      return await voiceToken(
+        new Request(`${base}/voice/token`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      );
+    } finally {
+      fetchSpy.mockRestore();
+      vi.unstubAllEnvs();
+    }
+  }
+  const freeSlot = () =>
+    sql`update calls set status = 'failed' where status = 'in_progress'`;
+
+  it("needs a real listing", async () => {
+    expect((await token({})).status).toBe(400);
+    expect((await token({ agent: "confirm", listingId: "x" })).status).toBe(
+      400,
+    );
+    expect(
+      (await token({ agent: "confirm", listingId: crypto.randomUUID() }))
+        .status,
+    ).toBe(400);
+  });
+
+  it("starts a call for the listing, so its result is accepted once", async () => {
+    await freeSlot();
+    const { id } = await newListing();
+    const res = await token({ agent: "confirm", listingId: id });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ token: "tok_test" });
+    const body = { listingId: id, takesPlan: "yes", acceptingNew: "yes" };
+    expect((await rawPost(body)).status).toBe(200);
+    expect((await rawPost(body)).status).toBe(409);
+  });
+
+  it("refuses with 429 while another call holds the slot", async () => {
+    await freeSlot();
+    const a = await newListing();
+    const b = await newListing();
+    expect((await token({ agent: "confirm", listingId: a.id })).status).toBe(
+      200,
+    );
+    expect((await token({ agent: "confirm", listingId: b.id })).status).toBe(
+      429,
+    );
+  });
+
+  it("frees the slot when ElevenLabs refuses", async () => {
+    await freeSlot();
+    const { id } = await newListing();
+    expect(
+      (await token({ agent: "confirm", listingId: id }, false)).status,
+    ).toBe(502);
+    const [{ n }] =
+      await sql`select count(*)::int as n from calls where listing_id = ${id} and status = 'in_progress'`;
+    expect(n).toBe(0);
+  });
+
+  it("the helper agent needs no listing and starts no call", async () => {
+    vi.stubEnv("NEXT_ELEVENLABS_HELPER_AGENT_ID", "helper_test_id");
+    const res = await token({ agent: "helper" });
+    expect(res.status).toBe(200);
   });
 });

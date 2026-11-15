@@ -24,6 +24,25 @@
   --bad-fg: #8a2e1e;
   --bad-line: #e9bdb2;
 
+  /* Type scale: body is --step-0 (18px at default size). rem, so it follows the browser's text size. */
+  --step--1: 1rem;
+  --step-0: 1.125rem;
+  --step-1: 1.25rem;
+  --step-2: 1.375rem;
+  --step-3: 1.875rem;
+  --step-4: 2.5rem;
+
+  /* Spacing scale. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2.5rem;
+
+  /* The one card: white, one radius, one border. */
+  --radius: 16px;
+
   color-scheme: light;
 }
 
@@ -42,7 +61,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--f-body);
-  font-size: 1.125rem;
+  font-size: var(--step-0);
   line-height: 1.5;
 }
 
@@ -61,6 +80,11 @@ ol {
 
 a {
   color: var(--teal);
+}
+
+/* Links inside sentences get a 44px tall tap area; inline padding leaves the line spacing alone. */
+main :is(p, li, dd) a:not(.btn, .link) {
+  padding-block: 0.6em;
 }
 
 button,
@@ -101,7 +125,7 @@ svg {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 18px;
+  padding: 0 var(--space-4);
   border-radius: 999px;
   background: var(--teal);
   color: #ffffff;
@@ -114,7 +138,7 @@ svg {
 }
 
 .no-js {
-  padding: 14px 16px;
+  padding: var(--space-4) var(--space-4);
   border: 2px solid var(--ink);
   border-radius: 8px;
   font-weight: 700;
@@ -128,30 +152,35 @@ svg {
   min-height: 100dvh;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 12px 16px 32px;
+  padding: var(--space-1) var(--space-4) var(--space-6);
 }
 
 main {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-3);
 }
 
-/* Wraps onto more lines on a narrow phone; no menu needed. */
+/* Two rows on a phone: logo and 988 first, the links under them. No menu needed. */
 .bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0 24px;
-  margin-bottom: 8px;
+  gap: 0 var(--space-4);
+  margin-bottom: 0;
+}
+
+.bar-nav {
+  order: 1;
+  flex: 1 1 100%;
 }
 
 .bar-nav,
 .foot-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 20px;
+  gap: 0 var(--space-5);
 }
 
 .bar-nav a,
@@ -176,15 +205,21 @@ main {
 }
 
 .crisis {
+  /* Shares the logo's row and wraps inside it on a narrow phone. */
+  flex: 1 1 0;
+  min-width: 0;
+  margin-left: auto;
   color: var(--ink-soft);
+  font-size: var(--step--1);
+  text-align: right;
 }
 
 .site-footer {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 40px;
-  padding-top: 16px;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--line);
   color: var(--ink-soft);
 }
@@ -192,25 +227,28 @@ main {
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   min-height: 44px;
   color: inherit;
   text-decoration: none;
   font-family: var(--f-ui);
   font-weight: 700;
-  font-size: 1.375rem;
+  font-size: var(--step-2);
+  /* At 200% text on a 320px screen the name may break rather than scroll sideways. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .intro {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 h1 {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.875rem;
+  font-size: var(--step-3);
   line-height: 1.12;
   letter-spacing: -0.01em;
 }
@@ -223,8 +261,8 @@ h1 {
 h2 {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.375rem;
-  margin-bottom: 10px;
+  font-size: var(--step-2);
+  margin-bottom: var(--space-2);
 }
 
 /* ---------- Buttons ---------- */
@@ -232,9 +270,9 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 48px;
-  padding: 0 22px;
+  padding: 0 var(--space-5);
   border: 0;
   border-radius: 999px;
   background: var(--teal);
@@ -242,6 +280,10 @@ h2 {
   font-family: var(--f-ui);
   font-weight: 700;
   text-decoration: none;
+  text-align: center;
+  /* At 200% text on a 320px screen a long word breaks instead of pushing the page sideways. */
+  max-width: 100%;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
@@ -274,19 +316,19 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px;
+  gap: var(--space-3);
   max-width: 760px;
-  padding: 16px;
-  border-radius: 24px;
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
   background: var(--card);
-  box-shadow: 0 10px 30px rgba(28, 43, 45, 0.1);
 }
 
 .field {
   flex: 1 1 140px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -303,7 +345,7 @@ h2 {
   appearance: none;
   width: 100%;
   min-height: 48px;
-  padding: 0 40px 0 14px;
+  padding: 0 var(--space-6) 0 var(--space-4);
   border: 2px solid var(--field);
   border-radius: 12px;
   background: var(--card);
@@ -327,7 +369,7 @@ h2 {
 .text-input {
   width: 100%;
   min-height: 3rem;
-  padding: 0 0.875rem;
+  padding: 0 var(--space-4);
   border: 2px solid var(--field);
   border-radius: 0.75rem;
   background: var(--card);
@@ -337,34 +379,36 @@ h2 {
 
 .hint {
   color: var(--muted);
-  font-size: 0.9375rem;
+  font-size: var(--step--1);
 }
 
 .search .btn {
   flex: 1 1 100%;
 }
 
-.search-pill {
+.search-pill,
+.narrow {
   align-self: flex-start;
   max-width: 100%;
 }
 
-.search-pill summary {
+.search-pill summary,
+.narrow summary {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   max-width: 100%;
   min-height: 52px;
-  padding: 0 8px 0 18px;
+  padding: 0 var(--space-2) 0 var(--space-4);
   border: 1px solid var(--field);
   border-radius: 999px;
   background: var(--card);
-  box-shadow: 0 6px 18px rgba(28, 43, 45, 0.08);
   cursor: pointer;
   list-style: none;
 }
 
-.search-pill summary::-webkit-details-marker {
+.search-pill summary::-webkit-details-marker,
+.narrow summary::-webkit-details-marker {
   display: none;
 }
 
@@ -385,40 +429,50 @@ h2 {
   color: #ffffff;
 }
 
-.search-pill[open] summary {
-  margin-bottom: 12px;
+.search-pill[open] summary,
+.narrow[open] summary {
+  margin-bottom: var(--space-3);
 }
 
-/* ---------- Fit filters ---------- */
-.search-wrap {
+/* ---------- Search and fit filters: one compact row ---------- */
+.search-row {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* Let the folded panels shrink to the screen at large text sizes. */
+.search-row > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* An open panel takes the whole row, so the form never squeezes beside the other pill. */
+.search-row > details[open] {
+  flex-basis: 100%;
+}
+
+.narrow summary {
+  padding-right: var(--space-4);
+}
+
+.narrow[open] summary svg {
+  transform: rotate(180deg);
 }
 
 .filters {
   margin: 0;
-  border: 0;
   min-width: 0;
-}
-
-/* A legend can't be a flex item, so it floats to take the full first row. */
-.filters legend {
-  float: left;
-  width: 100%;
-  padding: 0;
-  font-family: var(--f-head);
-  font-weight: 800;
-  font-size: 1.25rem;
 }
 
 .check {
   flex: 1 1 100%;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   min-height: 48px;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
 }
 
@@ -435,56 +489,63 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0 16px;
-  font-weight: 700;
+  gap: 0 var(--space-4);
+  font-weight: 400;
 }
 
 /* ---------- Summary ---------- */
-.summary {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border-radius: 24px;
-  background: var(--sun-pale);
-}
-
-.summary .big {
-  flex: none;
-  font-family: var(--f-head);
-  font-weight: 800;
-  font-size: 3.5rem;
-  line-height: 1;
-  color: var(--teal);
-}
 
 .summary-line {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: var(--step-1);
   line-height: 1.3;
 }
 
 .soft {
   color: var(--ink-soft);
-  margin-top: 4px;
+  margin-top: 0;
 }
 
-.progress {
+/* The plan we checked, with where to find theirs. */
+.plan {
+  padding-left: var(--space-4);
+  border-left: 4px solid var(--teal);
+}
+
+.plan-line {
+  font-weight: 400;
+}
+
+/* The long tail of listings we couldn't confirm, folded under one line. */
+.more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  margin-bottom: var(--space-3);
+  color: var(--teal);
+  font-family: var(--f-ui);
   font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.plan .muted {
+  font-size: var(--step--1);
+}
+
+.section-note {
+  margin-bottom: var(--space-3);
+  color: var(--ink-soft);
 }
 
 /* ---------- Sections and grid ---------- */
-.start {
-  padding: 14px;
-  border-radius: 28px;
-  background: var(--sun-pale);
-}
-
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 /* ---------- Card ---------- */
@@ -492,17 +553,17 @@ h2 {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px 18px;
-  border-radius: 26px;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
   background: var(--card);
-  box-shadow: 0 2px 0 var(--line-soft);
 }
 
 .card h3 {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.375rem;
+  font-size: var(--step-2);
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -513,14 +574,16 @@ h2 {
 }
 
 .card-compact {
-  gap: 4px;
-  padding: 12px 14px;
-  border: 1px solid var(--line-soft);
-  box-shadow: none;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+}
+
+.card-compact .actions {
+  padding-top: 0;
 }
 
 .card-compact h3 {
-  font-size: 1.25rem;
+  font-size: var(--step-1);
 }
 
 .card-compact .btn {
@@ -529,10 +592,11 @@ h2 {
 
 .badge {
   align-self: flex-start;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 3px 12px 3px 9px;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
   border: 1px solid;
   border-radius: 999px;
   font-family: var(--f-ui);
@@ -584,72 +648,32 @@ h2 {
 .honest {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
   color: var(--ink-soft);
 }
 
 .demo svg,
 .honest svg {
   flex: none;
-  margin-top: 3px;
-}
-
-/* Keep the questions and the call button together at the bottom of a stretched card. */
-.script {
-  margin-top: auto;
-  border-radius: 16px;
-  background: var(--sage);
-}
-
-.script summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 14px;
-  color: var(--teal);
-  font-weight: 700;
-  cursor: pointer;
-  list-style: none;
-}
-
-.script summary::-webkit-details-marker {
-  display: none;
-}
-
-.script summary::after {
-  content: "";
-  flex: none;
-  margin-left: auto;
-  width: 10px;
-  height: 10px;
-  border-right: 2.5px solid currentColor;
-  border-bottom: 2.5px solid currentColor;
-  transform: rotate(45deg) translate(-2px, -2px);
-}
-
-.script[open] summary::after {
-  transform: rotate(-135deg) translate(-2px, -2px);
-}
-
-.script ol {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 0 16px 12px 38px;
-  list-style: decimal;
+  margin-top: var(--space-1);
 }
 
 .actions {
-  padding-top: 6px;
+  /* Keeps the buttons together at the bottom of a stretched card. */
+  margin-top: auto;
+  padding-top: var(--space-2);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 14px;
+  gap: var(--space-2) var(--space-4);
 }
 
 .price {
-  font-weight: 700;
+  font-weight: 400;
+}
+
+.sources-count {
+  color: var(--muted);
 }
 
 .no-phone {
@@ -663,14 +687,15 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
-  padding: 20px;
-  border-radius: 24px;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
   background: var(--card);
 }
 
 .skeleton {
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .sk {
@@ -706,20 +731,28 @@ h2 {
   max-width: 760px;
 }
 
+.detail-main,
+.detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  min-width: 0;
+}
+
 .back {
   align-self: flex-start;
-  gap: 6px;
+  gap: var(--space-2);
   font-weight: 700;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 18px;
-  border-radius: 26px;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
   background: var(--card);
-  box-shadow: 0 2px 0 var(--line-soft);
 }
 
 .panel h2 {
@@ -734,19 +767,13 @@ h2 {
   color: var(--muted);
 }
 
-.detail-top .btn {
-  align-self: flex-start;
-}
-
 .live-badge {
   display: flex;
 }
 
 .reason {
-  font-family: var(--f-head);
-  font-weight: 800;
-  font-size: 1.5rem;
-  line-height: 1.3;
+  font-size: var(--step-1);
+  line-height: 1.4;
 }
 
 .facts {
@@ -760,8 +787,8 @@ h2 {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 4px 16px;
-  padding: 12px 0;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) 0;
   border-top: 1px solid var(--line-soft);
 }
 
@@ -774,7 +801,7 @@ h2 {
   margin: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-family: var(--f-ui);
   font-weight: 700;
 }
@@ -818,17 +845,21 @@ h2 {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .source {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px 6px;
-  border-radius: 18px;
-  background: var(--sage);
+  gap: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-soft);
   overflow-wrap: anywhere;
+}
+
+.source:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .source-name {
@@ -839,16 +870,15 @@ h2 {
 .call-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .last-call {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--sun-pale);
+  gap: var(--space-2);
+  padding-left: var(--space-4);
+  border-left: 4px solid var(--teal);
 }
 
 /* VoiceWidget sets only size inline; colour and shape come from here. */
@@ -871,12 +901,123 @@ h2 {
   cursor: not-allowed;
 }
 
+/* ---------- How to book ---------- */
+.path {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.path h3 {
+  font-family: var(--f-head);
+  font-weight: 800;
+  font-size: var(--step-1);
+  line-height: 1.2;
+}
+
+.path .btn {
+  align-self: flex-start;
+  max-width: 100%;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.call-yourself {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.say {
+  overflow-wrap: anywhere;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 16px;
+  background: var(--sage);
+}
+
+.say p {
+  font-weight: 700;
+}
+
+.say ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  list-style: disc;
+}
+
+.say ol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  list-style: decimal;
+}
+
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.report-title {
+  font-weight: 700;
+}
+
+.report fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.report legend {
+  padding: 0;
+  font-weight: 700;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-5);
+}
+
+.choice {
+  flex: 0 0 auto;
+  font-weight: 400;
+}
+
+/* The second question only matters once they say someone answered. CSS, so it works without JavaScript. */
+.report:not(:has(input[name="answered"][value="yes"]:checked))
+  .report-accepting {
+  display: none;
+}
+
+.report .btn {
+  align-self: flex-start;
+}
+
+.report .btn:disabled {
+  background: var(--line);
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.report-note:empty {
+  display: none;
+}
+
 /* ---------- Share ---------- */
 .share-js {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
+  gap: var(--space-3) var(--space-4);
 }
 
 .share-title {
@@ -890,7 +1031,7 @@ h2 {
 }
 
 .print {
-  padding: 0 4px;
+  padding: 0 var(--space-1);
   border: 0;
   background: none;
   font-weight: 700;
@@ -924,9 +1065,8 @@ h2 {
   .search-wrap,
   .showing,
   .summary,
-  .progress,
   .share,
-  .script,
+  .more,
   .actions .link,
   .site-footer {
     display: none !important;
@@ -939,12 +1079,11 @@ h2 {
   .print-title {
     font-family: var(--f-head);
     font-weight: 800;
-    font-size: 1.5rem;
+    font-size: var(--step-2);
   }
 
-  .start,
   .card {
-    padding: 8px 0;
+    padding: var(--space-2) 0;
     background: none;
     box-shadow: none;
     border: 0;
@@ -974,22 +1113,42 @@ h2 {
 /* ---------- Tap feedback, only when motion is welcome ---------- */
 @media (prefers-reduced-motion: no-preference) {
   .btn,
-  .search-pill summary {
+  .search-pill summary,
+  .narrow summary {
     transition:
       transform 0.08s ease,
       background-color 0.15s ease;
   }
 
   .btn:active,
-  .search-pill summary:active {
+  .search-pill summary:active,
+  .narrow summary:active {
     transform: scale(0.97);
+  }
+
+  .btn:not(.btn-outline):active {
+    background: var(--teal-dark);
+  }
+
+  /* A short highlight when a report or call changes the badge. */
+  .badge-changed .badge {
+    animation: badge-changed 0.9s ease-out;
+  }
+
+  @keyframes badge-changed {
+    from {
+      box-shadow: 0 0 0 6px var(--sun);
+    }
+    to {
+      box-shadow: 0 0 0 0 transparent;
+    }
   }
 }
 
 /* ---------- Narrow phones: drop the decorative icon so the pill fits on one line ---------- */
 @media (max-width: 22.4375em) {
   .search-pill summary {
-    padding-right: 18px;
+    padding-right: var(--space-4);
   }
 
   .search-pill i {
@@ -1000,11 +1159,11 @@ h2 {
 /* ---------- Wider screens ---------- */
 @media (min-width: 43.75em) {
   .page {
-    padding: 18px 32px 40px;
+    padding: var(--space-4) var(--space-6) var(--space-6);
   }
 
   h1 {
-    font-size: 2.5rem;
+    font-size: var(--step-4);
   }
 
   .search .btn {
@@ -1016,12 +1175,18 @@ h2 {
     flex: 1 1 100%;
   }
 
-  .crisis {
-    margin-left: auto;
+  main {
+    gap: var(--space-4);
   }
 
-  .start {
-    padding: 18px;
+  .crisis {
+    font-size: var(--step-0);
+  }
+
+  /* One row: the links sit between the logo and 988. */
+  .bar-nav {
+    order: 0;
+    flex: 0 1 auto;
   }
 }
 
@@ -1034,5 +1199,41 @@ h2 {
 @media (min-width: 68.75em) {
   .start .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Listing detail: two columns, "How to book" stays in view ---------- */
+@media (min-width: 64em) {
+  .detail {
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "back back"
+      "top side"
+      "main side";
+    align-items: start;
+  }
+
+  .detail > .back {
+    grid-area: back;
+  }
+
+  .detail-top {
+    grid-area: top;
+  }
+
+  .detail-main {
+    grid-area: main;
+  }
+
+  /* Scrolls inside itself if it is taller than the window, so every part stays reachable. */
+  .detail-side {
+    grid-area: side;
+    position: sticky;
+    top: var(--space-4);
+    max-height: calc(100dvh - 2 * var(--space-4));
+    overflow-y: auto;
   }
 }

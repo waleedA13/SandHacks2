@@ -3,6 +3,7 @@
 import { pathToFileURL } from "node:url";
 import { sql } from "@/backend/db/client";
 import type { EvidenceSource } from "@/shared/types";
+import { type Booking, bestBooking, findBooking } from "./booking";
 import { serp, unlock } from "./brightdata";
 import { findLicense } from "./license";
 import { isSamePerson, normalizeName } from "./match";
@@ -20,11 +21,17 @@ type Row = {
   credential: string | null;
   phone: string | null;
   npi: string | null;
+  licenceNumber?: string | null;
   city: string;
   state: string;
   source_url: string;
 };
-type Found = { source: EvidenceSource; url: string; rawText: string };
+type Found = {
+  source: EvidenceSource;
+  url: string;
+  rawText: string;
+  booking?: Booking | null;
+};
 
 // Directories, social sites and insurers: never a therapist's own practice site.
 const NOT_PRACTICE_SITES = new Set(
@@ -189,7 +196,13 @@ async function trySource(
         text,
       };
       if (isSamePerson({ ...l, nameIsUnique }, page))
-        matches.push({ source, url, rawText: text.slice(0, MAX_TEXT) });
+        matches.push({
+          source,
+          url,
+          rawText: text.slice(0, MAX_TEXT),
+          // Full html: "Book now" buttons usually sit in the header the text drops.
+          booking: findBooking(source, url, html),
+        });
     } catch (e) {
       errors.push(`${url} ${(e as Error).message.slice(0, 120)}`);
     }
@@ -225,15 +238,30 @@ export async function collectEvidence(listingId: string): Promise<number> {
   const nameIsUnique =
     names.filter((n) => normalizeName(n.name) === name).length === 1;
 
+  const lookUpLicence = async (profileText?: string) => {
+    try {
+      return await findLicense(l, profileText);
+    } catch (e) {
+      console.log(`${l.name} license_board: failed ${(e as Error).message}`);
+      return null;
+    }
+  };
+  // Looked up first so pages can be matched on the board-confirmed licence number.
+  const early = await lookUpLicence();
+  const withLicence = { ...l, licenceNumber: early?.number ?? null };
+
   const found = (
-    await Promise.all(sources.map((s) => trySource(l, nameIsUnique, s)))
+    await Promise.all(
+      sources.map((s) => trySource(withLicence, nameIsUnique, s)),
+    )
   ).filter((f): f is Found => f !== null);
 
-  try {
-    const licence = await findLicense(
-      l,
-      found.find((f) => f.source === "psychology_today")?.rawText,
-    );
+  {
+    const licence =
+      early ??
+      (await lookUpLicence(
+        found.find((f) => f.source === "psychology_today")?.rawText,
+      ));
     console.log(`${l.name} license_board: ${licence ? "matched" : "no match"}`);
     if (licence)
       found.push({
@@ -241,11 +269,15 @@ export async function collectEvidence(listingId: string): Promise<number> {
         url: licence.url,
         rawText: licence.rawText,
       });
-  } catch (e) {
-    console.log(`${l.name} license_board: failed ${(e as Error).message}`);
   }
 
+  const booking = bestBooking(found.map((f) => f.booking ?? null));
+  console.log(
+    `${l.name} booking: ${booking ? `${booking.source} ${booking.url}` : "none"}`,
+  );
   await sql.transaction([
+    sql`update listings set booking_url = ${booking?.url ?? null},
+          booking_source = ${booking?.source ?? null} where id = ${l.id}`,
     sql`delete from evidence where listing_id = ${l.id}`,
     ...found.map(
       (f) =>
