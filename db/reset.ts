@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { Pool } from "@neondatabase/serverless";
+import { configureNeonForUrl } from "../lib/neon-local";
 
 const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
 if (!url)
@@ -7,6 +8,7 @@ if (!url)
     "DATABASE_URL is not set. Copy .env.example to .env.local and fill it in.",
   );
 
+configureNeonForUrl(url);
 const pool = new Pool({ connectionString: url });
 for (const file of ["db/schema.sql", "db/seed.sql"]) {
   await pool.query(readFileSync(file, "utf8"));

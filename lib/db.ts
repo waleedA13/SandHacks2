@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { configureNeonForUrl } from "./neon-local";
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -6,4 +7,5 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+configureNeonForUrl(process.env.DATABASE_URL);
 export const sql = neon(process.env.DATABASE_URL);
