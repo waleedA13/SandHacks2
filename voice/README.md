@@ -48,7 +48,7 @@ Agent tab → **Tools** → **Add tool** → **Webhook**.
 | Field       | Value                                                                                                |
 | ----------- | ---------------------------------------------------------------------------------------------------- |
 | Name        | `save_call_result`                                                                                   |
-| Description | `Save the office's two answers at the end of the call. Call it once, after saying goodbye.`          |
+| Description | `Save the office's two answers at the end of the call. Call it once, before saying goodbye.`         |
 | Method      | `POST`                                                                                               |
 | URL         | `https://<your-vercel-domain>/api/calls/result` (the production domain, not a preview URL with auth) |
 
@@ -79,7 +79,11 @@ Save the tool.
 ## 7. Advanced tab
 
 1. **Client events:** turn on `agent_tool_response_full_payload` (keep the defaults on, including `agent_response` and `agent_tool_response`). Without it the widget never receives the score and `onDone` does not fire. The payload holds only `{ score, label }`.
-2. **Max conversation duration:** 90 seconds. The prompt aims for under 60; the extra time lets the save finish.
+2. **Max conversation duration:** 90 seconds. The prompt aims for under 60; the extra time lets the save finish. Set the duration message to `Sorry, I have to end the call now. Thank you for your time. Goodbye.`
+3. **End conversation after silence:** 20 seconds. The prompt says goodbye after about 10 seconds of silence; this ends the call if the agent never does.
+4. **Take turn after silence:** 7 seconds, so "let me check" gets time before the agent speaks again.
+
+The ending runs in this order: save, then one goodbye, then `end_call`. If the agent says goodbye before it saves, the model speaks again after the tool returns and the caller hears goodbye twice. If it never calls `end_call`, the line stays open until the silence limit. **Tools → System tools → End conversation** must be on.
 
 ## 8. Test in the dashboard
 
