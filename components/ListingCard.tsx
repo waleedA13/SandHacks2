@@ -1,36 +1,23 @@
 import Link from "next/link";
 import type { ListingSummary } from "@/lib/types";
 import { Icon } from "./Icon";
+import { checkedDate, telHref } from "./format";
 import { LabelBadge } from "./LabelBadge";
 
 const DEAD_END = new Set(["Likely dead end", "Demo call: unavailable"]);
-
-function checkedDate(iso: string) {
-  if (!iso) return "not yet";
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    // Every listed city is in California, so show the date people there see.
-    timeZone: "America/Los_Angeles",
-  });
-}
-
-function telHref(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  return `tel:${digits.length === 10 ? `+1${digits}` : digits}`;
-}
 
 export function ListingCard({
   listing,
   rank,
   variant,
   insurer,
+  city,
 }: {
   listing: ListingSummary;
   rank: number;
   variant: "full" | "compact";
   insurer: string;
+  city: string;
 }) {
   const { id, name, credential, phone, label } = listing;
   const headingId = `listing-${id}`;
@@ -72,8 +59,12 @@ export function ListingCard({
         ) : (
           <span className="muted no-phone">No phone number listed</span>
         )}
-        {/* No prefetch: the detail page (issue #13) does not exist yet. */}
-        <Link className="link" href={`/listing/${id}`} prefetch={false}>
+        {/* No prefetch: 12 cards would each load a detail page (5 queries each). */}
+        <Link
+          className="link"
+          href={`/listing/${id}?${new URLSearchParams({ insurer, city })}`}
+          prefetch={false}
+        >
           View details<span className="sr-only"> for {name}</span>
         </Link>
       </div>

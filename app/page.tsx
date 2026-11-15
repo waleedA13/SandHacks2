@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Icon } from "@/components/Icon";
 import { ListingCard } from "@/components/ListingCard";
+import { first } from "@/components/params";
 import { SearchForm } from "@/components/SearchForm";
 import { getStats, listSummaries } from "@/lib/queries";
 import type { Label, ListingSummary } from "@/lib/types";
@@ -13,19 +14,18 @@ export const instant = false;
 const REACHABLE: Label[] = ["Likely available", "Demo call: available"];
 const DEAD_END: Label[] = ["Likely dead end", "Demo call: unavailable"];
 
-const first = (v: string | string[] | undefined) =>
-  (Array.isArray(v) ? v[0] : v)?.trim() || undefined;
-
 type Ranked = { listing: ListingSummary; rank: number };
 
 function CardList({
   items,
   variant,
   insurer,
+  city,
 }: {
   items: Ranked[];
   variant: "full" | "compact";
   insurer: string;
+  city: string;
 }) {
   return (
     <ol className="grid">
@@ -36,6 +36,7 @@ function CardList({
             rank={rank}
             variant={variant}
             insurer={insurer}
+            city={city}
           />
         </li>
       ))}
@@ -119,14 +120,24 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                     ? "this one"
                     : `these ${startWith.length}`}
                 </h2>
-                <CardList items={startWith} variant="full" insurer={insurer} />
+                <CardList
+                  items={startWith}
+                  variant="full"
+                  insurer={insurer}
+                  city={city}
+                />
               </section>
             )}
 
             {alsoTry.length > 0 && (
               <section aria-labelledby="also-h">
                 <h2 id="also-h">Also worth a try</h2>
-                <CardList items={alsoTry} variant="full" insurer={insurer} />
+                <CardList
+                  items={alsoTry}
+                  variant="full"
+                  insurer={insurer}
+                  city={city}
+                />
               </section>
             )}
 
@@ -137,6 +148,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   items={deadEnds}
                   variant="compact"
                   insurer={insurer}
+                  city={city}
                 />
               </section>
             )}
