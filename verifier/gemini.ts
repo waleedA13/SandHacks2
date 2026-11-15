@@ -2,8 +2,9 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Tri } from "@/lib/types";
 
-// Newest stable Flash model on https://aistudio.google.com/docs/models (checked 2026-11-14).
-export const MODEL = "gemini-3.8-flash";
+// Stable Flash model from https://aistudio.google.com/docs/models. Chosen over gemini-3.8-flash,
+// which returned 503 in a live test on 2026-11-14.
+export const MODEL = "gemini-3.5-flash";
 
 export type Facts = {
   stillPractising: Tri;
@@ -57,6 +58,8 @@ export async function extractFacts(input: {
     config: {
       systemInstruction: SYSTEM,
       temperature: 0,
+      // One attempt (the SDK does not retry unless asked), so a hung call throws and the old verdict stays.
+      httpOptions: { timeout: 60_000 },
       responseMimeType: "application/json",
       responseJsonSchema: SCHEMA,
     },

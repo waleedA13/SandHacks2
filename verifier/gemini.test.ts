@@ -115,6 +115,16 @@ describe("extractFacts", () => {
     await expect(extractFacts(input)).rejects.toThrow("429 quota");
   });
 
+  it("gives up after 60 seconds and throws", async () => {
+    generateContent.mockRejectedValue(
+      new DOMException("This operation was aborted", "AbortError"),
+    );
+    await expect(extractFacts(input)).rejects.toThrow(/aborted/);
+    expect(generateContent.mock.calls[0][0].config.httpOptions).toEqual({
+      timeout: 60_000,
+    });
+  });
+
   it("fails before calling Gemini when GEMINI_API_KEY is missing", async () => {
     vi.stubEnv("GEMINI_API_KEY", "");
     await expect(extractFacts(input)).rejects.toThrow(/GEMINI_API_KEY/);
