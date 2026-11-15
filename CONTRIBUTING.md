@@ -28,7 +28,16 @@ Thanks for helping build TheraCheck. This guide keeps the team working fast in o
 
 ## Code style
 
-Follow the settings in `.editorconfig`. Linters and formatters will be added with the first code drop; run them before pushing once they exist.
+Follow the settings in `.editorconfig`. Before you push, run `npm run format`, then the four test scripts:
+
+```bash
+npm run test:unit
+npm run db:test:up   # needs Docker running
+npm run test:int
+npm run test:e2e
+```
+
+CI runs the same scripts on your pull request. See the Continuous integration section of the [README](README.md#continuous-integration).
 
 ## Reporting bugs and requesting features
 
