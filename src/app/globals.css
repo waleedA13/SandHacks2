@@ -82,6 +82,11 @@ a {
   color: var(--teal);
 }
 
+/* Links inside sentences get a 44px tall tap area; inline padding leaves the line spacing alone. */
+main :is(p, li, dd) a:not(.btn, .link) {
+  padding-block: 0.6em;
+}
+
 button,
 select {
   font: inherit;
