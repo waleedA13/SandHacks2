@@ -3,9 +3,11 @@
 **Owner:** Waleed · **Priority:** P0 · **Time box:** 45 min · **Depends on:** none · **Blocks:** everyone
 
 ## User stories
+
 Enables all of them. Nobody can start until this is merged.
 
 ## What to build
+
 - A Next.js (App Router, TypeScript) app at the repo root, deployable to Vercel.
 - A Neon database with the five tables from the plan's "Shared contract".
 - `db/seed.sql` with 12 made-up fixture listings for insurer `Aetna`, city `San Diego`, state `CA`. Give them a spread of verdicts: 4 that score 70 or more, 4 between 40 and 69, 4 below 40. Add 2 evidence rows each for at least 6 of them, and one `done` call for one listing. Fill the fit, fee and licence columns for at least 8 of them: a mix of specialties from the plan's fixed list, at least two with `spanish`, some with a fee range and some with none, one `inactive` licence and two `not_found`. Use obviously fake names and `555` phone numbers.
@@ -14,12 +16,15 @@ Enables all of them. Nobody can start until this is merged.
 - **A live deployment.** Deploy the placeholder app to Vercel, set `DATABASE_URL` and `CALLS_WEBHOOK_SECRET` there, and post the URL to the team. The voice agent in issue 07 needs a public URL to save call results, so this cannot wait.
 
 ## Files
+
 - Create: `package.json`, `app/layout.tsx`, `app/page.tsx` (placeholder), `db/schema.sql`, `db/seed.sql`, `lib/db.ts`, `lib/types.ts`, `lib/score.ts`, `lib/score.test.ts`, `.env.example`, `.gitignore`
 
 ## Interfaces
+
 - **Produces:** tables `listings`, `evidence`, `verdicts`, `calls`, `jobs`; types `Tri`, `Listing`, `Evidence`, `Verdict`, `Call`, `Job`, `ListingSummary`, `Label`; `scoreVerdict(v, call?)`; `sql` client exported from `lib/db.ts`; scripts `npm run dev`, `npm test`, `npm run db:reset` (applies schema then seed).
 
 ## Acceptance check
+
 - `npm test` passes these `scoreVerdict` cases:
   - all `unknown` → score 50, label `Unclear`
   - all `yes` → score 100, label `Likely available`
@@ -34,6 +39,7 @@ Enables all of them. Nobody can start until this is merged.
 - Teammates can clone, copy `.env.example` to `.env.local`, add `DATABASE_URL`, and run.
 
 ## Prompt for your Claude
+
 ```
 Read CLAUDE.md and docs/superpowers/plans/2026-11-14-ghost-network-check.md, especially "Shared contract".
 Implement issue docs/issues/01-scaffold-contract-fixtures.md.

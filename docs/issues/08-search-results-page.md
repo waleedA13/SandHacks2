@@ -3,6 +3,7 @@
 **Owner:** Tracy · **Priority:** P0 · **Time box:** 2.5 h · **Depends on:** 01 (build on fixtures; switch to the API when 06 lands)
 
 ## User stories
+
 - US-F1-M: pick insurer and city, see the likeliest therapists first.
 - US-F1-R: a short list in large text with a tap-to-call number.
 - US-F1-E: plain words and clear labels.
@@ -10,6 +11,7 @@
 - US-F6-M, US-F6-R, US-F6-E, US-F6-D: one sentence on how many listings look reachable.
 
 ## What to build
+
 The home page. One screen, top to bottom:
 
 1. **Headline and one line of explanation.** For example: "Find a therapist who will actually pick up."
@@ -19,19 +21,23 @@ The home page. One screen, top to bottom:
 5. **Honesty note** under the list: "Based on public web pages. Only the office can confirm."
 
 States to design:
+
 - **Empty (Review Focus 4):** "We don't have listings for that insurer and city yet. Try Aetna in San Diego."
 - **Loading and error:** plain text, no spinner-only screens.
 
 Use the label wording from the plan exactly: `Likely available`, `Unclear`, `Likely dead end`, `Demo call: available`, `Demo call: unavailable`.
 
 ## Files
+
 - Create: `app/page.tsx`, `components/SearchForm.tsx`, `components/ListingCard.tsx`, `components/AccuracyBanner.tsx`, `components/LabelBadge.tsx`, `app/globals.css`
 
 ## Interfaces
+
 - **Consumes:** `listSummaries(insurer, city)` and `getStats(insurer, city)` from `lib/queries.ts` (server-side), or the fixtures directly until issue 06 is merged. Type `ListingSummary`.
 - **Produces:** `<LabelBadge label />` and `<ListingCard listing />`, reused by issue 09.
 
 ## Acceptance check
+
 - The page is server-rendered: with JavaScript disabled in the browser, a search still returns results.
 - At 320px wide there is no sideways scrolling and every tap target is at least 44px tall.
 - With the fixtures, 12 cards appear in descending score, and the fixture with a call shows its `Demo call` badge.
@@ -40,6 +46,7 @@ Use the label wording from the plan exactly: `Likely available`, `Unclear`, `Lik
 - Lighthouse accessibility score of 95 or more on the results page.
 
 ## Prompt for your Claude
+
 ```
 Read CLAUDE.md, the plan's "Personas", "Features and user stories" and "Shared contract", and docs/issues/08-search-results-page.md.
 Use the frontend-design skill for the visual direction. The audience includes a stressed 24-year-old on a phone and a 67-year-old with low vision: calm, high contrast, large type, nothing playful.

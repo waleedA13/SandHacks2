@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.test
 *.pem
 *.key
 
@@ -24,6 +25,8 @@ build/
 .next/
 .vercel/
 out/
+*.tsbuildinfo
+next-env.d.ts
 coverage/
 *.egg-info/
 
@@ -39,3 +42,9 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.swp
+.neon
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/

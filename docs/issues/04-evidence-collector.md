@@ -3,9 +3,11 @@
 **Owner:** Waleed · **Priority:** P0 · **Time box:** 2 h · **Depends on:** 02 (can start on fixtures before 03 finishes)
 
 ## User stories
+
 - US-F2-M, US-F2-R, US-F2-E, US-F2-D: every reason and source link shown to a user comes from an evidence row.
 
 ## What to build
+
 For each listing, find what the rest of the public web says about that therapist and store the page text in `evidence`. Three sources, in this order:
 
 1. **Psychology Today:** search for the therapist's profile; store the profile text (it states insurers accepted and often whether they take new clients).
@@ -17,9 +19,11 @@ For each listing, find what the rest of the public web says about that therapist
 **Shared names.** Every listing in a run is in the same city, so the city test alone cannot tell apart two therapists with the same name. When a listing's normalised name appears more than once in `listings`, accept a page only on a phone match.
 
 ## Files
+
 - Create: `collector/evidence.ts`, `collector/match.ts`, `collector/match.test.ts`
 
 ## Interfaces
+
 - **Consumes:** `unlock`, `serp` from `collector/brightdata.ts`; `normalizeName`, `normalizePhone` from `collector/normalize.ts`; `sql`; `Listing`, `Evidence`.
 - **Produces:** `isSamePerson(listing: { name: string; phone: string | null; city: string; nameIsUnique: boolean }, page: { names: string[]; phones: string[]; text: string }): boolean` in `collector/match.ts`.
 - **Produces:** `collectEvidence(listingId: string): Promise<number>` exported from `collector/evidence.ts` (returns rows written; replaces that listing's old evidence). Issue 11's worker calls this.
@@ -27,6 +31,7 @@ For each listing, find what the rest of the public web says about that therapist
 - `raw_text` is plain text with HTML stripped, cut to 8,000 characters.
 
 ## Acceptance check
+
 - `npm test` passes for `isSamePerson`:
   - same name, same phone → true
   - same name, different phone, city appears in text → true
@@ -41,6 +46,7 @@ For each listing, find what the rest of the public web says about that therapist
 - Bright Data spend for a full run is noted in `docs/smoke-test.md`.
 
 ## Prompt for your Claude
+
 ```
 Read CLAUDE.md, the plan's "Shared contract" and "Review Focus", docs/smoke-test.md and docs/issues/04-evidence-collector.md.
 

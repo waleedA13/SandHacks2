@@ -10,6 +10,6 @@ We record significant technical decisions as ADRs, following [Michael Nygard's f
 
 ## Index
 
-| ADR | Title | Status |
-| --- | ----- | ------ |
+| ADR                                           | Title                         | Status   |
+| --------------------------------------------- | ----------------------------- | -------- |
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |

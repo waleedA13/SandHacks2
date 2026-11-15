@@ -1,5 +1,6 @@
 # TheraCheck
 
+[![CI](https://github.com/waleedA13/TheraCheck/actions/workflows/ci.yml/badge.svg)](https://github.com/waleedA13/TheraCheck/actions/workflows/ci.yml)
 [![Security](https://github.com/waleedA13/TheraCheck/actions/workflows/security.yml/badge.svg)](https://github.com/waleedA13/TheraCheck/actions/workflows/security.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
@@ -14,17 +15,17 @@
 
 ## Tech stack
 
-| Layer | What we use |
-|---|---|
-| App | Next.js 16 (App Router, TypeScript), React 19, server-rendered pages |
-| Hosting | Vercel |
-| Database | Neon Postgres, through `@neondatabase/serverless` (`lib/db.ts`) |
-| Scraping | Bright Data Browser API, Web Unlocker and SERP API (`collector/brightdata.ts` only) |
-| Reading evidence | Gemini API, Flash tier with structured output (`verifier/gemini.ts` only) |
-| Voice | ElevenLabs Agents (`components/VoiceWidget.tsx` only) |
-| Tests | Vitest |
-| Scripts | `tsx` runs the TypeScript pipeline scripts by hand |
-| Runtime | Node.js 24, npm |
+| Layer            | What we use                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| App              | Next.js 16 (App Router, TypeScript), React 19, server-rendered pages                |
+| Hosting          | Vercel                                                                              |
+| Database         | Neon Postgres, through `@neondatabase/serverless` (`lib/db.ts`)                     |
+| Scraping         | Bright Data Browser API, Web Unlocker and SERP API (`collector/brightdata.ts` only) |
+| Reading evidence | Gemini API, Flash tier with structured output (`verifier/gemini.ts` only)           |
+| Voice            | ElevenLabs Agents (`components/VoiceWidget.tsx` only)                               |
+| Tests            | Vitest                                                                              |
+| Scripts          | `tsx` runs the TypeScript pipeline scripts by hand                                  |
+| Runtime          | Node.js 24, npm                                                                     |
 
 The four parts (collector, verifier, web app, voice agent) talk only through the database. Pages and API routes read the database; they never call Bright Data or Gemini while a user waits.
 
@@ -54,28 +55,54 @@ cp .env.example .env.local   # fill in your keys; never commit .env.local
 npm run dev                  # http://localhost:3000
 ```
 
-| Command | What it does | Needs |
-|---|---|---|
-| `npm run dev` | Runs the app locally | nothing for the placeholder page; `DATABASE_URL` once pages read data |
-| `npm test` | Runs the Vitest suite | nothing |
-| `npm run lint` | ESLint | nothing |
-| `npm run build` | Production build | nothing today; `DATABASE_URL` once pages read data |
-| `npm run db:reset` | Drops all tables, applies `db/schema.sql` then `db/seed.sql` | `DATABASE_URL` (uses `DATABASE_URL_UNPOOLED` if set) |
+## Commands
+
+| Command                 | What it does                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| `npm run dev`           | Start the dev server                                                           |
+| `npm run format`        | Format every file with Prettier                                                |
+| `npm run format:check`  | Check formatting without changing files                                        |
+| `npm run lint`          | Run ESLint                                                                     |
+| `npm run typecheck`     | Generate Next.js route types and run `tsc --noEmit`                            |
+| `npm run audit`         | Fail on high or critical `npm audit` advisories                                |
+| `npm run build`         | Production build                                                               |
+| `npm test`              | Same as `test:unit`                                                            |
+| `npm run test:unit`     | Unit tests (`*.test.ts`), no database or network                               |
+| `npm run db:test:up`    | Start Postgres and the Neon HTTP proxy in Docker                               |
+| `npm run db:test:reset` | Apply `db/schema.sql` and `db/seed.sql` to the Docker database                 |
+| `npm run test:int`      | Reset the Docker database, then run integration tests (`*.int.test.ts`)        |
+| `npm run test:e2e`      | Build the app and run Playwright on desktop and phone sizes                    |
+| `npm run db:test:down`  | Stop the Docker database and delete its data                                   |
+| `npm run db:reset`      | Reset the database in `.env.local`. This drops every table. Never run it in CI |
 
 ## Continuous integration
 
-`.github/workflows/security.yml` already runs a Gitleaks secret scan on every push to `main` and every pull request, plus dependency review on pull requests.
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`. It has four jobs, and each one starts only after the previous one passes:
 
-A build-and-test workflow should, on pull requests and pushes to `main`:
+1. **Static:** `format:check`, `lint`, `typecheck`, `audit`
+2. **Unit:** `test:unit`
+3. **Integration:** `db:test:up`, then `test:int`
+4. **E2E:** `db:test:up`, `db:test:reset`, then `test:e2e`. If it fails, the Playwright report is uploaded as an artifact for 7 days.
 
-1. Use Node.js 24 with the npm cache, then `npm ci`.
-2. Run `npm run lint`, `npm test` and `npm run build`.
+CI needs no secrets. Integration and e2e tests read `DATABASE_URL` from the committed `.env.test`, which points at a Postgres container on `db.localtest.me` through the [local Neon HTTP proxy](https://github.com/TimoWilhelm/local-neon-http-proxy). `lib/neon-local.ts` sends the Neon driver to that proxy only when the host is `db.localtest.me`, so the team Neon database stays out of reach. Tests never call Gemini, Bright Data, ElevenLabs or Twilio.
 
-Notes for that workflow:
+To run the same checks on your machine, start Docker, then run:
 
-- No step should need real keys. Never run `npm run db:reset` in CI: it wipes the shared Neon database.
-- `lib/db.ts` throws on import when `DATABASE_URL` is missing. If a build starts failing for that reason, set a dummy value in the workflow (for example `postgresql://ci:ci@localhost/ci`), not a real one.
-- Vercel deploys every push by itself, so CI does not need a deploy step.
+```bash
+npm run format:check
+npm run lint
+npm run typecheck
+npm run audit
+npm run test:unit
+npm run db:test:up
+npm run test:int
+npm run test:e2e
+npm run db:test:down
+```
+
+These commands work in PowerShell, cmd and bash. The first `test:e2e` run needs `npx playwright install chromium`.
+
+`.github/workflows/security.yml` also runs a Gitleaks secret scan on every push to `main` and every pull request, plus dependency review on pull requests. Vercel deploys every push by itself, so CI has no deploy step.
 
 ## Contributing
 

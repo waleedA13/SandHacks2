@@ -21,14 +21,23 @@ Thanks for helping build TheraCheck. This guide keeps the team working fast in o
 ## Ground rules
 
 - `main` should always run. Don't push directly to it.
-- Never commit secrets. Put them in `.env` (git-ignored) and add the variable *name* to `.env.example`.
+- Never commit secrets. Put them in `.env` (git-ignored) and add the variable _name_ to `.env.example`.
 - Keep pull requests focused: one feature or fix per PR.
 - Add or update tests when you change behaviour.
 - Update `CHANGELOG.md` under **Unreleased** for user-facing changes.
 
 ## Code style
 
-Follow the settings in `.editorconfig`. Linters and formatters will be added with the first code drop; run them before pushing once they exist.
+Follow the settings in `.editorconfig`. Before you push, run `npm run format`, then the four test scripts:
+
+```bash
+npm run test:unit
+npm run db:test:up   # needs Docker running
+npm run test:int
+npm run test:e2e
+```
+
+CI runs the same scripts on your pull request. See the Continuous integration section of the [README](README.md#continuous-integration).
 
 ## Reporting bugs and requesting features
 

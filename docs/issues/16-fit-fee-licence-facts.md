@@ -5,14 +5,17 @@
 Start only after the Sat 9 PM checkpoint shows the core working.
 
 ## User stories
+
 - US-F7-M, US-F7-R, US-F7-E, US-F7-D: the data behind the fit filters.
 - US-F8-M, US-F8-R, US-F8-E, US-F8-D: the posted self-pay fee.
 - US-F9-M, US-F9-R, US-F9-E, US-F9-D: the licence status, read from the evidence that issue 18 collects.
 
 ## What to build
+
 Extend the existing Gemini extraction to return more facts from the same evidence, in the same single request, and let the listings route filter on them.
 
 New facts:
+
 - `specialties`: zero or more values from the plan's fixed list only. Anything else is dropped.
 - `languages`: lower-case English names of languages other than English that the therapist offers sessions in.
 - `telehealth`: `yes`, `no` or `unknown`.
@@ -21,6 +24,7 @@ New facts:
 - `licenseDiscipline`: `yes`, `no` or `unknown`, from the same row only.
 
 Rules:
+
 - Each fact is filled only when the evidence states it. Silence gives an empty list, null or `unknown`.
 - These facts do not change the score.
 - The no-evidence short-circuit from issue 05 stays: empty lists, nulls, `unknown`, `unchecked`.
@@ -28,13 +32,16 @@ Rules:
 API: `GET /api/listings` accepts optional `specialty`, `language` and `telehealth=yes`. Filters combine with AND. A listing with unknown telehealth is excluded when `telehealth=yes`. `ListingSummary` and the detail response carry the new fields.
 
 ## Files
+
 - Modify: `verifier/gemini.ts`, `verifier/verify.ts`, `verifier/verify.test.ts`, `lib/queries.ts`, `lib/queries.test.ts`, `app/api/listings/route.ts`, `lib/types.ts` (new fields are already named in the contract)
 
 ## Interfaces
+
 - **Consumes:** evidence rows, including source `license_board` from issue 18 when present.
 - **Produces:** the new `verdicts` columns filled in; `listSummaries(insurer, city, filters?: { specialty?: string; language?: string; telehealth?: boolean })`.
 
 ## Acceptance check
+
 - `npm test` passes with `extractFacts` mocked:
   - a specialty outside the fixed list is dropped before saving
   - `selfPayMin` greater than `selfPayMax` is swapped
@@ -45,6 +52,7 @@ API: `GET /api/listings` accepts optional `specialty`, `language` and `telehealt
 - Tell Tracy the fields are live.
 
 ## Prompt for your Claude
+
 ```
 Read CLAUDE.md, the plan's "Shared contract" and "Fixed vocabularies", and docs/issues/16-fit-fee-licence-facts.md. Read verifier/gemini.ts and verifier/verify.ts as they are now.
 

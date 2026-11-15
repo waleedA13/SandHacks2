@@ -27,10 +27,10 @@ _The single sentence a judge should remember._
 
 ## Success criteria
 
-| Criterion | How we measure it |
-| --------- | ----------------- |
+| Criterion                    | How we measure it               |
+| ---------------------------- | ------------------------------- |
 | _Demo flow works end to end_ | _Live run with no manual steps_ |
-| _Metric_ | _Target_ |
+| _Metric_                     | _Target_                        |
 
 ## Sponsor tracks
 

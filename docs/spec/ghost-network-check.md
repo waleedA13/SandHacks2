@@ -33,16 +33,16 @@ A person with insurance looks for a therapist in their insurer's directory, then
 
 The user picks an insurer, plan and city. The pipeline pulls that directory's therapists, then checks each one against other public sources and ranks the list by how likely each is to be reachable and taking patients.
 
-| Source | What a plain request returned | Bright Data product |
-|---|---|---|
-| Aetna, Anthem directories | JS SHELL, with Akamai bot protection | Browser API |
-| Cigna, Blue Shield of California directories | JS SHELL | Browser API |
-| Kaiser doctor search | Redirect, with Akamai | Browser API |
-| Psychology Today therapist listings, including by-insurer pages | LOADED | Web Unlocker, only for volume |
-| Zocdoc therapists | BLOCKED (403) | Web Unlocker |
-| Headway, GoodTherapy | BLOCKED (403, Cloudflare challenge) | Web Unlocker |
-| Each therapist's own practice website | Not tested | SERP API to find it, Web Unlocker to read it |
-| NPI Registry (federal provider ID lookup) | LOADED; free public API | None. Use the API, do not scrape |
+| Source                                                          | What a plain request returned        | Bright Data product                          |
+| --------------------------------------------------------------- | ------------------------------------ | -------------------------------------------- |
+| Aetna, Anthem directories                                       | JS SHELL, with Akamai bot protection | Browser API                                  |
+| Cigna, Blue Shield of California directories                    | JS SHELL                             | Browser API                                  |
+| Kaiser doctor search                                            | Redirect, with Akamai                | Browser API                                  |
+| Psychology Today therapist listings, including by-insurer pages | LOADED                               | Web Unlocker, only for volume                |
+| Zocdoc therapists                                               | BLOCKED (403)                        | Web Unlocker                                 |
+| Headway, GoodTherapy                                            | BLOCKED (403, Cloudflare challenge)  | Web Unlocker                                 |
+| Each therapist's own practice website                           | Not tested                           | SERP API to find it, Web Unlocker to read it |
+| NPI Registry (federal provider ID lookup)                       | LOADED; free public API              | None. Use the API, do not scrape             |
 
 Every insurer directory probed needs a real browser, and three of the four independent listing sites refused a plain request. That is where Bright Data is load-bearing.
 
@@ -95,13 +95,13 @@ Cutting the voice agent brings it to about 12 hours and leaves a web-only rankin
 
 **Closest existing tools and their blind spots**
 
-| Tool | What it does | Blind spot |
-|---|---|---|
-| [Zocdoc](https://www.zocdoc.com/therapists) — BLOCKED to scripts | Verifies and books providers who join its platform (per search summary) | Covers only its own providers; does not audit an insurer's directory |
-| [Headway](https://headway.co/therapists/california/san-diego) — BLOCKED to scripts | Marketplace of therapists it has contracted with insurers | Same; only its own network |
-| [Psychology Today](https://www.psychologytoday.com/us/therapists/aetna/ca/san-diego) — LOADED | Therapist-written profiles, filterable by insurer | Self-reported and not checked against the insurer |
-| Insurer directories | The official list | The source of the problem |
-| Manual workaround | Phone each listing | Senate staff succeeded 18% of the time |
+| Tool                                                                                          | What it does                                                            | Blind spot                                                           |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [Zocdoc](https://www.zocdoc.com/therapists) — BLOCKED to scripts                              | Verifies and books providers who join its platform (per search summary) | Covers only its own providers; does not audit an insurer's directory |
+| [Headway](https://headway.co/therapists/california/san-diego) — BLOCKED to scripts            | Marketplace of therapists it has contracted with insurers               | Same; only its own network                                           |
+| [Psychology Today](https://www.psychologytoday.com/us/therapists/aetna/ca/san-diego) — LOADED | Therapist-written profiles, filterable by insurer                       | Self-reported and not checked against the insurer                    |
+| Insurer directories                                                                           | The official list                                                       | The source of the problem                                            |
+| Manual workaround                                                                             | Phone each listing                                                      | Senate staff succeeded 18% of the time                               |
 
 One search for a patient-facing tool that checks an insurer's directory against other sources found none.
 

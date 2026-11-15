@@ -5,28 +5,34 @@
 Decide at the Sat 9 PM checkpoint whether to do this. It is also the one live lookup shown on stage.
 
 ## User stories
+
 - US-F5-M: re-check the one therapist Maya likes before she calls.
 - US-F5-R: one large "check again" button that says when it is done.
 - US-F5-E: the old answer stays visible while the new one loads.
 - US-F5-D: refresh stale listings before a student appointment.
 
 ## What to build
+
 **Worker (Waleed).** A long-running script on a laptop that polls `jobs` for `queued` rows every 2 seconds. For each: mark `running`, call `collectEvidence(listingId)` then `verifyListing(listingId)`, mark `done` and set `finished_at`. On any error mark `failed`. The web app never runs this work itself.
 
 **Button (Tracy).** On the listing page, next to the call panel: "Check again now". It posts to the recheck route, then polls the job every 2 seconds.
+
 - While running: the old result stays on screen with "Checking now. This takes about a minute."
 - On `done`: the page shows the new reason, facts, sources and "Last checked just now".
 - **On `failed`, or after 120 seconds (Review Focus 5):** "We couldn't check right now. Showing the last result from {date}." The old result stays.
 
 ## Files
+
 - Create: `collector/worker.ts`, `components/RecheckButton.tsx`
 - Modify: `components/CallPanel.tsx` or `app/listing/[id]/page.tsx` to place the button
 
 ## Interfaces
+
 - **Consumes:** `collectEvidence` (issue 04), `verifyListing` (issue 05), `POST /api/listings/[id]/recheck`, `GET /api/jobs/[id]`, `GET /api/listings/[id]`.
 - **Produces:** command `npx tsx collector/worker.ts`; `<RecheckButton listingId />`.
 
 ## Acceptance check
+
 - With the worker running, pressing the button on a real listing finishes with a fresh "Last checked" time, and the time taken is written down for the pitch.
 - With the worker stopped, the button shows the could-not-check message after 120 seconds and the old result is still there.
 - Pressing the button twice quickly creates one job.
@@ -35,6 +41,7 @@ Decide at the Sat 9 PM checkpoint whether to do this. It is also the one live lo
 - The status text is announced by a screen reader.
 
 ## Prompt for your Claude (Waleed, worker)
+
 ```
 Read CLAUDE.md, the plan's "Shared contract" and "Review Focus", and docs/issues/11-live-recheck.md.
 
@@ -44,6 +51,7 @@ Do not change collector/evidence.ts or verifier/verify.ts beyond importing from 
 ```
 
 ## Prompt for your Claude (Tracy, button)
+
 ```
 Read CLAUDE.md, the plan's "Features and user stories" (F5) and "Review Focus", and docs/issues/11-live-recheck.md.
 

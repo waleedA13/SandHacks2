@@ -5,30 +5,36 @@
 Start only after the Sat 9 PM checkpoint shows the core working. This is the riskiest of the added features: the board's search rejected scripted requests during research, and a wrong match would say something false about a real person.
 
 ## User stories
+
 - US-F9-M, US-F9-R, US-F9-E, US-F9-D: a licence status backed by the board's own record.
 
 ## What to build
+
 For each listing, look the therapist up on the California Department of Consumer Affairs licence search (`https://search.dca.ca.gov/`) and store the record page's text as an evidence row with source `license_board`. Issue 16 reads status and discipline from that text.
 
 - Use the Bright Data Browser API through `collector/brightdata.ts`. Check first whether the board publishes a bulk download or API for these licence types; if it does, use that and do not scrape.
 - Search by first and last name, limited to the licence type that matches the listing's credential (for example LMFT, LCSW, LPCC, psychologist).
 
 **Matching rule.** Store a record only when all of these hold:
+
 - the search returns exactly one licensee with that normalised name and licence type, and
 - the record's city or county matches the listing's city.
 
 If there are zero results, several results, or the place does not match, store nothing. The app then says "We could not match a licence record", which is the correct outcome. Never pick the "closest" result.
 
 ## Files
+
 - Create: `collector/license.ts`, `collector/license.test.ts`
 - Modify: `collector/evidence.ts` (call it as a fourth source)
 
 ## Interfaces
+
 - **Consumes:** `openBrowser()` from `collector/brightdata.ts`; `normalizeName` from `collector/normalize.ts`.
 - **Produces:** `pickLicenseRecord(listing: { name: string; credential: string | null; city: string }, results: { name: string; type: string; city: string; url: string }[]): { url: string } | null` in `collector/license.ts`.
 - **Produces:** evidence rows with source `license_board`, `url` pointing at the board's record page, `raw_text` holding the record text including status and any disciplinary action.
 
 ## Acceptance check
+
 - `npm test` passes for `pickLicenseRecord`:
   - one result, same name, same type, same city → that record
   - two results with the same name and type → null
@@ -41,6 +47,7 @@ If there are zero results, several results, or the place does not match, store n
 - If the search cannot be automated within 45 minutes, stop, note it in `docs/smoke-test.md`, and tell the team. The pages already handle `unchecked`.
 
 ## Prompt for your Claude
+
 ```
 Read CLAUDE.md, the plan's "Shared contract", docs/smoke-test.md and docs/issues/18-licence-evidence-collector.md.
 First check whether the California Department of Consumer Affairs offers a public data download or API for licence lookups. If it does, tell me and use that instead of scraping.
