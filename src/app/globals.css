@@ -229,6 +229,9 @@ main {
   font-family: var(--f-ui);
   font-weight: 700;
   font-size: var(--step-2);
+  /* At 200% text on a 320px screen the name may break rather than scroll sideways. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .intro {
@@ -272,6 +275,10 @@ h2 {
   font-family: var(--f-ui);
   font-weight: 700;
   text-decoration: none;
+  text-align: center;
+  /* At 200% text on a 320px screen a long word breaks instead of pushing the page sideways. */
+  max-width: 100%;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
@@ -430,6 +437,12 @@ h2 {
   gap: var(--space-3);
 }
 
+/* Let the folded panels shrink to the screen at large text sizes. */
+.search-row > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* An open panel takes the whole row, so the form never squeezes beside the other pill. */
 .search-row > details[open] {
   flex-basis: 100%;
@@ -574,6 +587,7 @@ h2 {
 
 .badge {
   align-self: flex-start;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -914,6 +928,7 @@ h2 {
 }
 
 .say {
+  overflow-wrap: anywhere;
   padding: var(--space-3) var(--space-4);
   border-radius: 16px;
   background: var(--sage);
@@ -1104,6 +1119,24 @@ h2 {
   .search-pill summary:active,
   .narrow summary:active {
     transform: scale(0.97);
+  }
+
+  .btn:not(.btn-outline):active {
+    background: var(--teal-dark);
+  }
+
+  /* A short highlight when a report or call changes the badge. */
+  .badge-changed .badge {
+    animation: badge-changed 0.9s ease-out;
+  }
+
+  @keyframes badge-changed {
+    from {
+      box-shadow: 0 0 0 6px var(--sun);
+    }
+    to {
+      box-shadow: 0 0 0 0 transparent;
+    }
   }
 }
 
