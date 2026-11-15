@@ -37,6 +37,7 @@ beforeEach(() => {
     name: "Avery Example",
     insurer: "Aetna",
     optedOut: false,
+    lineType: "landline",
   });
   vi.mocked(claimCallSlot).mockResolvedValue("call_row_id");
   fetchMock.mockResolvedValue(
@@ -185,6 +186,7 @@ describe("POST /api/calls/start", () => {
       name: "Avery Example",
       insurer: "Aetna",
       optedOut: true,
+      lineType: "landline",
     });
 
     const res = await post({ listingId: LISTING, toNumber: TEAMMATE });
@@ -195,6 +197,46 @@ describe("POST /api/calls/start", () => {
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(claimCallSlot).not.toHaveBeenCalled();
+  });
+
+  it.each(["mobile", "voip", "unknown"] as const)(
+    "returns 403 for a %s office line, even with an allow-listed number",
+    async (lineType) => {
+      vi.mocked(getCallTarget).mockResolvedValue({
+        name: "Avery Example",
+        insurer: "Aetna",
+        optedOut: false,
+        lineType,
+      });
+
+      const res = await post({ listingId: LISTING, toNumber: TEAMMATE });
+
+      expect(res.status).toBe(403);
+      expect(await res.json()).toEqual({
+        error: "We only place assistant calls to office landlines.",
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(claimCallSlot).not.toHaveBeenCalled();
+    },
+  );
+
+  it("ignores a lineType sent in the body: only the listing's line type counts", async () => {
+    vi.mocked(getCallTarget).mockResolvedValue({
+      name: "Avery Example",
+      insurer: "Aetna",
+      optedOut: false,
+      lineType: "mobile",
+    });
+
+    const res = await post({
+      listingId: LISTING,
+      toNumber: TEAMMATE,
+      lineType: "landline",
+      phoneLineType: "landline",
+    });
+
+    expect(res.status).toBe(403);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("returns 429 when another call started in the last 60 seconds", async () => {
