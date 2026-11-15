@@ -66,7 +66,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   return (
     <div className="page">
       <Header />
-      <main>
+      <main id="main">
         <section className="intro">
           <h1>Find a therapist who will actually pick up.</h1>
           <p className="lede">

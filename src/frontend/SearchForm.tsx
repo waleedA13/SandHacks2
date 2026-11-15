@@ -69,7 +69,9 @@ export function SearchForm({
     <details className="search-pill">
       <summary>
         <span>
-          <b>{insurer}</b> · {city} · <span className="muted">Change</span>
+          <b>{insurer}</b> <span aria-hidden="true">·</span> {city}{" "}
+          <span aria-hidden="true">·</span>{" "}
+          <span className="muted">Change</span>
         </span>
         <i>
           <Icon name="search" size={18} />

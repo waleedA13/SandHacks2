@@ -42,7 +42,7 @@ export default async function ListingPage({
     <div className="page">
       <Header />
       <LabelProvider key={listing.id}>
-        <main className="detail">
+        <main id="main" className="detail">
           <Link className="link back" href={back}>
             <span aria-hidden="true">←</span> Back to results
           </Link>

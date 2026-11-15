@@ -3,6 +3,9 @@ import Link from "next/link";
 export function Header() {
   return (
     <header className="bar">
+      <a className="skip" href="#main">
+        Skip to main content
+      </a>
       <Link className="logo" href="/">
         {/* Sunrise: a half-sun above a horizon bar. */}
         <svg width="32" height="32" viewBox="0 0 36 36" aria-hidden="true">
