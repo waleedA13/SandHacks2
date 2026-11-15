@@ -24,6 +24,22 @@
   --bad-fg: #8a2e1e;
   --bad-line: #e9bdb2;
 
+  /* Type scale: body is --step-0 (18px at default size). rem, so it follows the browser's text size. */
+  --step--1: 1rem;
+  --step-0: 1.125rem;
+  --step-1: 1.25rem;
+  --step-2: 1.375rem;
+  --step-3: 1.875rem;
+  --step-4: 2.5rem;
+
+  /* Spacing scale. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2.5rem;
+
   color-scheme: light;
 }
 
@@ -42,7 +58,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--f-body);
-  font-size: 1.125rem;
+  font-size: var(--step-0);
   line-height: 1.5;
 }
 
@@ -101,7 +117,7 @@ svg {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 18px;
+  padding: 0 var(--space-4);
   border-radius: 999px;
   background: var(--teal);
   color: #ffffff;
@@ -114,7 +130,7 @@ svg {
 }
 
 .no-js {
-  padding: 14px 16px;
+  padding: var(--space-4) var(--space-4);
   border: 2px solid var(--ink);
   border-radius: 8px;
   font-weight: 700;
@@ -128,14 +144,14 @@ svg {
   min-height: 100dvh;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 12px 16px 32px;
+  padding: var(--space-3) var(--space-4) var(--space-6);
 }
 
 main {
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-4);
 }
 
 /* Wraps onto more lines on a narrow phone; no menu needed. */
@@ -143,15 +159,15 @@ main {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0 24px;
-  margin-bottom: 8px;
+  gap: 0 var(--space-5);
+  margin-bottom: var(--space-2);
 }
 
 .bar-nav,
 .foot-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 20px;
+  gap: 0 var(--space-5);
 }
 
 .bar-nav a,
@@ -182,9 +198,9 @@ main {
 .site-footer {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 40px;
-  padding-top: 16px;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--line);
   color: var(--ink-soft);
 }
@@ -192,25 +208,25 @@ main {
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   min-height: 44px;
   color: inherit;
   text-decoration: none;
   font-family: var(--f-ui);
   font-weight: 700;
-  font-size: 1.375rem;
+  font-size: var(--step-2);
 }
 
 .intro {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 h1 {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.875rem;
+  font-size: var(--step-3);
   line-height: 1.12;
   letter-spacing: -0.01em;
 }
@@ -223,8 +239,8 @@ h1 {
 h2 {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.375rem;
-  margin-bottom: 10px;
+  font-size: var(--step-2);
+  margin-bottom: var(--space-3);
 }
 
 /* ---------- Buttons ---------- */
@@ -232,9 +248,9 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 48px;
-  padding: 0 22px;
+  padding: 0 var(--space-5);
   border: 0;
   border-radius: 999px;
   background: var(--teal);
@@ -274,9 +290,9 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px;
+  gap: var(--space-3);
   max-width: 760px;
-  padding: 16px;
+  padding: var(--space-4);
   border-radius: 24px;
   background: var(--card);
   box-shadow: 0 10px 30px rgba(28, 43, 45, 0.1);
@@ -286,7 +302,7 @@ h2 {
   flex: 1 1 140px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -303,7 +319,7 @@ h2 {
   appearance: none;
   width: 100%;
   min-height: 48px;
-  padding: 0 40px 0 14px;
+  padding: 0 var(--space-6) 0 var(--space-4);
   border: 2px solid var(--field);
   border-radius: 12px;
   background: var(--card);
@@ -327,7 +343,7 @@ h2 {
 .text-input {
   width: 100%;
   min-height: 3rem;
-  padding: 0 0.875rem;
+  padding: 0 var(--space-4);
   border: 2px solid var(--field);
   border-radius: 0.75rem;
   background: var(--card);
@@ -337,7 +353,7 @@ h2 {
 
 .hint {
   color: var(--muted);
-  font-size: 0.9375rem;
+  font-size: var(--step--1);
 }
 
 .search .btn {
@@ -352,10 +368,10 @@ h2 {
 .search-pill summary {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   max-width: 100%;
   min-height: 52px;
-  padding: 0 8px 0 18px;
+  padding: 0 var(--space-2) 0 var(--space-4);
   border: 1px solid var(--field);
   border-radius: 999px;
   background: var(--card);
@@ -386,14 +402,14 @@ h2 {
 }
 
 .search-pill[open] summary {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 /* ---------- Fit filters ---------- */
 .search-wrap {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .filters {
@@ -409,16 +425,16 @@ h2 {
   padding: 0;
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: var(--step-1);
 }
 
 .check {
   flex: 1 1 100%;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   min-height: 48px;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
 }
 
@@ -435,16 +451,16 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0 16px;
-  font-weight: 700;
+  gap: 0 var(--space-4);
+  font-weight: 400;
 }
 
 /* ---------- Summary ---------- */
 .summary {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px;
+  gap: var(--space-4);
+  padding: var(--space-4);
   border-radius: 24px;
   background: var(--sun-pale);
 }
@@ -453,7 +469,7 @@ h2 {
   flex: none;
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 3.5rem;
+  font-size: var(--step-4);
   line-height: 1;
   color: var(--teal);
 }
@@ -461,13 +477,13 @@ h2 {
 .summary-line {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: var(--step-1);
   line-height: 1.3;
 }
 
 .soft {
   color: var(--ink-soft);
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .progress {
@@ -476,22 +492,22 @@ h2 {
 
 /* The plan we checked, with where to find theirs. */
 .plan {
-  padding-left: 14px;
+  padding-left: var(--space-4);
   border-left: 4px solid var(--teal);
 }
 
 .plan-line {
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .section-note {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
   color: var(--ink-soft);
 }
 
 /* ---------- Sections and grid ---------- */
 .start {
-  padding: 14px;
+  padding: var(--space-4);
   border-radius: 28px;
   background: var(--sun-pale);
 }
@@ -499,7 +515,7 @@ h2 {
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 /* ---------- Card ---------- */
@@ -507,8 +523,8 @@ h2 {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px 18px;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4);
   border-radius: 26px;
   background: var(--card);
   box-shadow: 0 2px 0 var(--line-soft);
@@ -517,7 +533,7 @@ h2 {
 .card h3 {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.375rem;
+  font-size: var(--step-2);
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -528,14 +544,14 @@ h2 {
 }
 
 .card-compact {
-  gap: 4px;
-  padding: 12px 14px;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line-soft);
   box-shadow: none;
 }
 
 .card-compact h3 {
-  font-size: 1.25rem;
+  font-size: var(--step-1);
 }
 
 .card-compact .btn {
@@ -546,8 +562,8 @@ h2 {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 3px 12px 3px 9px;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
   border: 1px solid;
   border-radius: 999px;
   font-family: var(--f-ui);
@@ -599,14 +615,14 @@ h2 {
 .honest {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--space-2);
   color: var(--ink-soft);
 }
 
 .demo svg,
 .honest svg {
   flex: none;
-  margin-top: 3px;
+  margin-top: var(--space-1);
 }
 
 /* Keep the questions and the call button together at the bottom of a stretched card. */
@@ -619,9 +635,9 @@ h2 {
 .script summary {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 var(--space-4);
   color: var(--teal);
   font-weight: 700;
   cursor: pointer;
@@ -650,21 +666,21 @@ h2 {
 .script ol {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0 16px 12px 38px;
+  gap: var(--space-1);
+  padding: 0 var(--space-4) var(--space-3) var(--space-6);
   list-style: decimal;
 }
 
 .actions {
-  padding-top: 6px;
+  padding-top: var(--space-2);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 14px;
+  gap: var(--space-2) var(--space-4);
 }
 
 .price {
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .sources-count {
@@ -682,14 +698,14 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
-  padding: 20px;
+  gap: var(--space-3);
+  padding: var(--space-5);
   border-radius: 24px;
   background: var(--card);
 }
 
 .skeleton {
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .sk {
@@ -727,15 +743,15 @@ h2 {
 
 .back {
   align-self: flex-start;
-  gap: 6px;
+  gap: var(--space-2);
   font-weight: 700;
 }
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 18px;
+  gap: var(--space-3);
+  padding: var(--space-4);
   border-radius: 26px;
   background: var(--card);
   box-shadow: 0 2px 0 var(--line-soft);
@@ -762,10 +778,8 @@ h2 {
 }
 
 .reason {
-  font-family: var(--f-head);
-  font-weight: 800;
-  font-size: 1.5rem;
-  line-height: 1.3;
+  font-size: var(--step-1);
+  line-height: 1.4;
 }
 
 .facts {
@@ -779,8 +793,8 @@ h2 {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 4px 16px;
-  padding: 12px 0;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) 0;
   border-top: 1px solid var(--line-soft);
 }
 
@@ -793,7 +807,7 @@ h2 {
   margin: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-family: var(--f-ui);
   font-weight: 700;
 }
@@ -837,14 +851,14 @@ h2 {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .source {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px 6px;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-4) var(--space-2);
   border-radius: 18px;
   background: var(--sage);
   overflow-wrap: anywhere;
@@ -858,14 +872,14 @@ h2 {
 .call-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .last-call {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4);
   border-radius: 18px;
   background: var(--sun-pale);
 }
@@ -894,23 +908,23 @@ h2 {
 .path {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 14px;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--line);
 }
 
 .path h3 {
   font-family: var(--f-head);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: var(--step-1);
   line-height: 1.2;
 }
 
 .path .btn {
   align-self: flex-start;
   max-width: 100%;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
   text-align: center;
   overflow-wrap: anywhere;
 }
@@ -918,11 +932,11 @@ h2 {
 .call-yourself {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .say {
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   border-radius: 16px;
   background: var(--sage);
 }
@@ -934,23 +948,23 @@ h2 {
 .say ul {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-left: 22px;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
   list-style: disc;
 }
 
 .say ol {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-left: 22px;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
   list-style: decimal;
 }
 
 .report {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .report-title {
@@ -972,7 +986,7 @@ h2 {
 .choices {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 24px;
+  gap: 0 var(--space-5);
 }
 
 .choice {
@@ -1005,7 +1019,7 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
+  gap: var(--space-3) var(--space-4);
 }
 
 .share-title {
@@ -1019,7 +1033,7 @@ h2 {
 }
 
 .print {
-  padding: 0 4px;
+  padding: 0 var(--space-1);
   border: 0;
   background: none;
   font-weight: 700;
@@ -1068,12 +1082,12 @@ h2 {
   .print-title {
     font-family: var(--f-head);
     font-weight: 800;
-    font-size: 1.5rem;
+    font-size: var(--step-2);
   }
 
   .start,
   .card {
-    padding: 8px 0;
+    padding: var(--space-2) 0;
     background: none;
     box-shadow: none;
     border: 0;
@@ -1118,7 +1132,7 @@ h2 {
 /* ---------- Narrow phones: drop the decorative icon so the pill fits on one line ---------- */
 @media (max-width: 22.4375em) {
   .search-pill summary {
-    padding-right: 18px;
+    padding-right: var(--space-4);
   }
 
   .search-pill i {
@@ -1129,11 +1143,11 @@ h2 {
 /* ---------- Wider screens ---------- */
 @media (min-width: 43.75em) {
   .page {
-    padding: 18px 32px 40px;
+    padding: var(--space-4) var(--space-6) var(--space-6);
   }
 
   h1 {
-    font-size: 2.5rem;
+    font-size: var(--step-4);
   }
 
   .search .btn {
@@ -1150,7 +1164,7 @@ h2 {
   }
 
   .start {
-    padding: 18px;
+    padding: var(--space-4);
   }
 }
 
