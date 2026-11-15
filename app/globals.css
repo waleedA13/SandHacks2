@@ -431,7 +431,9 @@ h2 {
   margin-top: 3px;
 }
 
+/* Keep the questions and the call button together at the bottom of a stretched card. */
 .script {
+  margin-top: auto;
   border-radius: 16px;
   background: var(--sage);
 }
@@ -475,7 +477,6 @@ h2 {
 }
 
 .actions {
-  margin-top: auto;
   padding-top: 6px;
   display: flex;
   flex-wrap: wrap;
@@ -552,6 +553,17 @@ h2 {
   }
 }
 
+/* ---------- Narrow phones: drop the decorative icon so the pill fits on one line ---------- */
+@media (max-width: 359px) {
+  .search-pill summary {
+    padding-right: 18px;
+  }
+
+  .search-pill i {
+    display: none;
+  }
+}
+
 /* ---------- Wider screens ---------- */
 @media (min-width: 700px) {
   .page {
@@ -574,5 +586,11 @@ h2 {
 @media (min-width: 900px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .start .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

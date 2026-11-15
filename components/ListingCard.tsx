@@ -11,7 +11,8 @@ function checkedDate(iso: string) {
     month: "short",
     day: "numeric",
     year: "numeric",
-    timeZone: "UTC",
+    // Every listed city is in California, so show the date people there see.
+    timeZone: "America/Los_Angeles",
   });
 }
 
