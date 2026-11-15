@@ -271,6 +271,12 @@ export async function collectEvidence(listingId: string): Promise<number> {
       });
   }
 
+  // A run that finds nothing is usually a bot check or a flaky search, not proof the pages are gone.
+  if (!found.length) {
+    console.log(`${l.name}: nothing found, kept the last evidence`);
+    return 0;
+  }
+
   const booking = bestBooking(found.map((f) => f.booking ?? null));
   console.log(
     `${l.name} booking: ${booking ? `${booking.source} ${booking.url}` : "none"}`,
