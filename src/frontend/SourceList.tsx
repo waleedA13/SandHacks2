@@ -4,10 +4,10 @@ import { checkedDate } from "./format";
 
 const NAME: Record<EvidenceSource, string> = {
   psychology_today: "Psychology Today",
-  practice_site: "Practice website",
+  practice_site: "Their own website",
   zocdoc: "Zocdoc",
   headway: "Headway",
-  license_board: "California licence board",
+  license_board: "California license board",
 };
 
 function excerpt(text: string) {
@@ -32,7 +32,7 @@ export function SourceList({ evidence }: { evidence: Detail["evidence"] }) {
         <li key={`${e.url}|${e.fetchedAt}`} className="source">
           <p className="source-name">{NAME[e.source] ?? e.source}</p>
           <p>&ldquo;{excerpt(e.rawText)}&rdquo;</p>
-          <p className="muted">Fetched {checkedDate(e.fetchedAt)}</p>
+          <p className="muted">Checked {checkedDate(e.fetchedAt)}</p>
           {isWebUrl(e.url) && (
             <a
               className="link"

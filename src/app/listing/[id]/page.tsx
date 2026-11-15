@@ -42,7 +42,7 @@ export default async function ListingPage({
     <div className="page">
       <Header />
       <LabelProvider key={listing.id}>
-        <main className="detail">
+        <main id="main" className="detail">
           <Link className="link back" href={back}>
             <span aria-hidden="true">←</span> Back to results
           </Link>
@@ -90,11 +90,11 @@ export default async function ListingPage({
                 <h2 id="found-h">What we found</h2>
                 <dl className="facts">
                   <FactRow
-                    question="Still practising here?"
+                    question="Still seeing patients here?"
                     answer={verdict?.stillPractising ?? "unknown"}
                   />
                   <FactRow
-                    question="Lists this insurer?"
+                    question="Takes this insurance?"
                     answer={verdict?.listsInsurer ?? "unknown"}
                   />
                   <FactRow
@@ -120,6 +120,7 @@ export default async function ListingPage({
               listingId={listing.id}
               name={listing.name}
               insurer={listing.insurer}
+              hasPhone={Boolean(listing.phone)}
               lastCall={lastCall}
             />
           </section>

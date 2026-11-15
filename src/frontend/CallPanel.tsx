@@ -21,7 +21,7 @@ export function LabelProvider({ children }: { children: ReactNode }) {
 export function LiveBadge({ label }: { label: Label }) {
   const [fresh] = use(LabelState) ?? [null];
   return (
-    <div aria-live="polite" className="live-badge">
+    <div aria-live="polite" aria-atomic="true" className="live-badge">
       <LabelBadge label={fresh ?? label} />
     </div>
   );
@@ -31,11 +31,13 @@ export function CallPanel({
   listingId,
   name,
   insurer,
+  hasPhone = false,
   lastCall,
 }: {
   listingId: string;
   name: string;
   insurer: string;
+  hasPhone?: boolean;
   lastCall: Pick<Call, "summary" | "calledAt"> | null;
 }) {
   const router = useRouter();
@@ -58,16 +60,26 @@ export function CallPanel({
           </p>
         </div>
       )}
-      <VoiceWidget
-        mode="confirm"
-        listingId={listingId}
-        name={name}
-        insurer={insurer}
-        onDone={({ label }) => {
-          if ((LABELS as string[]).includes(label)) setFresh(label as Label);
-          router.refresh();
-        }}
-      />
+      {/* Without JavaScript the call buttons do nothing, so hide them and say why. */}
+      <noscript>
+        <style>{".voice { display: none; }"}</style>
+        <p className="no-js">
+          The demo call needs JavaScript, which is turned off in your browser.
+          {hasPhone && " You can still phone the office yourself."}
+        </p>
+      </noscript>
+      <div className="voice">
+        <VoiceWidget
+          mode="confirm"
+          listingId={listingId}
+          name={name}
+          insurer={insurer}
+          onDone={({ label }) => {
+            if ((LABELS as string[]).includes(label)) setFresh(label as Label);
+            router.refresh();
+          }}
+        />
+      </div>
     </div>
   );
 }
