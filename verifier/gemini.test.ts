@@ -19,6 +19,13 @@ const good = {
   listsInsurer: "unknown",
   acceptingNew: "yes",
   reason: "Their own website says they are taking new clients.",
+  specialties: ["anxiety"],
+  languages: ["spanish"],
+  telehealth: "yes",
+  selfPayMin: 120,
+  selfPayMax: 160,
+  licenseStatus: "unchecked",
+  licenseDiscipline: "unknown",
 };
 const reply = (body: unknown) =>
   generateContent.mockResolvedValue({
@@ -50,6 +57,31 @@ describe("extractFacts", () => {
       "listsInsurer",
       "acceptingNew",
       "reason",
+      "specialties",
+      "languages",
+      "telehealth",
+      "selfPayMin",
+      "selfPayMax",
+      "licenseStatus",
+      "licenseDiscipline",
+    ]);
+    expect(schema.properties.specialties.items.enum).toEqual([
+      "anxiety",
+      "depression",
+      "trauma",
+      "grief",
+      "teens",
+      "children",
+      "couples",
+      "addiction",
+      "adhd",
+    ]);
+    expect(schema.properties.selfPayMin.type).toEqual(["integer", "null"]);
+    expect(schema.properties.licenseStatus.enum).toEqual([
+      "active",
+      "inactive",
+      "not_found",
+      "unchecked",
     ]);
     expect(schema.properties.acceptingNew.enum).toEqual([
       "yes",
@@ -68,6 +100,16 @@ describe("extractFacts", () => {
     expect(system).toMatch(/does not (say|state)/i);
     expect(system).toMatch(/names? the source/i);
     expect(system).toMatch(/140 characters/);
+  });
+
+  it("tells the model to take licence facts only from license_board and never estimate a fee", async () => {
+    reply(good);
+    await extractFacts(input);
+    const system: string =
+      generateContent.mock.calls[0][0].config.systemInstruction;
+    expect(system).toMatch(/only from evidence whose source is license_board/i);
+    expect(system).toMatch(/never estimate/i);
+    expect(system).toMatch(/only when the evidence states it/i);
   });
 
   it("keeps scraped text out of the instructions, as quoted data", async () => {
@@ -98,6 +140,19 @@ describe("extractFacts", () => {
   it("rejects a fact outside yes, no, unknown", async () => {
     reply({ ...good, listsInsurer: "YES" });
     await expect(extractFacts(input)).rejects.toThrow(/listsInsurer/);
+  });
+
+  it.each([
+    ["specialties", "anxiety"],
+    ["languages", [1]],
+    ["telehealth", "maybe"],
+    ["selfPayMin", "120"],
+    ["selfPayMax", undefined],
+    ["licenseStatus", "revoked"],
+    ["licenseDiscipline", null],
+  ])("rejects a wrong type or value for %s", async (key, value) => {
+    reply({ ...good, [key]: value });
+    await expect(extractFacts(input)).rejects.toThrow(new RegExp(key));
   });
 
   it("rejects a missing or empty reason", async () => {

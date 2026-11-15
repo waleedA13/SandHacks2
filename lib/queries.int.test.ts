@@ -75,6 +75,31 @@ describe("listSummaries", () => {
       ),
     ).toEqual(["00000000-0000-4000-8000-000000000001"]);
   });
+
+  it("combines specialty and language with AND", async () => {
+    const rows = await listSummaries("Aetna", "San Diego", {
+      specialty: "anxiety",
+      language: "spanish",
+    });
+    expect(rows.map((r) => r.id)).toEqual([
+      "00000000-0000-4000-8000-000000000001",
+    ]);
+    expect(rows[0]).toMatchObject({
+      specialties: ["anxiety", "depression"],
+      languages: ["spanish"],
+      selfPayMin: 150,
+      selfPayMax: 180,
+      licenseStatus: "active",
+    });
+  });
+
+  it("excludes unknown telehealth when filtering on telehealth yes", async () => {
+    const rows = await listSummaries("Aetna", "San Diego", {
+      telehealth: "yes",
+    });
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.telehealth === "yes")).toBe(true);
+  });
 });
 
 describe("recordCall and the final score", () => {

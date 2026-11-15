@@ -48,6 +48,19 @@ describe("GET /api/listings", () => {
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
 
+  it("returns only the Spanish-speaking fixtures for language=spanish", async () => {
+    const res = await listings(
+      new Request(
+        `${base}/listings?insurer=aetna&city=san%20diego&language=spanish`,
+      ),
+    );
+    const body = await res.json();
+    expect(body.map((r: { id: string }) => r.id).sort()).toEqual([
+      "00000000-0000-4000-8000-000000000001",
+      "00000000-0000-4000-8000-000000000003",
+    ]);
+  });
+
   it("rejects a missing insurer or city with 400", async () => {
     expect(
       (await listings(new Request(`${base}/listings?city=x`))).status,
