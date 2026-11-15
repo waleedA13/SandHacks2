@@ -15,17 +15,18 @@
 
 ## Tech stack
 
-| Layer            | What we use                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------- |
-| App              | Next.js 16 (App Router, TypeScript), React 19, server-rendered pages                            |
-| Hosting          | Vercel                                                                                          |
-| Database         | Neon Postgres, through `@neondatabase/serverless` (`src/backend/db/client.ts`)                  |
-| Scraping         | Bright Data Browser API, Web Unlocker and SERP API (`src/backend/collector/brightdata.ts` only) |
-| Reading evidence | Gemini API, Flash tier with structured output (`src/backend/verifier/gemini.ts` only)           |
-| Voice            | ElevenLabs Agents (`src/frontend/VoiceWidget.tsx` only)                                         |
-| Tests            | Vitest                                                                                          |
-| Scripts          | `tsx` runs the TypeScript pipeline scripts by hand                                              |
-| Runtime          | Node.js 24, npm                                                                                 |
+| Layer            | What we use                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| App              | Next.js 16 (App Router, TypeScript), React 19, server-rendered pages                                                                                                                             |
+| Hosting          | Vercel                                                                                                                                                                                           |
+| Database         | Neon Postgres, through `@neondatabase/serverless` (`src/backend/db/client.ts`)                                                                                                                   |
+| Scraping         | Bright Data Browser API, Web Unlocker and SERP API (`src/backend/collector/brightdata.ts` only)                                                                                                  |
+| Licence data     | California DCA monthly licensee files, downloaded by hand into `data/` (gitignored), matched by licence number from the NPI Registry API or by name and city; `src/backend/collector/license.ts` |
+| Reading evidence | Gemini API, Flash tier with structured output (`src/backend/verifier/gemini.ts` only)                                                                                                            |
+| Voice            | ElevenLabs Agents (`src/frontend/VoiceWidget.tsx` only)                                                                                                                                          |
+| Tests            | Vitest                                                                                                                                                                                           |
+| Scripts          | `tsx` runs the TypeScript pipeline scripts by hand                                                                                                                                               |
+| Runtime          | Node.js 24, npm                                                                                                                                                                                  |
 
 The four parts (collector, verifier, web app, voice agent) talk only through the database. Pages and API routes read the database; they never call Bright Data or Gemini while a user waits.
 
@@ -38,7 +39,7 @@ The four parts (collector, verifier, web app, voice agent) talk only through the
 │   ├── frontend/       # UI components used by the pages
 │   ├── backend/        # Server-only code
 │   │   ├── db/         # client.ts (sql), schema.sql, seed.sql, reset.ts
-│   │   ├── collector/  # Bright Data scrapers and the job worker
+│   │   ├── collector/  # Bright Data scrapers, licence matching and the job worker
 │   │   ├── verifier/   # Gemini verifier
 │   │   └── queries.ts  # Reads and writes used by pages and API routes
 │   └── shared/         # Used by both sides: types.ts, score.ts
@@ -58,6 +59,8 @@ npm install
 cp .env.example .env.local   # fill in your keys; never commit .env.local
 npm run dev                  # http://localhost:3000
 ```
+
+Licence checks need DCA's public licensee files in `data/`. The steps are in `docs/smoke-test.md` under "Licence lookup". The app runs without them; licences then show as not checked.
 
 ## Commands
 

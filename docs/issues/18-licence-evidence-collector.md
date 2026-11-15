@@ -2,6 +2,8 @@
 
 **Owner:** Waleed · **Priority:** P1 · **Time box:** 1.5 h, abandon if no record is fetched within 45 min · **Depends on:** 02, 04
 
+> **As built:** the board's search could not be automated (Bright Data needs KYC for government sites; the form has a Cloudflare check). The collector matches against DCA's monthly public licensee files instead: by licence number from the NPI Registry or Psychology Today, else by the issue's name-and-city rule. Status only; no discipline, no per-person link. See `docs/smoke-test.md`, "Licence lookup".
+
 Start only after the Sat 9 PM checkpoint shows the core working. This is the riskiest of the added features: the board's search rejected scripted requests during research, and a wrong match would say something false about a real person.
 
 ## User stories
