@@ -71,7 +71,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           <h1>Find a therapist who will actually pick up.</h1>
           <p className="lede">
             Finding care should be easier. We rank listings using public web
-            pages, so you can call the likeliest offices first.
+            pages, so you can call the offices most likely to answer first.
           </p>
         </section>
 
@@ -101,7 +101,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                 </p>
                 <p className="soft">
                   {
-                    "If you've hit dead numbers before, it's not you. Insurer directories are often out of date."
+                    "If you've hit dead numbers before, it's not you. Insurance company lists are often out of date."
                   }
                 </p>
               </div>

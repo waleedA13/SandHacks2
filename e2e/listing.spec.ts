@@ -22,7 +22,7 @@ test("a listing with evidence shows facts and sources", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText("Likely available")).toBeVisible();
   await expect(page.locator(".fact")).toHaveCount(3);
-  await expect(page.getByText("Still practising here?")).toBeVisible();
+  await expect(page.getByText("Still seeing patients here?")).toBeVisible();
 
   const links = page.locator(".source a");
   await expect(links).toHaveCount(3);

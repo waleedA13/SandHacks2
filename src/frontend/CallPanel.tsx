@@ -31,11 +31,13 @@ export function CallPanel({
   listingId,
   name,
   insurer,
+  hasPhone = false,
   lastCall,
 }: {
   listingId: string;
   name: string;
   insurer: string;
+  hasPhone?: boolean;
   lastCall: Pick<Call, "summary" | "calledAt"> | null;
 }) {
   const router = useRouter();
@@ -63,7 +65,7 @@ export function CallPanel({
         <style>{".voice { display: none; }"}</style>
         <p className="no-js">
           The demo call needs JavaScript, which is turned off in your browser.
-          You can still phone the office yourself using the number above.
+          {hasPhone && " You can still phone the office yourself."}
         </p>
       </noscript>
       <div className="voice">

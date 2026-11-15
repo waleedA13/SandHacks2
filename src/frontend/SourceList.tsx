@@ -4,10 +4,10 @@ import { checkedDate } from "./format";
 
 const NAME: Record<EvidenceSource, string> = {
   psychology_today: "Psychology Today",
-  practice_site: "Practice website",
+  practice_site: "Their own website",
   zocdoc: "Zocdoc",
   headway: "Headway",
-  license_board: "California licence board",
+  license_board: "California license board",
 };
 
 function excerpt(text: string) {

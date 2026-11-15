@@ -36,7 +36,20 @@ test.describe("with JavaScript off", () => {
       page.getByText("The demo call needs JavaScript", { exact: false }),
     ).toBeVisible();
     await expect(
+      page.getByText("You can still phone the office yourself.", {
+        exact: false,
+      }),
+    ).toBeVisible();
+    await expect(
       page.getByRole("button", { name: "Start demo call" }),
     ).toBeHidden();
   });
+});
+
+test("the search form uses plain labels", async ({ page }) => {
+  await page.goto("/?insurer=Aetna&city=Fresno");
+  await expect(page.getByLabel("Insurance company")).toHaveAttribute(
+    "name",
+    "insurer",
+  );
 });

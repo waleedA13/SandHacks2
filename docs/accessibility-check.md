@@ -33,25 +33,26 @@ Lighthouse reported no failed accessibility audits, before or after. The fixes b
 
 ## As Elena (slow connection, plain language)
 
-| Check                                                                                     | Result                  | Notes                                                                                                                                                                                                                                                                                                                                                                  |
-| ----------------------------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Slow 4G: results show in under 3 seconds                                                  | **pass, with a caveat** | Lighthouse mobile simulates Slow 4G and a slow phone CPU. Results page: first text 0.9 s, largest content 2.5 s. The caveat is that the test data was local, so the real database query time isn't included. Tracy should re-run on the live site.                                                                                                                     |
-| Plain language                                                                            | **fixed in part**       | One clear win applied: "Fetched {date}" is now "Checked {date}". Other suggestions are waiting for a decision (see below).                                                                                                                                                                                                                                             |
-| JavaScript off: search and the listing page work; the call panel says it needs JavaScript | **fixed**               | Search (a plain GET form), the folding search pill and "What to ask" (native `<details>`) and the listing page all worked. The call panel showed a "Start demo call" button that did nothing. It is now hidden and replaced by: "The demo call needs JavaScript, which is turned off in your browser. You can still phone the office yourself using the number above." |
+| Check                                                                                     | Result                  | Notes                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Slow 4G: results show in under 3 seconds                                                  | **pass, with a caveat** | Lighthouse mobile simulates Slow 4G and a slow phone CPU. Results page: first text 0.9 s, largest content 2.5 s. The caveat is that the test data was local, so the real database query time isn't included. Tracy should re-run on the live site.                                                                                                                                                                  |
+| Plain language                                                                            | **fixed**               | The jargon sentences found were rewritten in plain words. The changes are listed below. The spec's fixed sentences (the five labels, the demo-call note, the honesty note, the empty-state sentence and the summary sentence) were kept as they are.                                                                                                                                                                |
+| JavaScript off: search and the listing page work; the call panel says it needs JavaScript | **fixed**               | Search (a plain GET form), the folding search pill and "What to ask" (native `<details>`) and the listing page all worked. The call panel showed a "Start demo call" button that did nothing. It is now hidden and replaced by: "The demo call needs JavaScript, which is turned off in your browser. You can still phone the office yourself." The second sentence shows only when the listing has a phone number. |
 
-### Plain-language suggestions waiting for a decision
+### Plain-language changes
 
-These were left as they are because the spec names them or the right wording is debatable.
+Tracy approved these.
 
-| Where                           | Now                                           | Suggested                                                 |
-| ------------------------------- | --------------------------------------------- | --------------------------------------------------------- |
-| Search label                    | Insurer                                       | Insurance company                                         |
-| Listing facts (spec 09 wording) | Still practising here?                        | Still seeing patients here?                               |
-| Listing facts (spec 09 wording) | Lists this insurer?                           | Takes this insurance?                                     |
-| Results intro                   | …so you can call the likeliest offices first. | …so you can call the offices most likely to answer first. |
-| Results summary                 | Insurer directories are often out of date.    | Insurance company lists are often out of date.            |
-| Source name                     | Practice website                              | Their own website                                         |
-| Spelling                        | practising, licence (UK)                      | practicing, license (US)                                  |
+| Where           | Before                                        | After                                                     |
+| --------------- | --------------------------------------------- | --------------------------------------------------------- |
+| Search label    | Insurer                                       | Insurance company                                         |
+| Listing facts   | Still practising here?                        | Still seeing patients here?                               |
+| Listing facts   | Lists this insurer?                           | Takes this insurance?                                     |
+| Results intro   | …so you can call the likeliest offices first. | …so you can call the offices most likely to answer first. |
+| Results summary | Insurer directories are often out of date.    | Insurance company lists are often out of date.            |
+| Source date     | Fetched {date}                                | Checked {date}                                            |
+| Source name     | Practice website                              | Their own website                                         |
+| Source name     | California licence board                      | California license board                                  |
 
 ## Devices and browsers
 
