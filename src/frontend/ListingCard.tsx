@@ -38,6 +38,12 @@ export function ListingCard({
         {credential && <span className="cred">, {credential}</span>}
       </h3>
       <p>{listing.reason}</p>
+      {listing.sourceCount > 0 && (
+        <p className="sources-count">
+          Checked in {listing.sourceCount}{" "}
+          {listing.sourceCount === 1 ? "place" : "places"}
+        </p>
+      )}
       {price && <p className="price">Their posted price: {price}</p>}
       {listing.call && !listing.call.summary?.startsWith(CALLER_REPORT) && (
         <p className="demo">
@@ -51,10 +57,20 @@ export function ListingCard({
           <Icon name="info" size={18} />
           What to ask when they answer
         </summary>
-        <ol>
-          <li>&ldquo;Do you take {insurer}?&rdquo;</li>
-          <li>&ldquo;Are you accepting new patients?&rdquo;</li>
-        </ol>
+        {label === "Pay yourself" ? (
+          <ol>
+            <li>
+              &ldquo;Do you have openings for clients who pay for
+              themselves?&rdquo;
+            </li>
+            <li>&ldquo;What do you charge per session?&rdquo;</li>
+          </ol>
+        ) : (
+          <ol>
+            <li>&ldquo;Do you take {insurer}?&rdquo;</li>
+            <li>&ldquo;Are you accepting new patients?&rdquo;</li>
+          </ol>
+        )}
       </details>
       <div className="actions">
         {paths.length === 0 && (

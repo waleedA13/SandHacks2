@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { priceText } from "./format";
+import { commonPlan, priceText } from "./format";
 
 describe("priceText", () => {
   it("shows one price or a range", () => {
@@ -10,5 +10,18 @@ describe("priceText", () => {
 
   it("is null with no fee", () => {
     expect(priceText(null, null)).toBeNull();
+  });
+});
+
+describe("commonPlan", () => {
+  it("picks the plan most listings share", () => {
+    expect(commonPlan(["Open Access", "PPO", "Open Access"])).toBe(
+      "Open Access",
+    );
+  });
+
+  it("is empty with no plans", () => {
+    expect(commonPlan([])).toBe("");
+    expect(commonPlan([""])).toBe("");
   });
 });

@@ -95,6 +95,27 @@ it("a mobile listing gets the script and no assistant", () => {
   ).toBeTruthy();
 });
 
+it("a Pay yourself listing asks about self-pay, not the insurer", () => {
+  render(
+    <LabelProvider>
+      <BookingPanel
+        listing={LISTING}
+        paths={["call_yourself"]}
+        lastCall={null}
+        selfPay
+      />
+    </LabelProvider>,
+  );
+  expect(
+    screen.getByText(
+      /Do you have openings for clients who pay for themselves\?/,
+    ),
+  ).toBeTruthy();
+  expect(screen.getByText(/What do you charge per session\?/)).toBeTruthy();
+  expect(screen.queryByText(/Do you take/)).toBeNull();
+  expect(screen.queryByText(/Is Quinn Sample taking/)).toBeNull();
+});
+
 it("says so when there is no way to contact", () => {
   renderPanel([]);
   expect(screen.getByText("No way to contact listed.")).toBeTruthy();

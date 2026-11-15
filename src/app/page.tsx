@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import Link from "next/link";
+import { planToAsk } from "@/frontend/BookingPanel";
 import { fitFromParams, withFit } from "@/frontend/FitFilters";
+import { commonPlan } from "@/frontend/format";
 import { ListingCard } from "@/frontend/ListingCard";
 import { first } from "@/frontend/params";
 import { SearchForm } from "@/frontend/SearchForm";
@@ -22,8 +24,7 @@ const DEAD_END: Label[] = [
   "Demo call: unavailable",
   "Caller reported: unavailable",
 ];
-// shortcut: Pay yourself sits in "Also worth a try" until #52 gives it its own section.
-const MAYBE: Label[] = ["Unclear", "Pay yourself"];
+const MAYBE: Label[] = ["Unclear"];
 
 type Ranked = { listing: ListingSummary; rank: number };
 
@@ -95,7 +96,9 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     ...reachable.slice(3),
     ...ranked.filter((r) => MAYBE.includes(r.listing.label)),
   ];
+  const payYourself = ranked.filter((r) => r.listing.label === "Pay yourself");
   const deadEnds = ranked.filter((r) => DEAD_END.includes(r.listing.label));
+  const plan = commonPlan(all.map((l) => l.plan));
 
   return (
     <main id="main">
@@ -154,6 +157,18 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             </div>
           </section>
 
+          {plan && (
+            <div className="plan">
+              <p className="plan-line">
+                Checked against {planToAsk(insurer, plan)}
+              </p>
+              <p className="muted">
+                Your plan name is on your insurance card. If it says something
+                else, these results may not apply.
+              </p>
+            </div>
+          )}
+
           <p className="progress">
             You narrowed {stats.total} listings to {stats.likelyAvailable} worth
             calling.
@@ -179,7 +194,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               <ShareShortlist
                 insurer={insurer}
                 city={city}
-                top={[...startWith, ...alsoTry, ...deadEnds]
+                top={[...startWith, ...alsoTry, ...payYourself, ...deadEnds]
                   .slice(0, 3)
                   .map(({ listing: { id, name, label, phone } }) => ({
                     id,
@@ -215,6 +230,21 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <h2 id="also-h">Also worth a try</h2>
                   <CardList
                     items={alsoTry}
+                    variant="full"
+                    insurer={insurer}
+                    query={query.toString()}
+                  />
+                </section>
+              )}
+
+              {payYourself.length > 0 && (
+                <section aria-labelledby="pay-h">
+                  <h2 id="pay-h">If you can pay yourself</h2>
+                  <p className="section-note">
+                    {`These therapists don't seem to take ${insurer} now, but they see clients who pay for themselves.`}
+                  </p>
+                  <CardList
+                    items={payYourself}
                     variant="full"
                     insurer={insurer}
                     query={query.toString()}

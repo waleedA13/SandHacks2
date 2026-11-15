@@ -474,6 +474,21 @@ h2 {
   font-weight: 700;
 }
 
+/* The plan we checked, with where to find theirs. */
+.plan {
+  padding-left: 14px;
+  border-left: 4px solid var(--teal);
+}
+
+.plan-line {
+  font-weight: 700;
+}
+
+.section-note {
+  margin-bottom: 12px;
+  color: var(--ink-soft);
+}
+
 /* ---------- Sections and grid ---------- */
 .start {
   padding: 14px;
@@ -650,6 +665,10 @@ h2 {
 
 .price {
   font-weight: 700;
+}
+
+.sources-count {
+  color: var(--muted);
 }
 
 .no-phone {
@@ -910,6 +929,14 @@ h2 {
 
 .say p {
   font-weight: 700;
+}
+
+.say ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 22px;
+  list-style: disc;
 }
 
 .say ol {
