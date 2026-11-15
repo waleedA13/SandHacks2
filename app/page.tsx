@@ -22,10 +22,12 @@ function CardList({
   items,
   variant,
   insurer,
+  city,
 }: {
   items: Ranked[];
   variant: "full" | "compact";
   insurer: string;
+  city: string;
 }) {
   return (
     <ol className="grid">
@@ -36,6 +38,7 @@ function CardList({
             rank={rank}
             variant={variant}
             insurer={insurer}
+            city={city}
           />
         </li>
       ))}
@@ -119,14 +122,24 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                     ? "this one"
                     : `these ${startWith.length}`}
                 </h2>
-                <CardList items={startWith} variant="full" insurer={insurer} />
+                <CardList
+                  items={startWith}
+                  variant="full"
+                  insurer={insurer}
+                  city={city}
+                />
               </section>
             )}
 
             {alsoTry.length > 0 && (
               <section aria-labelledby="also-h">
                 <h2 id="also-h">Also worth a try</h2>
-                <CardList items={alsoTry} variant="full" insurer={insurer} />
+                <CardList
+                  items={alsoTry}
+                  variant="full"
+                  insurer={insurer}
+                  city={city}
+                />
               </section>
             )}
 
@@ -137,6 +150,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   items={deadEnds}
                   variant="compact"
                   insurer={insurer}
+                  city={city}
                 />
               </section>
             )}

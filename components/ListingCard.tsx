@@ -5,7 +5,7 @@ import { LabelBadge } from "./LabelBadge";
 
 const DEAD_END = new Set(["Likely dead end", "Demo call: unavailable"]);
 
-function checkedDate(iso: string) {
+export function checkedDate(iso: string) {
   if (!iso) return "not yet";
   return new Date(iso).toLocaleDateString("en-US", {
     month: "short",
@@ -16,7 +16,7 @@ function checkedDate(iso: string) {
   });
 }
 
-function telHref(phone: string) {
+export function telHref(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return `tel:${digits.length === 10 ? `+1${digits}` : digits}`;
 }
@@ -26,11 +26,13 @@ export function ListingCard({
   rank,
   variant,
   insurer,
+  city,
 }: {
   listing: ListingSummary;
   rank: number;
   variant: "full" | "compact";
   insurer: string;
+  city: string;
 }) {
   const { id, name, credential, phone, label } = listing;
   const headingId = `listing-${id}`;
@@ -72,8 +74,10 @@ export function ListingCard({
         ) : (
           <span className="muted no-phone">No phone number listed</span>
         )}
-        {/* No prefetch: the detail page (issue #13) does not exist yet. */}
-        <Link className="link" href={`/listing/${id}`} prefetch={false}>
+        <Link
+          className="link"
+          href={`/listing/${id}?${new URLSearchParams({ insurer, city })}`}
+        >
           View details<span className="sr-only"> for {name}</span>
         </Link>
       </div>
