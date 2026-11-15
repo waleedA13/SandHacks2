@@ -28,7 +28,9 @@ export async function runOneJob(): Promise<boolean> {
   const start = Date.now();
   let status: "done" | "failed" = "done";
   try {
-    await collectEvidence(job.listing_id);
+    // Nothing new found: re-scoring old evidence would show a misleading "Last checked just now".
+    if (!(await collectEvidence(job.listing_id)))
+      throw new Error("no evidence found, kept the last result");
     await verifyListing(job.listing_id);
   } catch (e) {
     status = "failed";
