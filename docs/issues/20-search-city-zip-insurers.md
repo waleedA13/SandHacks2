@@ -1,6 +1,6 @@
 # 20 Search by city or ZIP code, with insurers from the database (GitHub #40)
 
-**Owner:** Tracy (Qinggin) · **Priority:** P1 · **Time box:** 2 h · **Depends on:** 08. Touches `app/page.tsx` and `components/SearchForm.tsx`, so do not work on it at the same time as 17 or 19.
+**Owner:** Tracy (Qinggin) · **Priority:** P1 · **Time box:** 2 h · **Depends on:** #12 (merged). Touches `src/app/page.tsx` and `src/frontend/SearchForm.tsx`, so do not work on it at the same time as #21 or #39.
 
 ## Why
 
@@ -10,7 +10,7 @@ The search form offers one insurer, `Aetna`, typed into the code. The real listi
 
 |                 | Before                                           | After                                                                              |
 | --------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| Insurer list    | `["Aetna"]` in `components/SearchForm.tsx`       | Every insurer that has listings, read from the database                            |
+| Insurer list    | `["Aetna"]` in `src/frontend/SearchForm.tsx`     | Every insurer that has listings, read from the database                            |
 | Where           | A dropdown of six fixed cities                   | One box, "City or ZIP code", with the cities we have as suggestions                |
 | ZIP search      | Not possible                                     | `92103` shows only listings whose address has that ZIP                             |
 | First visit     | Always Aetna, San Diego, even with no Aetna data | The first insurer and city that have listings                                      |
@@ -19,23 +19,23 @@ The search form offers one insurer, `Aetna`, typed into the code. The real listi
 
 ## What to build
 
-**1. Search options from the database.** Add `listSearchOptions()` to `lib/queries.ts`. It returns `{ insurers: string[]; cities: string[] }`: the distinct insurers and the distinct cities in `listings`, each sorted A to Z.
+**1. Search options from the database.** Add `listSearchOptions()` to `src/backend/queries.ts`. It returns `{ insurers: string[]; cities: string[] }`: the distinct insurers and the distinct cities in `listings`, each sorted A to Z.
 
-**2. City or ZIP in the same parameter.** Keep the query parameter named `city` and keep the signature `listSummaries(insurer, city, filters?)`. Change only how `city` is matched, in the one shared query (`summaryRows` in `lib/queries.ts`):
+**2. City or ZIP in the same parameter.** Keep the query parameter named `city` and keep the signature `listSummaries(insurer, city, filters?)`. Change only how `city` is matched, in the one shared query (`summaryRows` in `src/backend/queries.ts`):
 
 - Exactly five digits: match listings whose `address` contains that ZIP as a whole number (`92103` must not match `192103` or `9210`).
 - Anything else: match the listing's city, ignoring case, as today.
 
 `getStats` and `GET /api/listings` call the same query, so they follow without changes. Trim the value and cap it at 60 characters before it reaches the query.
 
-**3. The form (`components/SearchForm.tsx`).**
+**3. The form (`src/frontend/SearchForm.tsx`).**
 
 - Insurer: the same `<select>`, with options from `listSearchOptions().insurers`. Remove the `INSURERS` and `CITIES` constants.
 - Where: replace the city `<select>` with `<input type="text" name="city">`, label "City or ZIP code", `autocomplete="address-level2"`, and a `<datalist>` of `listSearchOptions().cities`. A hint under it: "For example San Diego or 92103."
 - It stays a plain GET form that works without JavaScript.
 - The collapsed pill reads `{insurer} · {city or ZIP} · Change`.
 
-**4. The page (`app/page.tsx`).**
+**4. The page (`src/app/page.tsx`).**
 
 - With no `insurer` or `city` in the URL, use the first insurer from the options and the first city that insurer has listings in.
 - The summary sentence reads "Of 12 Cigna listings in San Diego, …" for a city and "Of 4 Cigna listings in 92103, …" for a ZIP.
@@ -44,22 +44,22 @@ The search form offers one insurer, `Aetna`, typed into the code. The real listi
 ## Not in this issue
 
 - Street-address or "within 5 miles" search. Listings have no map coordinates, and looking them up would send a patient's address to an outside service.
-- Filters for what the therapist treats, language, or video sessions. Those are issue 17.
+- Filters for what the therapist treats, language, or video sessions. Those are #21.
 - A plan picker. Each insurer has one plan in the data today.
 
 ## Files
 
-- Modify: `lib/queries.ts`, `lib/queries.int.test.ts`, `components/SearchForm.tsx`, `app/page.tsx`, `app/globals.css`, `e2e/home.spec.ts`
-- Do not touch: `app/api/`, `components/VoiceWidget.tsx`, `voice/`, `verifier/`, `collector/`
+- Modify: `src/backend/queries.ts`, `src/backend/queries.int.test.ts`, `src/frontend/SearchForm.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `e2e/home.spec.ts`
+- Do not touch: `src/app/api/`, `src/frontend/VoiceWidget.tsx`, `voice/`, `src/backend/verifier/`, `src/backend/collector/`
 
 ## Interfaces
 
-- **Consumes:** `listSummaries`, `getStats` from `lib/queries.ts`.
-- **Produces:** `listSearchOptions(): Promise<{ insurers: string[]; cities: string[] }>` in `lib/queries.ts`. `listSummaries(insurer, city, filters?)` keeps its signature; `city` may now be a five-digit ZIP.
+- **Consumes:** `listSummaries`, `getStats` from `src/backend/queries.ts`.
+- **Produces:** `listSearchOptions(): Promise<{ insurers: string[]; cities: string[] }>` in `src/backend/queries.ts`. `listSummaries(insurer, city, filters?)` keeps its signature; `city` may now be a five-digit ZIP.
 
 ## Acceptance check
 
-- `npm run test:int` passes with new cases in `lib/queries.int.test.ts`:
+- `npm run test:int` passes with new cases in `src/backend/queries.int.test.ts`:
   - `listSearchOptions()` on the seed data returns `["Aetna"]` and `["San Diego"]`
   - `listSummaries("Aetna", "92103")` returns only the seed listings whose address ends in `92103`
   - `listSummaries("Aetna", "9210")` and `listSummaries("Aetna", "192103")` return nothing
@@ -77,11 +77,11 @@ The search form offers one insurer, `Aetna`, typed into the code. The real listi
 
 ```
 Read CLAUDE.md, AGENTS.md, and docs/issues/20-search-city-zip-insurers.md. This is Next.js 16: read the relevant guide in node_modules/next/dist/docs/ before changing a page.
-Read lib/queries.ts (summaryRows, listSummaries, getStats), lib/queries.int.test.ts, components/SearchForm.tsx, app/page.tsx, components/ListingCard.tsx and app/listing/[id]/page.tsx as they are now. Read db/seed.sql to see which ZIP codes the seed addresses use.
+Read src/backend/queries.ts (summaryRows, listSummaries, getStats), src/backend/queries.int.test.ts, src/frontend/SearchForm.tsx, src/app/page.tsx, src/frontend/ListingCard.tsx and src/app/listing/[id]/page.tsx as they are now. Read src/backend/db/seed.sql to see which ZIP codes the seed addresses use.
 
-Start with the tests. Add the cases in the acceptance check to lib/queries.int.test.ts, run npm run db:test:up and npm run test:int, and see them fail. Never run npm run db:reset and never read .env.local: tests use the Docker database only.
+Start with the tests. Add the cases in the acceptance check to src/backend/queries.int.test.ts, run npm run db:test:up and npm run test:int, and see them fail. Never run npm run db:reset and never read .env.local: tests use the Docker database only.
 
-Then, in lib/queries.ts:
+Then, in src/backend/queries.ts:
 - add listSearchOptions(), returning the distinct insurers and cities, sorted
 - in summaryRows, when the city value is exactly five digits, match it as a whole ZIP inside address; otherwise keep the case-insensitive city match. Keep it in the tagged sql template with the value as a parameter; never build SQL from a string.
 Do not change listSummaries' signature, the API routes or the voice files.
