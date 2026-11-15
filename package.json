@@ -11,7 +11,8 @@
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
     "audit": "npm audit --audit-level=high",
-    "test": "vitest run",
+    "test": "vitest run --project unit",
+    "test:unit": "vitest run --project unit",
     "db:reset": "tsx --env-file=.env.local db/reset.ts"
   },
   "dependencies": {
