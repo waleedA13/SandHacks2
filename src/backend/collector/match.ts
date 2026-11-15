@@ -13,11 +13,19 @@ export function isSamePerson(
     phone: string | null;
     city: string;
     nameIsUnique: boolean;
+    licenceNumber?: string | null;
   },
   page: { names: string[]; phones: string[]; text: string },
 ): boolean {
   const name = normalizeName(listing.name);
   if (!page.names.some((n) => normalizeName(n) === name)) return false;
+
+  // The state board confirmed this number for the listing; group practices share phones and addresses, so this is the exact tie.
+  if (
+    listing.licenceNumber &&
+    new RegExp(`(?<!\\d)${listing.licenceNumber}(?!\\d)`).test(page.text)
+  )
+    return true;
 
   const phone = listing.phone ? normalizePhone(listing.phone) : null;
   if (phone && page.phones.some((p) => normalizePhone(p) === phone))

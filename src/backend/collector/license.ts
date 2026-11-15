@@ -101,11 +101,11 @@ export function pickByLicenceNumber<R extends Result & { number: string }>(
   return perType.flat()[0] ?? null;
 }
 
-// Psychology Today profiles show "Licensed by State of California / LMFT 37318".
+// Psychology Today profiles show "Licensed by State of California / LMFT 37318", sometimes "/ PSY27872".
 export function profileLicenceNumbers(text: string): string[] {
   return [
     ...text.matchAll(
-      /Licensed by State of California \/ (?:[A-Za-z]+ )?(\d+)/g,
+      /Licensed by State of California \/ (?:[A-Za-z]+ ?)?(\d+)/g,
     ),
   ].map((m) => m[1]);
 }
@@ -163,7 +163,12 @@ type Listing = {
 export async function findLicense(
   listing: Listing,
   profileText = "",
-): Promise<{ url: string; rawText: string; npi: string | null } | null> {
+): Promise<{
+  url: string;
+  rawText: string;
+  npi: string | null;
+  number: string;
+} | null> {
   loadRows();
   const fromNpi = await npiLicences(listing);
   const numbers = [
@@ -180,6 +185,7 @@ export async function findLicense(
   return {
     url: r.url,
     rawText: `${licenseText(r.cols)} ${how}`,
+    number: r.number,
     npi:
       !listing.npi && fromNpi?.numbers.includes(r.number) ? fromNpi.npi : null,
   };
