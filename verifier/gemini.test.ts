@@ -62,7 +62,8 @@ describe("extractFacts", () => {
   it("tells the model that silence means unknown and to name the source", async () => {
     reply(good);
     await extractFacts(input);
-    const system: string = generateContent.mock.calls[0][0].config.systemInstruction;
+    const system: string =
+      generateContent.mock.calls[0][0].config.systemInstruction;
     expect(system).toMatch(/"unknown"/);
     expect(system).toMatch(/does not (say|state)/i);
     expect(system).toMatch(/names? the source/i);
