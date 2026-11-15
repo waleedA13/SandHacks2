@@ -708,6 +708,14 @@ h2 {
   max-width: 760px;
 }
 
+.detail-main,
+.detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  min-width: 0;
+}
+
 .back {
   align-self: flex-start;
   gap: var(--space-2);
@@ -734,10 +742,6 @@ h2 {
 
 .detail-top .cred {
   color: var(--muted);
-}
-
-.detail-top .btn {
-  align-self: flex-start;
 }
 
 .live-badge {
@@ -1151,5 +1155,41 @@ h2 {
 @media (min-width: 68.75em) {
   .start .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Listing detail: two columns, "How to book" stays in view ---------- */
+@media (min-width: 64em) {
+  .detail {
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "back back"
+      "top side"
+      "main side";
+    align-items: start;
+  }
+
+  .detail > .back {
+    grid-area: back;
+  }
+
+  .detail-top {
+    grid-area: top;
+  }
+
+  .detail-main {
+    grid-area: main;
+  }
+
+  /* Scrolls inside itself if it is taller than the window, so every part stays reachable. */
+  .detail-side {
+    grid-area: side;
+    position: sticky;
+    top: var(--space-4);
+    max-height: calc(100dvh - 2 * var(--space-4));
+    overflow-y: auto;
   }
 }
