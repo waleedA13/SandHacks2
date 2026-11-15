@@ -50,3 +50,15 @@ insert into evidence (listing_id, source, url, raw_text) values
 
 insert into calls (listing_id, status, takes_plan, accepting_new, summary) values
   ('00000000-0000-4000-8000-000000000004', 'done', 'yes', 'yes', 'Demo call: the person who answered said they take Aetna and have openings next week.');
+
+-- Booking paths (issue #45): two with a booking link, three landlines without one, three mobiles.
+update listings set booking_url = 'https://example.com/book/avery', booking_source = 'zocdoc', phone_line_type = 'landline'
+  where id = '00000000-0000-4000-8000-000000000001';
+update listings set booking_url = 'https://example.com/book/riley', booking_source = 'practice_site', phone_line_type = 'landline'
+  where id = '00000000-0000-4000-8000-000000000003';
+update listings set phone_line_type = 'landline' where id in
+  ('00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-000000000007');
+update listings set phone_line_type = 'mobile' where id in
+  ('00000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-000000000009');
+-- Pay yourself: does not take Aetna, sees self-pay clients at a posted fee.
+update verdicts set sees_self_pay = 'yes' where listing_id = '00000000-0000-4000-8000-000000000008';

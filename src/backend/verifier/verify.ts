@@ -110,6 +110,7 @@ export async function verifyListing(listingId: string): Promise<Verdict> {
     selfPayMax: row.self_pay_max,
     licenseStatus: row.license_status,
     licenseDiscipline: row.license_discipline,
+    seesSelfPay: row.sees_self_pay,
   };
 }
 
