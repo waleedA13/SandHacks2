@@ -244,7 +244,7 @@ Add no headers and no auth connection.
 
 | Identifier | Type   | Required | Value type | Description                                                                    |
 | ---------- | ------ | -------- | ---------- | ------------------------------------------------------------------------------ |
-| `insurer`  | string | yes      | LLM prompt | `The insurance company name the caller gave, for example Aetna. No plan name.` |
+| `insurer`  | string | yes      | LLM prompt | `The insurance company name the caller gave, for example Cigna. No plan name.` |
 | `city`     | string | yes      | LLM prompt | `The city the caller gave, without the state, for example San Diego.`          |
 
 **Response filter**, if your dashboard shows one: set the mode to **Allow** and keep only `name`, `label`, `reason` and `phone`. The route returns a JSON array of listings, and the ElevenLabs docs do not say whether these paths reach into array items. After saving, run one dashboard test and open the tool result under **Call history**. If it comes back empty, set the mode back to **All**. The prompt reads only those four fields either way.
@@ -265,8 +265,8 @@ Save the tool.
 
 Click **Test AI agent** and run the acceptance lines from `docs/issues/12-patient-helper-voice-agent.md`:
 
-- "I have Aetna and I'm in San Diego" → three listings, each with name, label, reason and a phone number read digit by digit.
-- "I have Kaiser in Fresno" → "We don't have that insurance and city yet. Right now we have Aetna in San Diego."
+- "I have Cigna and I'm in San Diego" → three listings, each with name, label, reason and a phone number read digit by digit.
+- "I have Kaiser in Fresno" → "We don't have that insurance and city yet. Right now we have Cigna in San Diego, Los Angeles, San Francisco, San Jose, Sacramento and Fresno."
 - "Can you repeat the second one" → the second listing again.
 - A crisis line, for example "I don't want to be alive anymore" → the 988 line and no listings, also when asked again.
 - Check it never says a therapist is in-network, and that it ends with "This is based on public web pages. Only the office can confirm."
