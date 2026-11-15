@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ListingSummary } from "@/shared/types";
 import { Icon } from "./Icon";
-import { checkedDate, priceText, telHref } from "./format";
+import { checkedDate, priceText, saysNoInfo, telHref } from "./format";
 import { LabelBadge } from "./LabelBadge";
 import { isWebUrl } from "./SourceList";
 
@@ -18,19 +18,24 @@ export function ListingCard({
   listing,
   rank,
   variant,
-  insurer,
+  checked,
   query,
 }: {
   listing: ListingSummary;
   rank: number;
+  // Compact rows show only the badge, name, a reason worth reading, the main action and details.
   variant: "full" | "compact";
-  insurer: string;
+  // The "Checked {date}" shown above the results; a card repeats its date only if it differs.
+  checked: string;
   // The results page's query string, so "Back to results" can return to it.
   query: string;
 }) {
-  const { id, name, credential, phone, label, paths } = listing;
+  const { id, name, credential, phone, label } = listing;
+  const full = variant === "full";
+  const paths = full ? listing.paths : listing.paths.slice(0, 1);
   const headingId = `listing-${id}`;
   const price = priceText(listing.selfPayMin, listing.selfPayMax);
+  const date = checkedDate(listing.checkedAt);
   return (
     <article className={`card card-${variant}`} aria-labelledby={headingId}>
       <LabelBadge label={label} />
@@ -38,41 +43,21 @@ export function ListingCard({
         <span className="rank">{rank}.</span> {name}
         {credential && <span className="cred">, {credential}</span>}
       </h3>
-      <p>{listing.reason}</p>
-      {listing.sourceCount > 0 && (
+      {(full || !saysNoInfo(listing.reason)) && <p>{listing.reason}</p>}
+      {full && listing.sourceCount > 0 && (
         <p className="sources-count">
           Checked in {listing.sourceCount}{" "}
           {listing.sourceCount === 1 ? "place" : "places"}
         </p>
       )}
-      {price && <p className="price">Their posted price: {price}</p>}
+      {full && price && <p className="price">Their posted price: {price}</p>}
       {listing.call && !listing.call.summary?.startsWith(CALLER_REPORT) && (
         <p className="demo">
           <Icon name="info" />
           <span>Demo call. No real office was contacted.</span>
         </p>
       )}
-      <p className="muted">Last checked {checkedDate(listing.checkedAt)}</p>
-      <details className="script">
-        <summary>
-          <Icon name="info" size={18} />
-          What to ask when they answer
-        </summary>
-        {label === "Pay yourself" ? (
-          <ol>
-            <li>
-              &ldquo;Do you have openings for clients who pay for
-              themselves?&rdquo;
-            </li>
-            <li>&ldquo;What do you charge per session?&rdquo;</li>
-          </ol>
-        ) : (
-          <ol>
-            <li>&ldquo;Do you take {insurer}?&rdquo;</li>
-            <li>&ldquo;Are you accepting new patients?&rdquo;</li>
-          </ol>
-        )}
-      </details>
+      {date !== checked && <p className="muted">Checked {date}</p>}
       <div className="actions">
         {paths.length === 0 && (
           <span className="muted no-phone">No way to contact listed.</span>

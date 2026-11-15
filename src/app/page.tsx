@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { planToAsk } from "@/frontend/BookingPanel";
 import { fitFromParams, withFit } from "@/frontend/FitFilters";
-import { commonPlan } from "@/frontend/format";
+import { checkedDate, commonPlan } from "@/frontend/format";
 import { ListingCard } from "@/frontend/ListingCard";
 import { first } from "@/frontend/params";
 import { SearchForm } from "@/frontend/SearchForm";
@@ -31,12 +31,12 @@ type Ranked = { listing: ListingSummary; rank: number };
 function CardList({
   items,
   variant,
-  insurer,
+  checked,
   query,
 }: {
   items: Ranked[];
   variant: "full" | "compact";
-  insurer: string;
+  checked: string;
   query: string;
 }) {
   return (
@@ -47,7 +47,7 @@ function CardList({
             listing={listing}
             rank={rank}
             variant={variant}
-            insurer={insurer}
+            checked={checked}
             query={query}
           />
         </li>
@@ -92,13 +92,18 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const ranked = listings.map((listing, i) => ({ listing, rank: i + 1 }));
   const reachable = ranked.filter((r) => REACHABLE.includes(r.listing.label));
   const startWith = reachable.slice(0, 3);
-  const alsoTry = [
-    ...reachable.slice(3),
-    ...ranked.filter((r) => MAYBE.includes(r.listing.label)),
-  ];
+  const alsoTry = reachable.slice(3);
+  const unclear = ranked.filter((r) => MAYBE.includes(r.listing.label));
   const payYourself = ranked.filter((r) => r.listing.label === "Pay yourself");
   const deadEnds = ranked.filter((r) => DEAD_END.includes(r.listing.label));
   const plan = commonPlan(all.map((l) => l.plan));
+  // Said once above the results: the most recent check. ISO strings sort by time.
+  const latest = listings
+    .map((l) => l.checkedAt)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  const checked = latest ? checkedDate(latest) : "";
 
   return (
     <main id="main">
@@ -152,15 +157,20 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             </p>
           </section>
 
-          {plan && (
+          {(plan || checked) && (
             <div className="plan">
-              <p className="plan-line">
-                Checked against {planToAsk(insurer, plan)}
-              </p>
-              <p className="muted">
-                Your plan name is on your insurance card. If it says something
-                else, these results may not apply.
-              </p>
+              {plan && (
+                <>
+                  <p className="plan-line">
+                    Checked against {planToAsk(insurer, plan)}
+                  </p>
+                  <p className="muted">
+                    Your plan name is on your insurance card. If it says
+                    something else, these results may not apply.
+                  </p>
+                </>
+              )}
+              {checked && <p className="muted">Checked {checked}</p>}
             </div>
           )}
 
@@ -196,7 +206,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <CardList
                     items={startWith}
                     variant="full"
-                    insurer={insurer}
+                    checked={checked}
                     query={query.toString()}
                   />
                 </section>
@@ -205,7 +215,13 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               <ShareShortlist
                 insurer={insurer}
                 city={city}
-                top={[...startWith, ...alsoTry, ...payYourself, ...deadEnds]
+                top={[
+                  ...startWith,
+                  ...alsoTry,
+                  ...unclear,
+                  ...payYourself,
+                  ...deadEnds,
+                ]
                   .slice(0, 3)
                   .map(({ listing: { id, name, label, phone } }) => ({
                     id,
@@ -222,7 +238,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <CardList
                     items={alsoTry}
                     variant="full"
-                    insurer={insurer}
+                    checked={checked}
                     query={query.toString()}
                   />
                 </section>
@@ -237,10 +253,30 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <CardList
                     items={payYourself}
                     variant="full"
-                    insurer={insurer}
+                    checked={checked}
                     query={query.toString()}
                   />
                 </section>
+              )}
+
+              {unclear.length > 0 && (
+                // Open when nothing above it would show a card.
+                <details
+                  className="more"
+                  open={startWith.length + alsoTry.length === 0}
+                >
+                  <summary>
+                    Show {unclear.length} more{" "}
+                    {unclear.length === 1 ? "listing" : "listings"} we
+                    couldn&apos;t confirm
+                  </summary>
+                  <CardList
+                    items={unclear}
+                    variant="compact"
+                    checked={checked}
+                    query={query.toString()}
+                  />
+                </details>
               )}
 
               {deadEnds.length > 0 && (
@@ -249,7 +285,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   <CardList
                     items={deadEnds}
                     variant="compact"
-                    insurer={insurer}
+                    checked={checked}
                     query={query.toString()}
                   />
                 </section>

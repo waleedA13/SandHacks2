@@ -8,7 +8,7 @@ import { FactRow, LicenseRow } from "@/frontend/FactRow";
 import { fitFromParams, withFit, type FitValues } from "@/frontend/FitFilters";
 import { Icon } from "@/frontend/Icon";
 import { ListingNotFound } from "@/frontend/ListingNotFound";
-import { checkedDate, priceText, telHref } from "@/frontend/format";
+import { checkedDate, priceText, saysNoInfo, telHref } from "@/frontend/format";
 import { first } from "@/frontend/params";
 import { isWebUrl, SourceList } from "@/frontend/SourceList";
 import { getDetail } from "@/backend/queries";
@@ -27,10 +27,6 @@ export async function generateMetadata({
 }
 
 const NO_INFO = "We found no other information about this listing.";
-
-// Some verdicts already give this as their reason; don't say it twice.
-const saysNoInfo = (reason?: string) =>
-  /^we found no other information/i.test(reason?.trim() ?? "");
 
 function backHref(insurer?: string, city?: string, fit: FitValues = {}) {
   const q = new URLSearchParams();
