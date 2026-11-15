@@ -1005,6 +1005,11 @@ h2 {
     flex: 0 0 auto;
   }
 
+  /* The hint under the city box would push an inline button out of line. */
+  .search-main .btn {
+    flex: 1 1 100%;
+  }
+
   .crisis {
     margin-left: auto;
   }
