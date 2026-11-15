@@ -97,4 +97,16 @@ The Medical and Osteopathic Board files are not used, because no listing is an M
 
 **Consistency check.** I compared every stored match with the name-and-place rule. Where both find a record, they find the same one: 0 conflicts.
 
-**Hand check, San Diego (first run, name and place only).** The board's search page has a CAPTCHA, so this compares Cigna's address with the board's address of record. Two match the street address exactly: Mednitsky (1420 Kettner Blvd Ste 100) and Medina (1202 Kettner Blvd Ste B). Medina's Psychology Today profile also gives the same licence number, 96724. The other six are the only licensee of that name and type in California, with an address of record in San Diego County. Number matches carry the licensee's full name from the board; six samples all had the listing's first and last name. Not yet checked against the board's own search page by a person.
+**Hand check, San Diego (first run, name and place only).** The board's search page has a CAPTCHA, so this compares Cigna's address with the board's address of record. Two match the street address exactly: Mednitsky (1420 Kettner Blvd Ste 100) and Medina (1202 Kettner Blvd Ste B). Medina's Psychology Today profile also gives the same licence number, 96724. The other six are the only licensee of that name and type in California, with an address of record in San Diego County. Number matches carry the licensee's full name from the board; six samples all had the listing's first and last name.
+
+**Hand check on the board's own site (2026-11-15).** Five stored records were looked up on `search.dca.ca.gov` in a normal browser; Cloudflare's check passed without a click. All five match our evidence row on name, licence type, number, status and expiry date, and none shows the "public record or disciplinary action" flag.
+
+| Listing                             | Matched by              | Board record                                                                                             |
+| ----------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| Ada M Valladares, LCSW, Los Angeles | NPI licence number      | LCSW 79279, renewed & current, expires 2027-08-31, Los Angeles                                           |
+| Alexa Brozick, PMHNP, Sacramento    | NPI licence number      | NP 95031608, current, expires 2027-04-30, Chino Hills                                                    |
+| Beth Buchanan, LMFT, San Jose       | Psychology Today number | LMFT 37318, renewed & current, expires 2028-10-31, Forestville                                           |
+| Agnesa Papazyan, PsyD, Los Angeles  | Name and city           | Psychologist 27872, renewed & current, expires 2027-05-31, Sherman Oaks                                  |
+| Angel Esparza, LCSW, Los Angeles    | Name and city           | A name search returns exactly 1 licensee: LCSW 108482, renewed & current, expires 2028-06-30, South Gate |
+
+Notes: the board's detail page for 79279 gives an issuance date of 2017-09-07, while the file's "Original Issue Date" is 2012-08-20, so the two fields measure different things. Record pages live at `/details/<board code>/<type>/<number>/<hash>`, and we can't build the hash ourselves, so the evidence still links to the search page.
