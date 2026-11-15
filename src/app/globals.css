@@ -871,6 +871,108 @@ h2 {
   cursor: not-allowed;
 }
 
+/* ---------- How to book ---------- */
+.path {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.path h3 {
+  font-family: var(--f-head);
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.path .btn {
+  align-self: flex-start;
+  max-width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.call-yourself {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.say {
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--sage);
+}
+
+.say p {
+  font-weight: 700;
+}
+
+.say ol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 22px;
+  list-style: decimal;
+}
+
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-title {
+  font-weight: 700;
+}
+
+.report fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.report legend {
+  padding: 0;
+  font-weight: 700;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+}
+
+.choice {
+  flex: 0 0 auto;
+  font-weight: 400;
+}
+
+/* The second question only matters once they say someone answered. CSS, so it works without JavaScript. */
+.report:not(:has(input[name="answered"][value="yes"]:checked))
+  .report-accepting {
+  display: none;
+}
+
+.report .btn {
+  align-self: flex-start;
+}
+
+.report .btn:disabled {
+  background: var(--line);
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.report-note:empty {
+  display: none;
+}
+
 /* ---------- Share ---------- */
 .share-js {
   display: flex;

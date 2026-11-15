@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cache } from "react";
-import { CallPanel, LabelProvider, LiveBadge } from "@/frontend/CallPanel";
+import { BookingPanel } from "@/frontend/BookingPanel";
+import { LabelProvider, LiveBadge } from "@/frontend/CallPanel";
 import { FactRow, LicenseRow } from "@/frontend/FactRow";
 import { fitFromParams, withFit, type FitValues } from "@/frontend/FitFilters";
 import { Icon } from "@/frontend/Icon";
@@ -48,7 +49,9 @@ export default async function ListingPage({
   if (!detail) return <ListingNotFound />;
 
   const { listing, verdict, label, evidence, calls } = detail;
-  const lastCall = calls.find((c) => c.status === "done") ?? null;
+  // Only the assistant's calls are demo calls; caller reports show in the badge.
+  const lastCall =
+    calls.find((c) => c.status === "done" && c.source === "agent") ?? null;
   const back = backHref(
     first(query.insurer),
     first(query.city),
@@ -153,16 +156,11 @@ export default async function ListingPage({
           !saysNoInfo(verdict?.reason) && <p className="panel">{NO_INFO}</p>
         )}
 
-        <section className="panel" aria-labelledby="call-h">
-          <h2 id="call-h">Confirm by phone</h2>
-          <CallPanel
-            listingId={listing.id}
-            name={listing.name}
-            insurer={listing.insurer}
-            hasPhone={Boolean(listing.phone)}
-            lastCall={lastCall}
-          />
-        </section>
+        <BookingPanel
+          listing={listing}
+          paths={detail.paths}
+          lastCall={lastCall}
+        />
       </main>
     </LabelProvider>
   );
