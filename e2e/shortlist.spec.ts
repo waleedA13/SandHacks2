@@ -31,10 +31,10 @@ test("choosing a filter and submitting puts it in the URL", async ({
 }) => {
   await page.goto(SD);
   // The filters start folded; a filter in the URL opens them (checked above).
-  await page.locator(".narrow summary").click();
+  await page.locator(".search-pill summary").click();
   await page.getByLabel("Language").selectOption("spanish");
   await page
-    .locator(".filters")
+    .locator(".search-pill")
     .getByRole("button", { name: "Show therapists" })
     .click();
   await expect(page).toHaveURL(/language=spanish/);

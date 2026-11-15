@@ -7,6 +7,7 @@ import { ListingCard } from "@/frontend/ListingCard";
 import { first } from "@/frontend/params";
 import { SearchForm } from "@/frontend/SearchForm";
 import { ShareShortlist } from "@/frontend/ShareShortlist";
+import { VoiceWidget } from "@/frontend/VoiceWidget";
 import { getStats, listSearchOptions, listSummaries } from "@/backend/queries";
 import type { Label, ListingSummary } from "@/shared/types";
 
@@ -243,6 +244,15 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   If you get voicemail, leave your name and number, then try the
                   next one on the list.
                 </p>
+              </section>
+
+              <section className="panel" aria-labelledby="helper-h">
+                <h2 id="helper-h">Rather talk it through?</h2>
+                <p>
+                  Our voice helper reads you the top listings and their phone
+                  numbers. ¿Habla español? El asistente también habla español.
+                </p>
+                <VoiceWidget mode="helper" />
               </section>
 
               {alsoTry.length > 0 && (
