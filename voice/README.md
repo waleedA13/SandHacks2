@@ -45,12 +45,12 @@ Pick a clear, calm English voice. Leave speed at the default.
 
 Agent tab → **Tools** → **Add tool** → **Webhook**.
 
-| Field       | Value                                                                                                |
-| ----------- | ---------------------------------------------------------------------------------------------------- |
-| Name        | `save_call_result`                                                                                   |
-| Description | `Save the office's two answers at the end of the call. Call it once, before saying goodbye.`         |
-| Method      | `POST`                                                                                               |
-| URL         | `https://<your-vercel-domain>/api/calls/result` (the production domain, not a preview URL with auth) |
+| Field       | Value                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| Name        | `save_call_result`                                                                                     |
+| Description | `Save the office's two answers at the end of the call. Call it once, in the same turn as the goodbye.` |
+| Method      | `POST`                                                                                                 |
+| URL         | `https://<your-vercel-domain>/api/calls/result` (the production domain, not a preview URL with auth)   |
 
 **Headers:** add one header.
 
@@ -95,7 +95,7 @@ The opt-out works without any dashboard setting. When the office says it does no
 
 On an existing database, add the table with `src/backend/db/migrations/003-do-not-call.sql`. It is safe to run twice. `db:reset` creates it from `schema.sql`.
 
-The ending runs in this order: save, then one goodbye, then `end_call`. If the agent says goodbye before it saves, the model speaks again after the tool returns and the caller hears goodbye twice. If it never calls `end_call`, the line stays open until the silence limit. **Tools → System tools → End conversation** must be on.
+The ending runs in this order: one goodbye spoken in the same turn as the `save_call_result` call, then a silent turn that only calls `end_call`. In dashboard tests the model spoke while calling the tool even when told not to, and then spoke again after the tool returned, so the caller heard goodbye twice. Making the goodbye part of the tool turn and the next turn silent gives one goodbye and an automatic hang-up. If it never calls `end_call`, the line stays open until the silence limit. **Tools → System tools → End conversation** must be on.
 
 ## 8. Test in the dashboard
 
