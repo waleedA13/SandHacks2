@@ -82,6 +82,15 @@ Licence checks need DCA's public licensee files in `data/`. The steps are in `do
 | `npm run db:test:down`  | Stop the Docker database and delete its data                                           |
 | `npm run db:reset`      | Reset the database in `.env.local`. This drops every table. Never run it in CI         |
 
+### Collector run order
+
+Run by hand against the database in `.env.local`, in this order:
+
+1. `npx tsx --env-file=.env.local src/backend/collector/directory.ts --insurer "Cigna" --zip 92101 --limit 50`: directory scrape, one city per run; stores the plan network name in `plan`
+2. `npx tsx --env-file=.env.local src/backend/collector/evidence.ts --all`: evidence pages, plus `booking_url` and `booking_source` when a matched page has a booking link
+3. `npx tsx --env-file=.env.local src/backend/collector/linetype.ts --all`: Twilio line type for each listing still `unknown` (about 1 cent per number)
+4. `npm run verify -- --all`: verdicts
+
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs on every pull request and on pushes to `main`. It has four jobs, and each one starts only after the previous one passes:

@@ -3,6 +3,7 @@
 import { pathToFileURL } from "node:url";
 import { sql } from "@/backend/db/client";
 import type { EvidenceSource } from "@/shared/types";
+import { type Booking, bestBooking, findBooking } from "./booking";
 import { serp, unlock } from "./brightdata";
 import { findLicense } from "./license";
 import { isSamePerson, normalizeName } from "./match";
@@ -24,7 +25,12 @@ type Row = {
   state: string;
   source_url: string;
 };
-type Found = { source: EvidenceSource; url: string; rawText: string };
+type Found = {
+  source: EvidenceSource;
+  url: string;
+  rawText: string;
+  booking?: Booking | null;
+};
 
 // Directories, social sites and insurers: never a therapist's own practice site.
 const NOT_PRACTICE_SITES = new Set(
@@ -189,7 +195,13 @@ async function trySource(
         text,
       };
       if (isSamePerson({ ...l, nameIsUnique }, page))
-        matches.push({ source, url, rawText: text.slice(0, MAX_TEXT) });
+        matches.push({
+          source,
+          url,
+          rawText: text.slice(0, MAX_TEXT),
+          // Full html: "Book now" buttons usually sit in the header the text drops.
+          booking: findBooking(source, url, html),
+        });
     } catch (e) {
       errors.push(`${url} ${(e as Error).message.slice(0, 120)}`);
     }
@@ -245,7 +257,13 @@ export async function collectEvidence(listingId: string): Promise<number> {
     console.log(`${l.name} license_board: failed ${(e as Error).message}`);
   }
 
+  const booking = bestBooking(found.map((f) => f.booking ?? null));
+  console.log(
+    `${l.name} booking: ${booking ? `${booking.source} ${booking.url}` : "none"}`,
+  );
   await sql.transaction([
+    sql`update listings set booking_url = ${booking?.url ?? null},
+          booking_source = ${booking?.source ?? null} where id = ${l.id}`,
     sql`delete from evidence where listing_id = ${l.id}`,
     ...found.map(
       (f) =>
