@@ -1,3 +1,4 @@
+import { Icon } from "./Icon";
 import { first } from "./params";
 import { Select } from "./Select";
 
@@ -45,6 +46,7 @@ export function withFit(q: URLSearchParams, fit: FitValues) {
 }
 
 // Plain controls inside the search form, so filters live in the URL and work without JavaScript.
+// Folded into a native <details> so the results come first; open when a filter is set.
 export function FitFilters({
   values,
   languages,
@@ -52,46 +54,55 @@ export function FitFilters({
   values: FitValues;
   languages: string[];
 }) {
+  const active = Boolean(
+    values.specialty || values.language || values.telehealth,
+  );
   // Keep a language from the URL selectable even if no listing here has it.
   const langs = [...new Set([...languages, values.language ?? ""])].filter(
     Boolean,
   );
   return (
-    <fieldset className="search filters">
-      <legend>Narrow the list</legend>
-      <Select
-        id="specialty"
-        label="What do you need help with?"
-        value={values.specialty ?? ""}
-        options={[
-          { value: "", label: "Anything" },
-          ...Object.entries(SPECIALTIES).map(([value, label]) => ({
-            value,
-            label,
-          })),
-        ]}
-      />
-      <Select
-        id="language"
-        label="Language"
-        value={values.language ?? ""}
-        options={[
-          { value: "", label: "Any language" },
-          ...langs.map((l) => ({ value: l, label: languageLabel(l) })),
-        ]}
-      />
-      <label className="check">
-        <input
-          type="checkbox"
-          name="telehealth"
-          value="yes"
-          defaultChecked={values.telehealth === "yes"}
+    <details className="search-pill narrow" open={active}>
+      <summary>
+        <span>Narrow the list</span>
+        <Icon name="chevron" size={18} />
+      </summary>
+      <fieldset className="search filters">
+        <legend className="sr-only">Narrow the list</legend>
+        <Select
+          id="specialty"
+          label="What do you need help with?"
+          value={values.specialty ?? ""}
+          options={[
+            { value: "", label: "Anything" },
+            ...Object.entries(SPECIALTIES).map(([value, label]) => ({
+              value,
+              label,
+            })),
+          ]}
         />
-        Video or phone sessions
-      </label>
-      <button className="btn" type="submit">
-        Show therapists
-      </button>
-    </fieldset>
+        <Select
+          id="language"
+          label="Language"
+          value={values.language ?? ""}
+          options={[
+            { value: "", label: "Any language" },
+            ...langs.map((l) => ({ value: l, label: languageLabel(l) })),
+          ]}
+        />
+        <label className="check">
+          <input
+            type="checkbox"
+            name="telehealth"
+            value="yes"
+            defaultChecked={values.telehealth === "yes"}
+          />
+          Video or phone sessions
+        </label>
+        <button className="btn" type="submit">
+          Show therapists
+        </button>
+      </fieldset>
+    </details>
   );
 }

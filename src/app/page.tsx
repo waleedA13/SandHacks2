@@ -140,21 +140,16 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       ) : (
         <>
           <section className="summary" aria-label="Summary">
-            <span className="big" aria-hidden="true">
-              {stats.likelyAvailable}
-            </span>
-            <div>
-              <p className="summary-line">
-                Of {stats.total} {insurer}{" "}
-                {stats.total === 1 ? "listing" : "listings"} in {city},{" "}
-                {stats.likelyAvailable} look reachable.
-              </p>
-              <p className="soft">
-                {
-                  "If you've hit dead numbers before, it's not you. Insurance company lists are often out of date."
-                }
-              </p>
-            </div>
+            <p className="summary-line">
+              {stats.likelyAvailable} of {stats.total} {insurer}{" "}
+              {stats.total === 1 ? "listing" : "listings"} in {city}{" "}
+              {stats.likelyAvailable === 1 ? "looks" : "look"} reachable.
+            </p>
+            <p className="soft">
+              {
+                "If you've hit dead numbers before, it's not you. Insurance company lists are often out of date."
+              }
+            </p>
           </section>
 
           {plan && (
@@ -168,11 +163,6 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               </p>
             </div>
           )}
-
-          <p className="progress">
-            You narrowed {stats.total} listings to {stats.likelyAvailable} worth
-            calling.
-          </p>
 
           {filtering && (
             <p className="showing">
@@ -191,19 +181,6 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             </p>
           ) : (
             <>
-              <ShareShortlist
-                insurer={insurer}
-                city={city}
-                top={[...startWith, ...alsoTry, ...payYourself, ...deadEnds]
-                  .slice(0, 3)
-                  .map(({ listing: { id, name, label, phone } }) => ({
-                    id,
-                    name,
-                    label,
-                    phone,
-                  }))}
-                url={shareUrl}
-              />
               <p className="print-only print-title">
                 Therapists most likely to pick up ({insurer}, {city})
               </p>
@@ -224,6 +201,20 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                   />
                 </section>
               )}
+
+              <ShareShortlist
+                insurer={insurer}
+                city={city}
+                top={[...startWith, ...alsoTry, ...payYourself, ...deadEnds]
+                  .slice(0, 3)
+                  .map(({ listing: { id, name, label, phone } }) => ({
+                    id,
+                    name,
+                    label,
+                    phone,
+                  }))}
+                url={shareUrl}
+              />
 
               {alsoTry.length > 0 && (
                 <section aria-labelledby="also-h">
