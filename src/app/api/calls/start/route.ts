@@ -39,6 +39,14 @@ export async function POST(request: Request) {
       error: "body must be { listingId: uuid, toNumber: string }",
     });
 
+  // The listing's own line type, never the body or the number dialled: the agent only calls landlines.
+  const target = await getCallTarget(body.listingId);
+  if (!target) return reply(404, { error: "listing not found" });
+  if (target.lineType !== "landline")
+    return reply(403, {
+      error: "We only place assistant calls to office landlines.",
+    });
+
   const toNumber = allowed(body.toNumber);
   if (!toNumber)
     return reply(403, { error: "That number is not on the demo allow-list." });
@@ -49,8 +57,6 @@ export async function POST(request: Request) {
   if (!apiKey || !agentId || !phoneNumberId)
     return reply(500, { error: "Phone calls are not configured." });
 
-  const target = await getCallTarget(body.listingId);
-  if (!target) return reply(404, { error: "listing not found" });
   if (target.optedOut)
     return reply(403, { error: "This office asked not to be called." });
 
