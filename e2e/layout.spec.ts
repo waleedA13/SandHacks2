@@ -39,7 +39,9 @@ test.describe("with JavaScript off", () => {
     page,
   }) => {
     await page.goto(SD);
-    const more = page.locator("details.more");
+    const more = page.locator("details.more", {
+      hasText: "listings we couldn't confirm",
+    });
     await expect(more).not.toHaveAttribute("open");
     const summary = more.locator("summary");
     await expect(summary).toHaveText(

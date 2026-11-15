@@ -205,12 +205,17 @@ main {
 }
 
 .crisis {
-  /* Its own row under the links on a phone; it sits on the logo's row from the tablet width up. */
-  order: 2;
-  flex: 1 1 100%;
-  margin: 0;
+  /* Shares the logo's row; a phone gets the short wording. */
+  flex: 1 1 0;
+  min-width: 0;
+  margin-left: auto;
   color: var(--ink-soft);
   font-size: var(--step--1);
+  text-align: right;
+}
+
+.crisis .wide {
+  display: none;
 }
 
 .site-footer {
@@ -1179,12 +1184,11 @@ h2 {
   }
 
   .crisis {
-    order: 0;
-    flex: 1 1 0;
-    min-width: 0;
-    margin-left: auto;
     font-size: var(--step-0);
-    text-align: right;
+  }
+
+  .crisis .wide {
+    display: inline;
   }
 
   /* One row: the links sit between the logo and 988. */

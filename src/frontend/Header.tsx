@@ -16,8 +16,10 @@ export function Header() {
         <Link href="/how-it-works">How it works</Link>
       </nav>
       <p className="crisis">
-        Need to talk to someone now? Call or text <a href="tel:988">988</a>, any
-        time.
+        {/* The short form fits beside the logo on a phone. */}
+        Need to talk<span className="wide"> to someone</span> now? Call or text{" "}
+        <a href="tel:988">988</a>
+        <span className="wide">, any time</span>.
       </p>
     </header>
   );
