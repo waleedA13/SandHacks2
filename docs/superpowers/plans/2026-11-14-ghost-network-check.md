@@ -118,6 +118,8 @@ Show whether the California licensing board lists the therapist's licence as act
 - **US-F9-E:** As Elena, I want to know the person seeing my son is licensed, in words I understand.
 - **US-F9-D:** As Dana, I want a link to the board's own record, so that I can verify before recommending.
 
+**As built (issue 18 / GitHub #22):** Bright Data refuses `search.dca.ca.gov` without KYC, and the search form has a Cloudflare check. Licence rows come from DCA's monthly public licensee files instead. Behavioral Sciences, Psychology and the nurse practitioner rows of Registered Nursing are used. Matches are made by licence number (from the NPI Registry or the Psychology Today profile) or by name, type and city or county. They give status but **no discipline history and no per-person record link**: `license_discipline` stays `unknown`, and the link is DCA's search page, with the licence number in the evidence text. Upgrade after the hackathon: the DCA Search API (iServices, access by request) for discipline and live status.
+
 ### F10. Send me my shortlist (P1)
 
 Share the top three results by text, messaging app or link, with no account and nothing stored about the user.

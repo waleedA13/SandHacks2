@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 import { sql } from "@/backend/db/client";
 import type { EvidenceSource } from "@/shared/types";
 import { serp, unlock } from "./brightdata";
+import { findLicense } from "./license";
 import { isSamePerson, normalizeName } from "./match";
 
 const FIXTURE_PREFIX = "https://example.com/";
@@ -18,6 +19,7 @@ type Row = {
   name: string;
   credential: string | null;
   phone: string | null;
+  npi: string | null;
   city: string;
   state: string;
   source_url: string;
@@ -210,7 +212,7 @@ async function trySource(
 
 export async function collectEvidence(listingId: string): Promise<number> {
   const [l] = (await sql`
-    select id, name, credential, phone, city, state, source_url
+    select id, name, credential, phone, npi, city, state, source_url
     from listings where id = ${listingId}`) as Row[];
   if (!l) throw new Error(`listing ${listingId} not found`);
   if (l.source_url.startsWith(FIXTURE_PREFIX)) {
@@ -226,6 +228,22 @@ export async function collectEvidence(listingId: string): Promise<number> {
   const found = (
     await Promise.all(sources.map((s) => trySource(l, nameIsUnique, s)))
   ).filter((f): f is Found => f !== null);
+
+  try {
+    const licence = await findLicense(
+      l,
+      found.find((f) => f.source === "psychology_today")?.rawText,
+    );
+    console.log(`${l.name} license_board: ${licence ? "matched" : "no match"}`);
+    if (licence)
+      found.push({
+        source: "license_board",
+        url: licence.url,
+        rawText: licence.rawText,
+      });
+  } catch (e) {
+    console.log(`${l.name} license_board: failed ${(e as Error).message}`);
+  }
 
   await sql.transaction([
     sql`delete from evidence where listing_id = ${l.id}`,
