@@ -33,7 +33,7 @@ test("Pay yourself listings get their own section above the dead ends", async ({
   );
 
   await expect(
-    section(page, "Likely dead end").getByRole("heading", {
+    section(page, "Probably out of date").getByRole("heading", {
       name: /Drew Fakename/,
     }),
   ).toHaveCount(0);
@@ -43,13 +43,15 @@ test("Pay yourself listings get their own section above the dead ends", async ({
     }),
   ).toHaveCount(0);
 
-  // The order on the page: Also worth a try, then this, then Likely dead end.
+  // The order on the page: Also worth a try, then this, then Probably out of date.
   const headings = await page
     .getByRole("heading", { level: 2 })
     .allInnerTexts();
   const at = (h: string) => headings.indexOf(h);
   expect(at("Also worth a try")).toBeLessThan(at("If you can pay yourself"));
-  expect(at("If you can pay yourself")).toBeLessThan(at("Likely dead end"));
+  expect(at("If you can pay yourself")).toBeLessThan(
+    at("Probably out of date"),
+  );
 });
 
 test("the results say which plan we checked and where to find yours", async ({

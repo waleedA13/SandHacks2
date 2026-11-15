@@ -232,6 +232,19 @@ export default async function Home({ searchParams }: PageProps<"/">) {
                 url={shareUrl}
               />
 
+              <section className="panel phone-help" aria-labelledby="ask-h">
+                <h2 id="ask-h">Not sure what to say on the phone?</h2>
+                <p>Two questions are enough:</p>
+                <ol>
+                  <li>&ldquo;Do you take {insurer}?&rdquo;</li>
+                  <li>&ldquo;Are you taking new patients?&rdquo;</li>
+                </ol>
+                <p>
+                  If you get voicemail, leave your name and number, then try the
+                  next one on the list.
+                </p>
+              </section>
+
               {alsoTry.length > 0 && (
                 <section aria-labelledby="also-h">
                   <h2 id="also-h">Also worth a try</h2>
@@ -280,14 +293,23 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               )}
 
               {deadEnds.length > 0 && (
+                // Folded so a list of dead ends doesn't sit there discouraging anyone.
                 <section aria-labelledby="dead-h">
-                  <h2 id="dead-h">Likely dead end</h2>
-                  <CardList
-                    items={deadEnds}
-                    variant="compact"
-                    checked={checked}
-                    query={query.toString()}
-                  />
+                  <h2 id="dead-h">Probably out of date</h2>
+                  <details className="more">
+                    <summary>
+                      Show {deadEnds.length}{" "}
+                      {deadEnds.length === 1 ? "listing" : "listings"} that
+                      {deadEnds.length === 1 ? " is" : " are"} probably out of
+                      date
+                    </summary>
+                    <CardList
+                      items={deadEnds}
+                      variant="compact"
+                      checked={checked}
+                      query={query.toString()}
+                    />
+                  </details>
                 </section>
               )}
             </>

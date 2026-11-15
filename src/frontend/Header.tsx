@@ -16,7 +16,8 @@ export function Header() {
         <Link href="/how-it-works">How it works</Link>
       </nav>
       <p className="crisis">
-        In crisis? Call or text <a href="tel:988">988</a>
+        Need to talk to someone now? Call or text <a href="tel:988">988</a>, any
+        time.
       </p>
     </header>
   );
