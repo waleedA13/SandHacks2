@@ -36,6 +36,7 @@ beforeEach(() => {
   vi.mocked(getCallTarget).mockResolvedValue({
     name: "Avery Example",
     insurer: "Aetna",
+    optedOut: false,
   });
   vi.mocked(claimCallSlot).mockResolvedValue("call_row_id");
   fetchMock.mockResolvedValue(
@@ -175,6 +176,23 @@ describe("POST /api/calls/start", () => {
     const res = await post({ listingId: LISTING, toNumber: TEAMMATE });
 
     expect(res.status).toBe(404);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(claimCallSlot).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 and places no call when the office asked not to be called", async () => {
+    vi.mocked(getCallTarget).mockResolvedValue({
+      name: "Avery Example",
+      insurer: "Aetna",
+      optedOut: true,
+    });
+
+    const res = await post({ listingId: LISTING, toNumber: TEAMMATE });
+
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({
+      error: "This office asked not to be called.",
+    });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(claimCallSlot).not.toHaveBeenCalled();
   });

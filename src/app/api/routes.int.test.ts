@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { sql } from "@/backend/db/client";
 import { GET as listings } from "./listings/route";
 import { GET as detail } from "./listings/[id]/route";
@@ -6,6 +6,7 @@ import { POST as recheck } from "./listings/[id]/recheck/route";
 import { GET as job } from "./jobs/[id]/route";
 import { GET as stats } from "./stats/route";
 import { POST as callResult } from "./calls/result/route";
+import { POST as callStart } from "./calls/start/route";
 
 const base = "http://localhost/api";
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -193,5 +194,101 @@ describe("POST /api/calls/result", () => {
     expect(list.map((r: { id: string }) => r.id)).toEqual([other[0].id, id]);
     const [v] = await sql`select score from verdicts where listing_id = ${id}`;
     expect(v.score).toBe(100);
+  });
+});
+
+describe("opting out of calls", () => {
+  const TEAMMATE = "+16195550123";
+
+  async function listingWithPhone() {
+    const { id } = await newListing();
+    const phone = `(760) 555-${String(Date.now()).slice(-4)}`;
+    await sql`update listings set phone = ${phone} where id = ${id}`;
+    return { id, digits: `760555${phone.slice(-4)}` };
+  }
+
+  afterAll(async () => {
+    await sql`delete from do_not_call where phone like '760555%'`;
+  });
+
+  it("an opt-out result adds the listing's phone to do_not_call and still returns the score", async () => {
+    const { id, digits } = await listingWithPhone();
+    const res = await post({
+      listingId: id,
+      takesPlan: "unknown",
+      acceptingNew: "unknown",
+      summary: "Opted out of calls.",
+    });
+    expect(res.status).toBe(200);
+    expect(Object.keys(await res.json()).sort()).toEqual(["label", "score"]);
+    const rows =
+      await sql`select phone from do_not_call where phone = ${digits}`;
+    expect(rows).toHaveLength(1);
+
+    // A second opt-out for the same phone is not an error.
+    const again = await post({
+      listingId: id,
+      takesPlan: "unknown",
+      acceptingNew: "unknown",
+      summary: "Opted out of calls.",
+    });
+    expect(again.status).toBe(200);
+  });
+
+  it("any other summary leaves do_not_call alone", async () => {
+    const { id, digits } = await listingWithPhone();
+    await post({
+      listingId: id,
+      takesPlan: "yes",
+      acceptingNew: "yes",
+      summary: "They take it. Opted out of calls.",
+    });
+    const rows =
+      await sql`select phone from do_not_call where phone = ${digits}`;
+    expect(rows).toHaveLength(0);
+  });
+
+  it("calls/start then refuses that listing with 403 and places no call", async () => {
+    const { id } = await listingWithPhone();
+    await post({
+      listingId: id,
+      takesPlan: "unknown",
+      acceptingNew: "unknown",
+      summary: "Opted out of calls.",
+    });
+    // The database client also uses fetch: pass it through, and answer ElevenLabs without calling it.
+    const realFetch = globalThis.fetch;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) =>
+        String(input).includes("elevenlabs")
+          ? Promise.resolve(Response.json({ success: true, callSid: "CA1" }))
+          : realFetch(input, init),
+      );
+    vi.stubEnv("DEMO_CALL_ALLOWLIST", TEAMMATE);
+    vi.stubEnv("ELEVENLABS_API_KEY", "sk_test_key");
+    vi.stubEnv("NEXT_ELEVENLABS_AGENT_ID", "agent_test_id");
+    vi.stubEnv("ELEVENLABS_PHONE_NUMBER_ID", "phnum_test_id");
+    try {
+      const res = await callStart(
+        new Request(`${base}/calls/start`, {
+          method: "POST",
+          body: JSON.stringify({ listingId: id, toNumber: TEAMMATE }),
+        }),
+      );
+      expect(res.status).toBe(403);
+      expect(await res.json()).toEqual({
+        error: "This office asked not to be called.",
+      });
+      expect(
+        fetchSpy.mock.calls.some(([url]) => String(url).includes("elevenlabs")),
+      ).toBe(false);
+      const [{ n }] =
+        await sql`select count(*)::int as n from calls where listing_id = ${id} and status = 'in_progress'`;
+      expect(n).toBe(0);
+    } finally {
+      fetchSpy.mockRestore();
+      vi.unstubAllEnvs();
+    }
   });
 });

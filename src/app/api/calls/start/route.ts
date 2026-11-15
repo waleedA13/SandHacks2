@@ -51,6 +51,8 @@ export async function POST(request: Request) {
 
   const target = await getCallTarget(body.listingId);
   if (!target) return reply(404, { error: "listing not found" });
+  if (target.optedOut)
+    return reply(403, { error: "This office asked not to be called." });
 
   const callId = await claimCallSlot(body.listingId);
   if (!callId)

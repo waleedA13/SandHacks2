@@ -282,8 +282,27 @@ describe("enqueueRecheck and getJob", () => {
 describe("getCallTarget", () => {
   it("returns only the name and insurer, never the phone", async () => {
     const t = await getCallTarget("00000000-0000-4000-8000-000000000001");
-    expect(Object.keys(t!).sort()).toEqual(["insurer", "name"]);
+    expect(Object.keys(t!).sort()).toEqual(["insurer", "name", "optedOut"]);
     expect(t!.insurer).toBe("Aetna");
+    expect(t!.optedOut).toBe(false);
+  });
+
+  it("flags a listing whose phone opted out, whatever the formatting", async () => {
+    const digits = String(Date.now()).slice(-7);
+    const [a, b] = await sql`
+      insert into listings (insurer, plan, city, state, name, phone, source_url)
+      values ('TestCo optout', 'P', 'San Diego', 'CA', 'A', ${`(858) ${digits.slice(0, 3)}-${digits.slice(3)}`}, 'https://example.com/a'),
+             ('TestCo optout', 'P', 'San Diego', 'CA', 'B', ${`+1 858 ${digits}`}, 'https://example.com/b')
+      returning id`;
+    await recordCall({
+      listingId: a.id,
+      takesPlan: "unknown",
+      acceptingNew: "unknown",
+      summary: "Opted out of calls.",
+    });
+    expect((await getCallTarget(a.id))!.optedOut).toBe(true);
+    expect((await getCallTarget(b.id))!.optedOut).toBe(true);
+    await sql`delete from do_not_call where phone = ${`858${digits}`}`;
   });
 
   it("returns null for unknown or malformed ids", async () => {
