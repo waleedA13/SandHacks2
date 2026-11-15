@@ -30,14 +30,14 @@ Four people push to one repo during a 24-hour hackathon. CI has to catch broken 
 
 ## Approaches considered
 
-1. **Postgres in Docker behind the community Neon HTTP proxy** (chosen). `docker-compose.test.yml` runs `postgres` and `ghcr.io/timowilhelm/local-neon-http-proxy` (pinned by digest). Neon's serverless-driver docs point to this setup for local work. No secrets, so every PR runs everything. Cost: `lib/db.ts` sets `neonConfig` endpoints when the host is `db.localtest.me`.
+1. **Postgres in Docker behind the community Neon HTTP proxy** (chosen). `docker-compose.test.yml` runs `postgres` and `ghcr.io/timowilhelm/local-neon-http-proxy` (pinned by digest). Neon's serverless-driver docs point to this setup for local work. No secrets, so every PR runs everything. Cost: `src/backend/db/client.ts` sets `neonConfig` endpoints when the host is `db.localtest.me`.
 2. **A throwaway Neon branch per CI run.** Same driver as production and a Neon-track talking point, but it needs `NEON_API_KEY` and `NEON_PROJECT_ID` as secrets, and Dependabot PRs cannot read secrets, so they would skip stages 3 and 4.
 3. **Plain Postgres container without the proxy.** Neon's serverless driver cannot talk to plain Postgres, so tests would need a second driver. Rejected.
 
 ## Decisions
 
 - CI lands as a PR into Waleed's scaffold branch (`waleed/01-scaffold-contract-fixtures`, PR #25), so the scaffold itself merges to `main` with CI already gating it, and the two PRs never conflict over `package.json`.
-- Vendor modules (`collector/brightdata.ts`, `verifier/gemini.ts`, `components/VoiceWidget.tsx`) are mocked in unit and integration tests. A separate `npm run test:live` suite (real vendors, run by hand, never in CI) is out of scope for this change and comes with the first vendor issue.
+- Vendor modules (`src/backend/collector/brightdata.ts`, `src/backend/verifier/gemini.ts`, `src/frontend/VoiceWidget.tsx`) are mocked in unit and integration tests. A separate `npm run test:live` suite (real vendors, run by hand, never in CI) is out of scope for this change and comes with the first vendor issue.
 - Node 24 in CI, matching the README.
 - Test-first: each stage gets one starter test that is committed failing and then made to pass.
 

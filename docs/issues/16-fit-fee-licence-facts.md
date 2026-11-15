@@ -33,7 +33,7 @@ API: `GET /api/listings` accepts optional `specialty`, `language` and `telehealt
 
 ## Files
 
-- Modify: `verifier/gemini.ts`, `verifier/verify.ts`, `verifier/verify.test.ts`, `lib/queries.ts`, `lib/queries.test.ts`, `app/api/listings/route.ts`, `lib/types.ts` (new fields are already named in the contract)
+- Modify: `src/backend/verifier/gemini.ts`, `src/backend/verifier/verify.ts`, `src/backend/verifier/verify.test.ts`, `src/backend/queries.ts`, `src/backend/queries.test.ts`, `src/app/api/listings/route.ts`, `src/shared/types.ts` (new fields are already named in the contract)
 
 ## Interfaces
 
@@ -54,11 +54,11 @@ API: `GET /api/listings` accepts optional `specialty`, `language` and `telehealt
 ## Prompt for your Claude
 
 ```
-Read CLAUDE.md, the plan's "Shared contract" and "Fixed vocabularies", and docs/issues/16-fit-fee-licence-facts.md. Read verifier/gemini.ts and verifier/verify.ts as they are now.
+Read CLAUDE.md, the plan's "Shared contract" and "Fixed vocabularies", and docs/issues/16-fit-fee-licence-facts.md. Read src/backend/verifier/gemini.ts and src/backend/verifier/verify.ts as they are now.
 
-Add the test cases in the acceptance check to verifier/verify.test.ts and lib/queries.test.ts and see them fail.
-Extend the structured output in verifier/gemini.ts with the six new facts, in the same single request. The instruction must say: fill a fact only when the evidence states it; take licence facts only from the evidence marked license_board; never estimate a fee.
-In verifier/verify.ts, clean the result before saving: keep only specialties in the fixed list, lower-case languages, swap min and max if reversed, and force licenseStatus to "unchecked" when the listing has no license_board evidence. Do not change the score.
-In lib/queries.ts add the optional filters to listSummaries and the new fields to both responses. Read the three query parameters in app/api/listings/route.ts.
-Do not touch collector/ or components/. Do not commit; show me the diff and a proposed commit message.
+Add the test cases in the acceptance check to src/backend/verifier/verify.test.ts and src/backend/queries.test.ts and see them fail.
+Extend the structured output in src/backend/verifier/gemini.ts with the six new facts, in the same single request. The instruction must say: fill a fact only when the evidence states it; take licence facts only from the evidence marked license_board; never estimate a fee.
+In src/backend/verifier/verify.ts, clean the result before saving: keep only specialties in the fixed list, lower-case languages, swap min and max if reversed, and force licenseStatus to "unchecked" when the listing has no license_board evidence. Do not change the score.
+In src/backend/queries.ts add the optional filters to listSummaries and the new fields to both responses. Read the three query parameters in src/app/api/listings/route.ts.
+Do not touch src/backend/collector/ or src/frontend/. Do not commit; show me the diff and a proposed commit message.
 ```

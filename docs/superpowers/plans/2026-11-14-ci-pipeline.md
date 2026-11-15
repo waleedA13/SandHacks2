@@ -4,7 +4,7 @@
 
 **Goal:** A GitHub Actions pipeline that runs static checks, then unit tests, then integration tests against Postgres in Docker, then Playwright e2e, with the same npm scripts working locally on Windows, macOS and Linux.
 
-**Architecture:** One workflow, four jobs chained with `needs:`. Integration and e2e jobs start `docker-compose.test.yml` (Postgres plus the community Neon HTTP proxy). A small `lib/neon-local.ts` points the Neon serverless driver at that proxy when the database host is `db.localtest.me`, and does nothing for real Neon hosts.
+**Architecture:** One workflow, four jobs chained with `needs:`. Integration and e2e jobs start `docker-compose.test.yml` (Postgres plus the community Neon HTTP proxy). A small `src/backend/db/neon-local.ts` points the Neon serverless driver at that proxy when the database host is `db.localtest.me`, and does nothing for real Neon hosts.
 
 **Tech Stack:** Next.js 16, TypeScript, Vitest 5 (projects), Playwright, Prettier, ESLint 9, Docker Compose, GitHub Actions, Node 24.
 
@@ -23,7 +23,7 @@
 
 ## Review Focus
 
-1. **Real Neon hit by accident.** `db/reset.ts` run with a Neon URL drops every table. Pinned by Task 3 Step 1 (`isLocalNeonHost` false for `*.neon.tech`) and by the test scripts only ever loading `.env.test`.
+1. **Real Neon hit by accident.** `src/backend/db/reset.ts` run with a Neon URL drops every table. Pinned by Task 3 Step 1 (`isLocalNeonHost` false for `*.neon.tech`) and by the test scripts only ever loading `.env.test`.
 2. **Windows contributor runs `npm run test:int`.** Must work in PowerShell and cmd. Pinned by Task 3 using `--env-file` and Vitest `env`, never inline env vars.
 3. **Docker not running.** `npm run test:int` should fail at `docker compose up` with Docker's own error, not hang. Pinned by `--wait` with a timeout in Task 3.
 4. **Gitleaks flags `.env.test`.** The local `postgres:postgres` URL is not a secret. Task 5 Step 2 runs `docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source /repo` (or the installed `gitleaks`); if it flags `.env.test`, add a `.gitleaks.toml` that extends the default config and allowlists that one path.
@@ -62,33 +62,33 @@
 - Produces scripts: `test` → `vitest run --project unit`, `test:unit` (same), `test:int` (Task 3).
 
 - [ ] **Step 1:** Write `vitest.config.ts` with the two projects; resolve the `@/*` path alias to the repo root.
-- [ ] **Step 2:** Run `npm run test:unit`. Expected: PASS, `lib/score.test.ts` runs, no `*.int.test.ts` picked up.
+- [ ] **Step 2:** Run `npm run test:unit`. Expected: PASS, `src/shared/score.test.ts` runs, no `*.int.test.ts` picked up.
 - [ ] **Step 3:** Commit `test: split Vitest into unit and integration projects`.
 
 ### Task 3: Integration stage (Postgres in Docker)
 
 **Files:**
 
-- Create: `docker-compose.test.yml`, `.env.test`, `lib/neon-local.ts`, `lib/neon-local.test.ts`, `db/seed.int.test.ts`
-- Modify: `lib/db.ts`, `db/reset.ts`, `.gitignore` (add `!.env.test`), `package.json` scripts
+- Create: `docker-compose.test.yml`, `.env.test`, `src/backend/db/neon-local.ts`, `src/backend/db/neon-local.test.ts`, `src/backend/db/seed.int.test.ts`
+- Modify: `src/backend/db/client.ts`, `src/backend/db/reset.ts`, `.gitignore` (add `!.env.test`), `package.json` scripts
 
 **Interfaces:**
 
-- Produces `isLocalNeonHost(url: string): boolean` (true only when hostname is `db.localtest.me`) and `configureNeonForUrl(url: string): void` in `lib/neon-local.ts`. For local hosts it sets on `neonConfig`: `fetchEndpoint` → `http://db.localtest.me:4444/sql`, `wsProxy` → `(host) => \`${host}:4444/v1\``, `useSecureWebSocket`→`false`, `pipelineTLS`→`false`, `pipelineConnect`→`false`. For any other host it changes nothing.
-- `lib/db.ts` and `db/reset.ts` call `configureNeonForUrl(url)` before creating `neon()` / `Pool`.
-- Produces scripts: `db:test:up` (`docker compose -f docker-compose.test.yml up -d --wait --wait-timeout 60`), `db:test:down` (`docker compose -f docker-compose.test.yml down -v`), `db:test:reset` (`tsx --env-file=.env.test db/reset.ts`), `test:int` (`npm run db:test:reset && vitest run --project int`).
+- Produces `isLocalNeonHost(url: string): boolean` (true only when hostname is `db.localtest.me`) and `configureNeonForUrl(url: string): void` in `src/backend/db/neon-local.ts`. For local hosts it sets on `neonConfig`: `fetchEndpoint` → `http://db.localtest.me:4444/sql`, `wsProxy` → `(host) => \`${host}:4444/v1\``, `useSecureWebSocket`→`false`, `pipelineTLS`→`false`, `pipelineConnect`→`false`. For any other host it changes nothing.
+- `src/backend/db/client.ts` and `src/backend/db/reset.ts` call `configureNeonForUrl(url)` before creating `neon()` / `Pool`.
+- Produces scripts: `db:test:up` (`docker compose -f docker-compose.test.yml up -d --wait --wait-timeout 60`), `db:test:down` (`docker compose -f docker-compose.test.yml down -v`), `db:test:reset` (`tsx --env-file=.env.test src/backend/db/reset.ts`), `test:int` (`npm run db:test:reset && vitest run --project int`).
 - `.env.test` contains exactly `DATABASE_URL=postgres://postgres:postgres@db.localtest.me:5432/main`.
 
-- [ ] **Step 1: Write the failing unit test** `lib/neon-local.test.ts`:
+- [ ] **Step 1: Write the failing unit test** `src/backend/db/neon-local.test.ts`:
   - `isLocalNeonHost("postgres://postgres:postgres@db.localtest.me:5432/main")` is `true`
   - `isLocalNeonHost("postgresql://u:p@ep-cool-123.us-east-2.aws.neon.tech/neondb")` is `false`
   - after `configureNeonForUrl(local)`, `neonConfig.useSecureWebSocket` is `false` and `fetchEndpoint` resolves to `http://db.localtest.me:4444/sql`
   - after resetting `neonConfig` and calling `configureNeonForUrl(neonUrl)`, `neonConfig.useSecureWebSocket` is still its default `true`
 - [ ] **Step 2:** `npm run test:unit`. Expected: FAIL, module `./neon-local` not found.
-- [ ] **Step 3:** Implement `lib/neon-local.ts`; wire it into `lib/db.ts` and `db/reset.ts`.
+- [ ] **Step 3:** Implement `src/backend/db/neon-local.ts`; wire it into `src/backend/db/client.ts` and `src/backend/db/reset.ts`.
 - [ ] **Step 4:** `npm run test:unit`. Expected: PASS.
 - [ ] **Step 5:** `docker-compose.test.yml`: service `postgres` (`postgres:17`, user/password `postgres`, db `main`, port `5432:5432`, `pg_isready` healthcheck, no volume) and `neon-proxy` (`ghcr.io/timowilhelm/local-neon-http-proxy@sha256:<digest>`, `PG_CONNECTION_STRING=postgres://postgres:postgres@postgres:5432/main`, port `4444:4444`, `depends_on` postgres healthy). Get the digest with `docker pull` then `docker inspect --format '{{index .RepoDigests 0}}'`.
-- [ ] **Step 6: Write the failing integration test** `db/seed.int.test.ts`: imports `sql` from `@/lib/db`; asserts `select count(*)::int as n from listings` returns `n` equal to the number of listings rows inserted by `db/seed.sql` (count them and hard-code the number). Run `npm run test:int` with Docker stopped: expected FAIL at `db:test:reset` with a connection error. Then `npm run db:test:up` and `npm run test:int`: expected PASS.
+- [ ] **Step 6: Write the failing integration test** `src/backend/db/seed.int.test.ts`: imports `sql` from `@/lib/db`; asserts `select count(*)::int as n from listings` returns `n` equal to the number of listings rows inserted by `src/backend/db/seed.sql` (count them and hard-code the number). Run `npm run test:int` with Docker stopped: expected FAIL at `db:test:reset` with a connection error. Then `npm run db:test:up` and `npm run test:int`: expected PASS.
 - [ ] **Step 7:** Commit `test: run integration tests against Postgres in Docker`.
 
 ### Task 4: E2E stage (Playwright)
@@ -105,7 +105,7 @@
 
 - [ ] **Step 1:** `npm i -D @playwright/test`, `npx playwright install chromium`.
 - [ ] **Step 2: Write the test** `e2e/home.spec.ts`: on `/`, the page has a level-1 heading named `TheraCheck`, `<html>` has a `lang` attribute, and no `console` errors are logged during load.
-- [ ] **Step 3:** Run `npm run test:e2e`. Expected: if the layout already sets `lang`, PASS on both projects; if it fails on `lang`, fix `app/layout.tsx` and re-run to PASS.
+- [ ] **Step 3:** Run `npm run test:e2e`. Expected: if the layout already sets `lang`, PASS on both projects; if it fails on `lang`, fix `src/app/layout.tsx` and re-run to PASS.
 - [ ] **Step 4:** Commit `test: add Playwright e2e on desktop and phone sizes`.
 
 ### Task 5: Workflow and docs

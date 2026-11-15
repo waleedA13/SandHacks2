@@ -23,13 +23,13 @@ Decide at the Sat 9 PM checkpoint whether to do this. It is also the one live lo
 
 ## Files
 
-- Create: `collector/worker.ts`, `components/RecheckButton.tsx`
-- Modify: `components/CallPanel.tsx` or `app/listing/[id]/page.tsx` to place the button
+- Create: `src/backend/collector/worker.ts`, `src/frontend/RecheckButton.tsx`
+- Modify: `src/frontend/CallPanel.tsx` or `src/app/listing/[id]/page.tsx` to place the button
 
 ## Interfaces
 
 - **Consumes:** `collectEvidence` (issue 04), `verifyListing` (issue 05), `POST /api/listings/[id]/recheck`, `GET /api/jobs/[id]`, `GET /api/listings/[id]`.
-- **Produces:** command `npx tsx collector/worker.ts`; `<RecheckButton listingId />`.
+- **Produces:** command `npx tsx src/backend/collector/worker.ts`; `<RecheckButton listingId />`.
 
 ## Acceptance check
 
@@ -45,9 +45,9 @@ Decide at the Sat 9 PM checkpoint whether to do this. It is also the one live lo
 ```
 Read CLAUDE.md, the plan's "Shared contract" and "Review Focus", and docs/issues/11-live-recheck.md.
 
-Write collector/worker.ts: on start, mark any job that has been "running" for more than 3 minutes as "failed". Then loop every 2 seconds: claim one queued job by setting it to "running" in a single UPDATE ... RETURNING so two workers cannot take the same job; call collectEvidence(listingId) from collector/evidence.ts, then verifyListing(listingId) from verifier/verify.ts; set status "done" and finished_at. Catch any error, log it, and set "failed".
+Write src/backend/collector/worker.ts: on start, mark any job that has been "running" for more than 3 minutes as "failed". Then loop every 2 seconds: claim one queued job by setting it to "running" in a single UPDATE ... RETURNING so two workers cannot take the same job; call collectEvidence(listingId) from src/backend/collector/evidence.ts, then verifyListing(listingId) from src/backend/verifier/verify.ts; set status "done" and finished_at. Catch any error, log it, and set "failed".
 Log one line per job with the seconds taken.
-Do not change collector/evidence.ts or verifier/verify.ts beyond importing from them. Do not commit; show me the diff and a proposed commit message.
+Do not change src/backend/collector/evidence.ts or src/backend/verifier/verify.ts beyond importing from them. Do not commit; show me the diff and a proposed commit message.
 ```
 
 ## Prompt for your Claude (Tracy, button)
@@ -55,7 +55,7 @@ Do not change collector/evidence.ts or verifier/verify.ts beyond importing from 
 ```
 Read CLAUDE.md, the plan's "Features and user stories" (F5) and "Review Focus", and docs/issues/11-live-recheck.md.
 
-Write components/RecheckButton.tsx, a client component: on press, POST /api/listings/{id}/recheck, then poll GET /api/jobs/{jobId} every 2 seconds for up to 120 seconds. Show the three states in the issue in an aria-live region. On "done", refresh the page data so the new result appears. Never clear the existing result while waiting.
+Write src/frontend/RecheckButton.tsx, a client component: on press, POST /api/listings/{id}/recheck, then poll GET /api/jobs/{jobId} every 2 seconds for up to 120 seconds. Show the three states in the issue in an aria-live region. On "done", refresh the page data so the new result appears. Never clear the existing result while waiting.
 Place it on the listing page beside the call panel, matching the existing visual style.
 Do not commit; show me the diff and a proposed commit message.
 ```

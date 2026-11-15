@@ -13,13 +13,13 @@
     "audit": "npm audit --audit-level=high",
     "test": "vitest run --project unit",
     "test:unit": "vitest run --project unit",
-    "db:reset": "tsx --env-file=.env.local db/reset.ts",
-    "verify": "tsx --env-file=.env.local verifier/verify.ts",
+    "db:reset": "tsx --env-file=.env.local src/backend/db/reset.ts",
+    "verify": "tsx --env-file=.env.local src/backend/verifier/verify.ts",
     "test:e2e": "playwright test",
     "test:int": "npm run db:test:reset && vitest run --project int",
     "db:test:up": "docker compose -f docker-compose.test.yml up -d --wait --wait-timeout 60",
     "db:test:down": "docker compose -f docker-compose.test.yml down -v",
-    "db:test:reset": "tsx --env-file=.env.test db/reset.ts --local-only"
+    "db:test:reset": "tsx --env-file=.env.test src/backend/db/reset.ts --local-only"
   },
   "dependencies": {
     "@elevenlabs/react": "^1.22.1",

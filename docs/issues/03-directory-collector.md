@@ -30,13 +30,13 @@ Store the city name from the table above, not whatever the directory prints, so 
 
 ## Files
 
-- Create: `collector/directory.ts`, `collector/npi.ts`, `collector/normalize.ts`, `collector/normalize.test.ts`
+- Create: `src/backend/collector/directory.ts`, `src/backend/collector/npi.ts`, `src/backend/collector/normalize.ts`, `src/backend/collector/normalize.test.ts`
 
 ## Interfaces
 
-- **Consumes:** `openBrowser()` from `collector/brightdata.ts`; `sql` from `lib/db.ts`; `Listing` from `lib/types.ts`.
-- **Produces:** rows in `listings`. Command: `npx tsx collector/directory.ts --insurer "<name>" --zip 92101 --limit 50`.
-- **Produces:** `normalizePhone(raw: string): string | null` (digits only, 10 digits, else null) and `normalizeName(raw: string): string` (lower-case, credentials and punctuation stripped) in `collector/normalize.ts`. Issue 04 uses both.
+- **Consumes:** `openBrowser()` from `src/backend/collector/brightdata.ts`; `sql` from `src/backend/db/client.ts`; `Listing` from `src/shared/types.ts`.
+- **Produces:** rows in `listings`. Command: `npx tsx src/backend/collector/directory.ts --insurer "<name>" --zip 92101 --limit 50`.
+- **Produces:** `normalizePhone(raw: string): string | null` (digits only, 10 digits, else null) and `normalizeName(raw: string): string` (lower-case, credentials and punctuation stripped) in `src/backend/collector/normalize.ts`. Issue 04 uses both.
 
 ## Acceptance check
 
@@ -51,9 +51,9 @@ Store the city name from the table above, not whatever the directory prints, so 
 ```
 Read CLAUDE.md, the plan's "Shared contract", docs/smoke-test.md and docs/issues/03-directory-collector.md.
 
-Write collector/normalize.test.ts with the cases in the acceptance check, see it fail, then write collector/normalize.ts.
-Write collector/npi.ts with one function that queries the public NPI Registry API (https://npiregistry.cms.hhs.gov/api/, version 2.1) by first name, last name, city and state, and returns the NPI only when exactly one result comes back.
-Write collector/directory.ts: use openBrowser() from collector/brightdata.ts and the search steps recorded in docs/smoke-test.md to page through results, extract the fields in the issue, normalise, look up the NPI, and upsert into listings keyed on insurer + normalised name + normalised phone.
-Only call Bright Data through collector/brightdata.ts. Log one line per listing saved.
-Do not touch app/, verifier/ or components/. Do not commit; show me the diff and a proposed commit message.
+Write src/backend/collector/normalize.test.ts with the cases in the acceptance check, see it fail, then write src/backend/collector/normalize.ts.
+Write src/backend/collector/npi.ts with one function that queries the public NPI Registry API (https://npiregistry.cms.hhs.gov/api/, version 2.1) by first name, last name, city and state, and returns the NPI only when exactly one result comes back.
+Write src/backend/collector/directory.ts: use openBrowser() from src/backend/collector/brightdata.ts and the search steps recorded in docs/smoke-test.md to page through results, extract the fields in the issue, normalise, look up the NPI, and upsert into listings keyed on insurer + normalised name + normalised phone.
+Only call Bright Data through src/backend/collector/brightdata.ts. Log one line per listing saved.
+Do not touch src/app/, src/backend/verifier/ or src/frontend/. Do not commit; show me the diff and a proposed commit message.
 ```

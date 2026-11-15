@@ -4,7 +4,7 @@ TheraCheck has one ElevenLabs agent, **TheraCheck confirm call**. It plays a cal
 
 How the pieces connect:
 
-1. `components/VoiceWidget.tsx` asks `POST /api/voice/token` for a conversation token. That route holds `ELEVENLABS_API_KEY` and `NEXT_ELEVENLABS_AGENT_ID`; the browser sees only the token.
+1. `src/frontend/VoiceWidget.tsx` asks `POST /api/voice/token` for a conversation token. That route holds `ELEVENLABS_API_KEY` and `NEXT_ELEVENLABS_AGENT_ID`; the browser sees only the token.
 2. The widget starts the call with the token and three dynamic variables: `listing_id`, `therapist_name`, `insurer`.
 3. At the end of the call the agent runs its `save_call_result` webhook tool. ElevenLabs posts the answers to `/api/calls/result` with the `x-webhook-secret` header.
 4. The route returns the listing's new `{ score, label }`. ElevenLabs forwards that result to the widget as an `agent_tool_response_full_payload` event, and the widget hands it to `onDone`.
@@ -142,7 +142,7 @@ The agent gets the same dynamic variables as the browser call: `listing_id`, `th
 
 To stop a double press or a loop from ringing a phone over and over and spending money, the route allows one outbound call per 60 seconds for the whole app. Each started call is stored as an `in_progress` row in `calls`; the result the agent saves is a separate `done` row. A call ElevenLabs refuses is marked `failed` and frees the slot at once.
 
-From a client component (the "Call a phone instead" option in `components/CallPanel.tsx`):
+From a client component (the "Call a phone instead" option in `src/frontend/CallPanel.tsx`):
 
 ```ts
 const res = await fetch("/api/calls/start", {

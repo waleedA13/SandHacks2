@@ -1,5 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
-import { isLocalNeonHost } from "./lib/neon-local";
+import { isLocalNeonHost } from "./src/backend/db/neon-local";
 
 process.loadEnvFile(".env.test");
 // loadEnvFile does not override a DATABASE_URL already set in the shell.

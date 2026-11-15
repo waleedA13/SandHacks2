@@ -31,7 +31,7 @@ Rules:
 
 ## Files
 
-- Create: `voice/agent-confirm.md` (the agent's system prompt and first message), `voice/README.md` (how the agent, its tool and its variables are configured in the ElevenLabs dashboard), `components/VoiceWidget.tsx`
+- Create: `voice/agent-confirm.md` (the agent's system prompt and first message), `voice/README.md` (how the agent, its tool and its variables are configured in the ElevenLabs dashboard), `src/frontend/VoiceWidget.tsx`
 
 ## Interfaces
 
@@ -58,7 +58,7 @@ Read the current ElevenLabs Agents docs for: creating an agent, dynamic variable
 
 Write voice/agent-confirm.md: the system prompt and first message implementing the conversation and rules in the issue, with {{therapist_name}}, {{insurer}} and {{listing_id}} as variables. Include the instruction to record anything vague as "unknown".
 Write voice/README.md: step-by-step dashboard setup, including the save_call_result server tool pointing at /api/calls/result with the x-webhook-secret header and the three fields constrained to yes/no/unknown.
-Write components/VoiceWidget.tsx with the props in the issue. Keep it accessible: real buttons, a text status that screen readers announce, and a visible transcript of the last agent line.
+Write src/frontend/VoiceWidget.tsx with the props in the issue. Keep it accessible: real buttons, a text status that screen readers announce, and a visible transcript of the last agent line.
 I will create the agent in the dashboard myself from the README; tell me exactly what to paste where.
-Do not touch collector/ or verifier/. Do not commit; show me the diff and a proposed commit message.
+Do not touch src/backend/collector/ or src/backend/verifier/. Do not commit; show me the diff and a proposed commit message.
 ```

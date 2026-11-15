@@ -34,7 +34,7 @@ Go through both pages as each persona and fix what fails.
 
 ## Files
 
-- Modify: `app/globals.css`, files under `components/`, `app/page.tsx`, `app/listing/[id]/page.tsx`
+- Modify: `src/app/globals.css`, files under `src/frontend/`, `src/app/page.tsx`, `src/app/listing/[id]/page.tsx`
 - Create: `docs/accessibility-check.md` (what was tested, what passed, what was fixed, what is still open)
 
 ## Interfaces
@@ -58,5 +58,5 @@ Fix the failures in the components and CSS: contrast, focus styles, heading orde
 Rewrite any on-screen sentence that uses jargon into plain words, and show me each before and after so I can approve the wording.
 Test at 320, 390, 768 and 1280px and with JavaScript disabled.
 Write docs/accessibility-check.md recording each item as pass, fixed or open. Be honest about what you could not test (real devices and real screen readers are mine to test).
-Do not change the API, collector/ or verifier/. Do not commit; show me the diff and a proposed commit message.
+Do not change the API, src/backend/collector/ or src/backend/verifier/. Do not commit; show me the diff and a proposed commit message.
 ```
