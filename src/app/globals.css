@@ -1276,3 +1276,10 @@ h2 {
     overflow-y: auto;
   }
 }
+
+/* Some labels wrap to two lines; give every label that height so the boxes line up. */
+.search-all .field > label {
+  display: flex;
+  align-items: flex-end;
+  min-height: 2lh;
+}
