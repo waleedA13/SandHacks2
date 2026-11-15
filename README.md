@@ -15,17 +15,17 @@
 
 ## Tech stack
 
-| Layer | What we use |
-|---|---|
-| App | Next.js 16 (App Router, TypeScript), React 19, server-rendered pages |
-| Hosting | Vercel |
-| Database | Neon Postgres, through `@neondatabase/serverless` (`lib/db.ts`) |
-| Scraping | Bright Data Browser API, Web Unlocker and SERP API (`collector/brightdata.ts` only) |
-| Reading evidence | Gemini API, Flash tier with structured output (`verifier/gemini.ts` only) |
-| Voice | ElevenLabs Agents (`components/VoiceWidget.tsx` only) |
-| Tests | Vitest |
-| Scripts | `tsx` runs the TypeScript pipeline scripts by hand |
-| Runtime | Node.js 24, npm |
+| Layer            | What we use                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| App              | Next.js 16 (App Router, TypeScript), React 19, server-rendered pages                |
+| Hosting          | Vercel                                                                              |
+| Database         | Neon Postgres, through `@neondatabase/serverless` (`lib/db.ts`)                     |
+| Scraping         | Bright Data Browser API, Web Unlocker and SERP API (`collector/brightdata.ts` only) |
+| Reading evidence | Gemini API, Flash tier with structured output (`verifier/gemini.ts` only)           |
+| Voice            | ElevenLabs Agents (`components/VoiceWidget.tsx` only)                               |
+| Tests            | Vitest                                                                              |
+| Scripts          | `tsx` runs the TypeScript pipeline scripts by hand                                  |
+| Runtime          | Node.js 24, npm                                                                     |
 
 The four parts (collector, verifier, web app, voice agent) talk only through the database. Pages and API routes read the database; they never call Bright Data or Gemini while a user waits.
 
@@ -55,29 +55,6 @@ cp .env.example .env.local   # fill in your keys; never commit .env.local
 npm run dev                  # http://localhost:3000
 ```
 
-| Command | What it does | Needs |
-|---|---|---|
-| `npm run dev` | Runs the app locally | nothing for the placeholder page; `DATABASE_URL` once pages read data |
-| `npm test` | Runs the Vitest suite | nothing |
-| `npm run lint` | ESLint | nothing |
-| `npm run build` | Production build | nothing today; `DATABASE_URL` once pages read data |
-| `npm run db:reset` | Drops all tables, applies `db/schema.sql` then `db/seed.sql` | `DATABASE_URL` (uses `DATABASE_URL_UNPOOLED` if set) |
-
-## Continuous integration
-
-`.github/workflows/security.yml` already runs a Gitleaks secret scan on every push to `main` and every pull request, plus dependency review on pull requests.
-
-A build-and-test workflow should, on pull requests and pushes to `main`:
-
-1. Use Node.js 24 with the npm cache, then `npm ci`.
-2. Run `npm run lint`, `npm test` and `npm run build`.
-
-Notes for that workflow:
-
-- No step should need real keys. Never run `npm run db:reset` in CI: it wipes the shared Neon database.
-- `lib/db.ts` throws on import when `DATABASE_URL` is missing. If a build starts failing for that reason, set a dummy value in the workflow (for example `postgresql://ci:ci@localhost/ci`), not a real one.
-- Vercel deploys every push by itself, so CI does not need a deploy step.
-
 ## Commands
 
 | Command                 | What it does                                                                   |
@@ -88,6 +65,8 @@ Notes for that workflow:
 | `npm run lint`          | Run ESLint                                                                     |
 | `npm run typecheck`     | Generate Next.js route types and run `tsc --noEmit`                            |
 | `npm run audit`         | Fail on high or critical `npm audit` advisories                                |
+| `npm run build`         | Production build                                                               |
+| `npm test`              | Same as `test:unit`                                                            |
 | `npm run test:unit`     | Unit tests (`*.test.ts`), no database or network                               |
 | `npm run db:test:up`    | Start Postgres and the Neon HTTP proxy in Docker                               |
 | `npm run db:test:reset` | Apply `db/schema.sql` and `db/seed.sql` to the Docker database                 |
@@ -122,6 +101,8 @@ npm run db:test:down
 ```
 
 These commands work in PowerShell, cmd and bash. The first `test:e2e` run needs `npx playwright install chromium`.
+
+`.github/workflows/security.yml` also runs a Gitleaks secret scan on every push to `main` and every pull request, plus dependency review on pull requests. Vercel deploys every push by itself, so CI has no deploy step.
 
 ## Contributing
 
