@@ -122,21 +122,21 @@ export async function listSummaries(
 }
 
 // What the search form offers: every insurer and city with listings, A to Z,
-// and the first insurer with its first city, used as the starting search.
+// and each insurer's first city, used when a search names no city.
 export async function listSearchOptions(): Promise<{
   insurers: string[];
   cities: string[];
-  first: { insurer: string; city: string } | null;
+  firstCity: Record<string, string>;
 }> {
-  const [insurers, cities, [first]] = await Promise.all([
+  const [insurers, cities, firsts] = await Promise.all([
     sql`select distinct insurer from listings order by insurer`,
     sql`select distinct city from listings order by city`,
-    sql`select insurer, city from listings order by insurer, city limit 1`,
+    sql`select distinct on (insurer) insurer, city from listings order by insurer, city`,
   ]);
   return {
     insurers: insurers.map((r) => r.insurer),
     cities: cities.map((r) => r.city),
-    first: first ? { insurer: first.insurer, city: first.city } : null,
+    firstCity: Object.fromEntries(firsts.map((r) => [r.insurer, r.city])),
   };
 }
 

@@ -50,9 +50,15 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     searchParams,
     listSearchOptions(),
   ]);
-  // With no search in the URL, start with the first insurer and city that have listings.
-  const insurer = first(params.insurer) ?? options.first?.insurer ?? "";
-  const city = first(params.city)?.slice(0, 60) ?? options.first?.city ?? "";
+  // The first city an insurer has listings in, matching the insurer's name ignoring case.
+  const cityFor = (i: string) =>
+    Object.entries(options.firstCity).find(
+      ([k]) => k.toLowerCase() === i.toLowerCase(),
+    )?.[1];
+  // With no search in the URL, start with the first insurer and its first city.
+  const start = options.insurers[0];
+  const insurer = first(params.insurer) ?? start ?? "";
+  const city = first(params.city)?.slice(0, 60) ?? cityFor(insurer) ?? "";
 
   const fit = fitFromParams(params);
   const filtering = Boolean(fit.specialty || fit.language || fit.telehealth);
@@ -91,7 +97,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         </p>
       </section>
 
-      {options.first && (
+      {start && (
         <SearchForm
           insurer={insurer}
           city={city}
@@ -104,14 +110,14 @@ export default async function Home({ searchParams }: PageProps<"/">) {
 
       {stats.total === 0 ? (
         <section className="empty">
-          {options.first ? (
+          {start ? (
             <>
               <p>{"We don't have listings for that insurer and place yet."}</p>
               <Link
                 className="btn"
-                href={`/?${new URLSearchParams(options.first)}`}
+                href={`/?${new URLSearchParams({ insurer: start, city: cityFor(start) ?? "" })}`}
               >
-                Show {options.first.insurer} in {options.first.city}
+                Show {start} in {cityFor(start)}
               </Link>
             </>
           ) : (
@@ -126,7 +132,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             </span>
             <div>
               <p className="summary-line">
-                Of {stats.total} {insurer} listings in {city},{" "}
+                Of {stats.total} {insurer}{" "}
+                {stats.total === 1 ? "listing" : "listings"} in {city},{" "}
                 {stats.likelyAvailable} look reachable.
               </p>
               <p className="soft">

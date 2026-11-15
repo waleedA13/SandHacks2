@@ -107,14 +107,25 @@ describe("listSummaries", () => {
 });
 
 describe("listSearchOptions", () => {
-  it("returns the seed's insurers and cities, sorted, and the first pair", async () => {
+  it("returns the seed's insurers and cities, sorted, and each insurer's first city", async () => {
     const o = await listSearchOptions();
     // Other tests add "TestCo …" insurers; the seed has only Aetna in San Diego.
     expect(o.insurers.filter((i) => !i.startsWith("TestCo "))).toEqual([
       "Aetna",
     ]);
     expect(o.cities).toEqual(["San Diego"]);
-    expect(o.first).toEqual({ insurer: "Aetna", city: "San Diego" });
+    expect(o.firstCity.Aetna).toBe("San Diego");
+  });
+
+  it("gives each insurer the first city it has listings in", async () => {
+    const insurer = `TestCo ${crypto.randomUUID()}`;
+    for (const city of ["Fresno", "Chula Vista"])
+      await sql`
+        insert into listings (insurer, plan, city, state, name, source_url)
+        values (${insurer}, 'P', ${city}, 'CA', 'Pat Test', 'https://example.com/c')`;
+    const o = await listSearchOptions();
+    expect(o.firstCity[insurer]).toBe("Chula Vista");
+    expect(o.firstCity.Aetna).toBe("San Diego");
   });
 });
 

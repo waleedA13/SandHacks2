@@ -58,7 +58,7 @@ test.describe("without JavaScript", () => {
     await expect(page).toHaveURL(/\/\?insurer=Aetna&city=92103$/);
     await expect(page.locator("main article")).toHaveCount(1);
     await expect(
-      page.getByText("Of 1 Aetna listings in 92103,", { exact: false }),
+      page.getByText("Of 1 Aetna listing in 92103,", { exact: false }),
     ).toBeVisible();
     await expect(page.locator(".search-pill summary")).toContainText(
       "Aetna · 92103 · Change",
@@ -78,6 +78,9 @@ test("Back from a listing returns to the same ZIP results", async ({
 }) => {
   await page.goto("/?insurer=Aetna&city=92101");
   await expect(page.locator("main article")).toHaveCount(2);
+  await expect(
+    page.getByText("Of 2 Aetna listings in 92101,", { exact: false }),
+  ).toBeVisible();
   await page
     .getByRole("link", { name: "View details for Avery Example" })
     .click();
@@ -98,4 +101,11 @@ test("the city box is at least 44px tall with no sideways scroll at 320px", asyn
     () => document.documentElement.scrollWidth - window.innerWidth,
   );
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("an insurer with no city starts in that insurer's first city", async ({
+  page,
+}) => {
+  await page.goto("/?insurer=aetna");
+  await expect(page.locator("main article")).toHaveCount(12);
 });
