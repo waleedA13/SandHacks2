@@ -1,10 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { claimCallSlot, failCall } from "@/backend/queries";
 import { POST } from "./route";
 
-const fetchMock = vi.fn();
+const LID = "00000000-0000-4000-8000-000000000001";
 
-// The widget sends no body for the confirm agent and { agent } for the helper.
-const post = (body?: string) =>
+// The database is not used in unit tests: a known listing and a free call slot.
+vi.mock("@/backend/queries", () => ({
+  isUuid: (s: unknown) => typeof s === "string" && /^[0-9a-f-]{36}$/.test(s),
+  getCallTarget: vi.fn(async (id: string) =>
+    id === LID ? { name: "Ana", insurer: "Aetna" } : null,
+  ),
+  claimCallSlot: vi.fn(async () => "call-1"),
+  failCall: vi.fn(async () => {}),
+}));
+
+const fetchMock = vi.fn();
+const CONFIRM = JSON.stringify({ agent: "confirm", listingId: LID });
+
+// The widget sends { agent: "confirm", listingId } or { agent: "helper" }.
+const post = (body: string | undefined = CONFIRM) =>
   POST(
     new Request("http://localhost/api/voice/token", { method: "POST", body }),
   );
@@ -21,6 +35,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
+  vi.clearAllMocks();
   fetchMock.mockReset();
 });
 
@@ -92,9 +107,7 @@ describe("POST /api/voice/token agent choice", () => {
     `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${id}`;
 
   it.each([
-    ["no body", undefined, "agent_test_id"],
-    ["an empty object", "{}", "agent_test_id"],
-    ["confirm", '{"agent":"confirm"}', "agent_test_id"],
+    ["confirm", CONFIRM, "agent_test_id"],
     ["helper", '{"agent":"helper"}', "agent_helper_id"],
   ])("uses the right agent id for %s", async (_, body, id) => {
     fetchMock.mockResolvedValue(Response.json({ token: "tok_123" }));
@@ -121,6 +134,48 @@ describe("POST /api/voice/token agent choice", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(await res.json()).toEqual({ error: "Unknown voice agent." });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["no body", ""],
+    ["an empty object", "{}"],
+    ["confirm without a listing", '{"agent":"confirm"}'],
+    ["a malformed listing id", '{"agent":"confirm","listingId":"x"}'],
+    [
+      "an unknown listing",
+      '{"agent":"confirm","listingId":"00000000-0000-4000-8000-000000000999"}',
+    ],
+  ])("returns 400 and calls nothing for %s", async (_, body) => {
+    const res = await post(body);
+
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Unknown listing." });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(claimCallSlot).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 while another call holds the slot", async () => {
+    vi.mocked(claimCallSlot).mockResolvedValueOnce(null);
+
+    const res = await post();
+
+    expect(res.status).toBe(429);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("frees the slot when ElevenLabs refuses", async () => {
+    fetchMock.mockResolvedValue(new Response("no", { status: 500 }));
+
+    expect((await post()).status).toBe(502);
+    expect(failCall).toHaveBeenCalledWith("call-1");
+  });
+
+  it("starts no call for the helper", async () => {
+    fetchMock.mockResolvedValue(Response.json({ token: "tok_123" }));
+
+    await post('{"agent":"helper"}');
+
+    expect(claimCallSlot).not.toHaveBeenCalled();
   });
 
   it("returns 500 when the helper agent id is missing", async () => {
