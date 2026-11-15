@@ -67,23 +67,31 @@ const sources: {
 // Many SERP links are google.com/goto?url=… redirects whose url is an opaque token, not an address.
 function isPageUrl(url: string): boolean {
   try {
-    return !new URL(url).host.endsWith("google.com");
+    const host = new URL(url).hostname;
+    return host !== "google.com" && !host.endsWith(".google.com");
   } catch {
     return false;
   }
 }
 
+const ENTITIES: Record<string, string> = {
+  nbsp: " ",
+  amp: "&",
+  quot: '"',
+  apos: "'",
+  lt: "<",
+  gt: ">",
+  mdash: "—",
+  ndash: "—",
+};
+
+// One pass, so "&amp;lt;" becomes "&lt;" and is not decoded twice.
 function decode(s: string): string {
-  return s
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-    .replace(/&[mn]dash;/g, "—")
-    .replace(/&\w+;/g, " ");
+  return s.replace(/&(#\d+|\w+);/g, (_, e: string) =>
+    e.startsWith("#")
+      ? String.fromCharCode(Number(e.slice(1)))
+      : (ENTITIES[e] ?? " "),
+  );
 }
 
 function stripHtml(html: string): string {
