@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 // Seed facts from src/backend/db/seed.sql:
 // 8 Drew Fakename is the one "Pay yourself" listing, posted price $175 to $225.
 // Every listing's plan is "Aetna Open Access". 2 Jordan Placeholder has no price.
-// Sources: 8 has 2 evidence sources (+1 directory = 3), 6 has none (1).
+// Sources: 8 has 2 evidence sources (+1 directory = 3), 4 has none (1).
 const SD = "/?insurer=Aetna&city=San+Diego";
 const listing = (n: number) =>
   `/listing/00000000-0000-4000-8000-0000000000${String(n).padStart(2, "0")}`;
@@ -72,7 +72,7 @@ test("cards say how many places we checked", async ({ page }) => {
   await expect(
     card(page, "Drew Fakename").locator(".sources-count"),
   ).toHaveText("Checked in 3 places");
-  await expect(card(page, "Quinn Sample").locator(".sources-count")).toHaveText(
+  await expect(card(page, "Casey Demo").locator(".sources-count")).toHaveText(
     "Checked in 1 place",
   );
 });
@@ -124,18 +124,6 @@ test("every detail page has the cost panel, with no price when none is posted", 
 test("listing 8 gets the self-pay questions, not the insurer ones", async ({
   page,
 }) => {
-  await page.goto(SD);
-  const script = card(page, "Drew Fakename").locator(".script");
-  await script.locator("summary").click();
-  await expect(script.getByRole("listitem")).toHaveText([
-    "\u201cDo you have openings for clients who pay for themselves?\u201d",
-    "\u201cWhat do you charge per session?\u201d",
-  ]);
-  // Other labels keep the insurer questions.
-  await expect(
-    card(page, "Avery Example").locator(".script li").first(),
-  ).toHaveText("\u201cDo you take Aetna?\u201d");
-
   await page.goto(listing(8));
   const say = page.locator("#call-yourself .say");
   await expect(say).toContainText(

@@ -62,7 +62,7 @@ export function FitFilters({
     Boolean,
   );
   return (
-    <details className="search-pill narrow" open={active}>
+    <details className="narrow" open={active}>
       <summary>
         <span>Narrow the list</span>
         <Icon name="chevron" size={18} />

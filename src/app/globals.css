@@ -374,12 +374,14 @@ h2 {
   flex: 1 1 100%;
 }
 
-.search-pill {
+.search-pill,
+.narrow {
   align-self: flex-start;
   max-width: 100%;
 }
 
-.search-pill summary {
+.search-pill summary,
+.narrow summary {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
@@ -393,7 +395,8 @@ h2 {
   list-style: none;
 }
 
-.search-pill summary::-webkit-details-marker {
+.search-pill summary::-webkit-details-marker,
+.narrow summary::-webkit-details-marker {
   display: none;
 }
 
@@ -414,7 +417,8 @@ h2 {
   color: #ffffff;
 }
 
-.search-pill[open] summary {
+.search-pill[open] summary,
+.narrow[open] summary {
   margin-bottom: var(--space-3);
 }
 
@@ -1089,14 +1093,16 @@ h2 {
 /* ---------- Tap feedback, only when motion is welcome ---------- */
 @media (prefers-reduced-motion: no-preference) {
   .btn,
-  .search-pill summary {
+  .search-pill summary,
+  .narrow summary {
     transition:
       transform 0.08s ease,
       background-color 0.15s ease;
   }
 
   .btn:active,
-  .search-pill summary:active {
+  .search-pill summary:active,
+  .narrow summary:active {
     transform: scale(0.97);
   }
 }
