@@ -1,9 +1,11 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Header } from "@/frontend/Header";
 import { Icon } from "@/frontend/Icon";
 import { ListingCard } from "@/frontend/ListingCard";
 import { first } from "@/frontend/params";
 import { SearchForm } from "@/frontend/SearchForm";
+import { ShareShortlist } from "@/frontend/ShareShortlist";
 import { getStats, listSummaries } from "@/backend/queries";
 import type { Label, ListingSummary } from "@/shared/types";
 
@@ -49,10 +51,14 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const insurer = first(params.insurer) ?? "Aetna";
   const city = first(params.city) ?? "San Diego";
 
-  const [listings, stats] = await Promise.all([
+  const [listings, stats, h] = await Promise.all([
     listSummaries(insurer, city),
     getStats(insurer, city),
+    headers(),
   ]);
+  const query = new URLSearchParams({ insurer, city });
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  const shareUrl = `${proto}://${h.get("host")}/?${query}`;
 
   const ranked = listings.map((listing, i) => ({ listing, rank: i + 1 }));
   const reachable = ranked.filter((r) => REACHABLE.includes(r.listing.label));
@@ -110,6 +116,23 @@ export default async function Home({ searchParams }: PageProps<"/">) {
             <p className="progress">
               You narrowed {stats.total} listings to {stats.likelyAvailable}{" "}
               worth calling.
+            </p>
+
+            <ShareShortlist
+              insurer={insurer}
+              city={city}
+              top={[...startWith, ...alsoTry, ...deadEnds]
+                .slice(0, 3)
+                .map(({ listing: { id, name, label, phone } }) => ({
+                  id,
+                  name,
+                  label,
+                  phone,
+                }))}
+              url={shareUrl}
+            />
+            <p className="print-only print-title">
+              Therapists most likely to pick up ({insurer}, {city})
             </p>
 
             {startWith.length > 0 && (
