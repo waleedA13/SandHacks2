@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
+import { SPECIALTIES } from "@/frontend/FitFilters";
 import { Header } from "@/frontend/Header";
 import { Icon } from "@/frontend/Icon";
 import { ListingCard } from "@/frontend/ListingCard";
@@ -51,12 +52,31 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const insurer = first(params.insurer) ?? "Aetna";
   const city = first(params.city) ?? "San Diego";
 
-  const [listings, stats, h] = await Promise.all([
+  const specialty = first(params.specialty);
+  const fit = {
+    specialty:
+      specialty && Object.hasOwn(SPECIALTIES, specialty)
+        ? specialty
+        : undefined,
+    language: first(params.language)?.toLowerCase(),
+    telehealth:
+      first(params.telehealth) === "yes" ? ("yes" as const) : undefined,
+  };
+  const filtering = Boolean(fit.specialty || fit.language || fit.telehealth);
+
+  const [all, stats, h, filtered] = await Promise.all([
     listSummaries(insurer, city),
     getStats(insurer, city),
     headers(),
+    filtering ? listSummaries(insurer, city, fit) : null,
   ]);
-  const query = new URLSearchParams({ insurer, city });
+  const listings = filtered ?? all;
+  // Only offer languages that some listing here actually has.
+  const languages = [...new Set(all.flatMap((l) => l.languages))].sort();
+
+  const base = new URLSearchParams({ insurer, city });
+  const query = new URLSearchParams(base);
+  for (const [k, v] of Object.entries(fit)) if (v) query.set(k, v);
   const proto = h.get("x-forwarded-proto") ?? "http";
   const shareUrl = `${proto}://${h.get("host")}/?${query}`;
 
@@ -81,7 +101,13 @@ export default async function Home({ searchParams }: PageProps<"/">) {
           </p>
         </section>
 
-        <SearchForm insurer={insurer} city={city} collapsed={stats.total > 0} />
+        <SearchForm
+          insurer={insurer}
+          city={city}
+          collapsed={stats.total > 0}
+          fit={fit}
+          languages={languages}
+        />
 
         {stats.total === 0 ? (
           <section className="empty">
@@ -118,62 +144,81 @@ export default async function Home({ searchParams }: PageProps<"/">) {
               worth calling.
             </p>
 
-            <ShareShortlist
-              insurer={insurer}
-              city={city}
-              top={[...startWith, ...alsoTry, ...deadEnds]
-                .slice(0, 3)
-                .map(({ listing: { id, name, label, phone } }) => ({
-                  id,
-                  name,
-                  label,
-                  phone,
-                }))}
-              url={shareUrl}
-            />
-            <p className="print-only print-title">
-              Therapists most likely to pick up ({insurer}, {city})
-            </p>
-
-            {startWith.length > 0 && (
-              <section className="start" aria-labelledby="start-h">
-                <h2 id="start-h">
-                  Start with{" "}
-                  {startWith.length === 1
-                    ? "this one"
-                    : `these ${startWith.length}`}
-                </h2>
-                <CardList
-                  items={startWith}
-                  variant="full"
-                  insurer={insurer}
-                  city={city}
-                />
-              </section>
+            {filtering && (
+              <p className="showing">
+                <span>
+                  Showing {listings.length} of {stats.total}
+                </span>
+                <Link className="link" href={`/?${base}`}>
+                  Clear filters
+                </Link>
+              </p>
             )}
 
-            {alsoTry.length > 0 && (
-              <section aria-labelledby="also-h">
-                <h2 id="also-h">Also worth a try</h2>
-                <CardList
-                  items={alsoTry}
-                  variant="full"
+            {listings.length === 0 ? (
+              <p className="empty">
+                No listings match all of these. Try removing one.
+              </p>
+            ) : (
+              <>
+                <ShareShortlist
                   insurer={insurer}
                   city={city}
+                  top={[...startWith, ...alsoTry, ...deadEnds]
+                    .slice(0, 3)
+                    .map(({ listing: { id, name, label, phone } }) => ({
+                      id,
+                      name,
+                      label,
+                      phone,
+                    }))}
+                  url={shareUrl}
                 />
-              </section>
-            )}
+                <p className="print-only print-title">
+                  Therapists most likely to pick up ({insurer}, {city})
+                </p>
 
-            {deadEnds.length > 0 && (
-              <section aria-labelledby="dead-h">
-                <h2 id="dead-h">Likely dead end</h2>
-                <CardList
-                  items={deadEnds}
-                  variant="compact"
-                  insurer={insurer}
-                  city={city}
-                />
-              </section>
+                {startWith.length > 0 && (
+                  <section className="start" aria-labelledby="start-h">
+                    <h2 id="start-h">
+                      Start with{" "}
+                      {startWith.length === 1
+                        ? "this one"
+                        : `these ${startWith.length}`}
+                    </h2>
+                    <CardList
+                      items={startWith}
+                      variant="full"
+                      insurer={insurer}
+                      city={city}
+                    />
+                  </section>
+                )}
+
+                {alsoTry.length > 0 && (
+                  <section aria-labelledby="also-h">
+                    <h2 id="also-h">Also worth a try</h2>
+                    <CardList
+                      items={alsoTry}
+                      variant="full"
+                      insurer={insurer}
+                      city={city}
+                    />
+                  </section>
+                )}
+
+                {deadEnds.length > 0 && (
+                  <section aria-labelledby="dead-h">
+                    <h2 id="dead-h">Likely dead end</h2>
+                    <CardList
+                      items={deadEnds}
+                      variant="compact"
+                      insurer={insurer}
+                      city={city}
+                    />
+                  </section>
+                )}
+              </>
             )}
           </>
         )}

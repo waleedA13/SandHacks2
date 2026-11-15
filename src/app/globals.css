@@ -316,6 +316,56 @@ h2 {
   margin-bottom: 12px;
 }
 
+/* ---------- Fit filters ---------- */
+.search-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filters {
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+
+/* A legend can't be a flex item, so it floats to take the full first row. */
+.filters legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  font-family: var(--f-head);
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+.check {
+  flex: 1 1 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+
+.showing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 16px;
+  font-weight: 700;
+}
+
 /* ---------- Summary ---------- */
 .summary {
   display: flex;
@@ -772,8 +822,8 @@ h2 {
   .skip,
   .intro,
   .search,
-  .search-pill,
-  .filters,
+  .search-wrap,
+  .showing,
   .summary,
   .progress,
   .share,
