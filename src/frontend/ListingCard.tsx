@@ -55,10 +55,20 @@ export function ListingCard({
           <Icon name="info" size={18} />
           What to ask when they answer
         </summary>
-        <ol>
-          <li>&ldquo;Do you take {insurer}?&rdquo;</li>
-          <li>&ldquo;Are you accepting new patients?&rdquo;</li>
-        </ol>
+        {label === "Pay yourself" ? (
+          <ol>
+            <li>
+              &ldquo;Do you have openings for clients who pay for
+              themselves?&rdquo;
+            </li>
+            <li>&ldquo;What do you charge per session?&rdquo;</li>
+          </ol>
+        ) : (
+          <ol>
+            <li>&ldquo;Do you take {insurer}?&rdquo;</li>
+            <li>&ldquo;Are you accepting new patients?&rdquo;</li>
+          </ol>
+        )}
       </details>
       <div className="actions">
         {paths.length === 0 && (

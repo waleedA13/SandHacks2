@@ -21,12 +21,15 @@ export function CallYourself({
   name,
   phone,
   askPlan,
+  selfPay = false,
 }: {
   listingId: string;
   name: string;
   phone: string;
   // "Aetna Open Access", as the office would say it.
   askPlan: string;
+  // Labelled "Pay yourself": ask about self-pay, not about the insurer.
+  selfPay?: boolean;
 }) {
   const id = useId();
   const router = useRouter();
@@ -80,17 +83,30 @@ export function CallYourself({
       <div className="say">
         <p id={`${id}-say`}>What to say:</p>
         <ol aria-labelledby={`${id}-say`}>
-          <li>
-            &ldquo;Hi, I&apos;m looking for a therapist. Do you take {askPlan}
-            ?&rdquo;
-          </li>
-          <li>&ldquo;Is {name} taking new patients?&rdquo;</li>
+          {selfPay ? (
+            <>
+              <li>
+                &ldquo;Hi, I&apos;m looking for a therapist. Do you have
+                openings for clients who pay for themselves?&rdquo;
+              </li>
+              <li>&ldquo;What do you charge per session?&rdquo;</li>
+            </>
+          ) : (
+            <>
+              <li>
+                &ldquo;Hi, I&apos;m looking for a therapist. Do you take{" "}
+                {askPlan}?&rdquo;
+              </li>
+              <li>&ldquo;Is {name} taking new patients?&rdquo;</li>
+            </>
+          )}
           <li>&ldquo;What&apos;s the earliest appointment?&rdquo;</li>
         </ol>
       </div>
       <form
         className="report"
-        method="post"
+        // React renders a function action's method as "POST"; match it so hydration agrees.
+        method="POST"
         action={formAction}
         onSubmit={send}
         aria-labelledby={`${id}-after`}

@@ -20,9 +20,11 @@ export function BookingPanel({
   listing,
   paths,
   lastCall,
+  selfPay = false,
 }: {
   listing: Listing;
   paths: BookingPath[];
+  selfPay?: boolean;
   lastCall: Pick<Call, "summary" | "calledAt"> | null;
 }) {
   const { id, name, insurer, plan, phone, bookingUrl, bookingSource } = listing;
@@ -77,6 +79,7 @@ export function BookingPanel({
                 name={name}
                 phone={phone}
                 askPlan={planToAsk(insurer, plan)}
+                selfPay={selfPay}
               />
             </div>
           );

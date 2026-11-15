@@ -151,6 +151,7 @@ export default async function ListingPage({
           listing={listing}
           paths={detail.paths}
           lastCall={lastCall}
+          selfPay={label === "Pay yourself"}
         />
       </main>
     </LabelProvider>

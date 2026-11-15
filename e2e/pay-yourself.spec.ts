@@ -120,6 +120,30 @@ test("every detail page has the cost panel, with no price when none is posted", 
   expect(await page.locator("main").innerText()).not.toMatch(/\$\d/);
 });
 
+test("listing 8 gets the self-pay questions, not the insurer ones", async ({
+  page,
+}) => {
+  await page.goto(SD);
+  const script = card(page, "Drew Fakename").locator(".script");
+  await script.locator("summary").click();
+  await expect(script.getByRole("listitem")).toHaveText([
+    "\u201cDo you have openings for clients who pay for themselves?\u201d",
+    "\u201cWhat do you charge per session?\u201d",
+  ]);
+  // Other labels keep the insurer questions.
+  await expect(
+    card(page, "Avery Example").locator(".script li").first(),
+  ).toHaveText("\u201cDo you take Aetna?\u201d");
+
+  await page.goto(listing(8));
+  const say = page.locator("#call-yourself .say");
+  await expect(say).toContainText(
+    "Do you have openings for clients who pay for themselves?",
+  );
+  await expect(say).toContainText("What do you charge per session?");
+  await expect(say).not.toContainText("Do you take");
+});
+
 test.describe("with JavaScript off", () => {
   test.use({ javaScriptEnabled: false });
 
