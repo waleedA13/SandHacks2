@@ -45,12 +45,12 @@ Pick a clear, calm English voice. Leave speed at the default.
 
 Agent tab → **Tools** → **Add tool** → **Webhook**.
 
-| Field       | Value                                                                                                |
-| ----------- | ---------------------------------------------------------------------------------------------------- |
-| Name        | `save_call_result`                                                                                   |
-| Description | `Save the office's two answers at the end of the call. Call it once, before saying goodbye.`         |
-| Method      | `POST`                                                                                               |
-| URL         | `https://<your-vercel-domain>/api/calls/result` (the production domain, not a preview URL with auth) |
+| Field       | Value                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| Name        | `save_call_result`                                                                                     |
+| Description | `Save the office's two answers at the end of the call. Call it once, in the same turn as the goodbye.` |
+| Method      | `POST`                                                                                                 |
+| URL         | `https://<your-vercel-domain>/api/calls/result` (the production domain, not a preview URL with auth)   |
 
 **Headers:** add one header.
 
@@ -95,7 +95,7 @@ The opt-out works without any dashboard setting. When the office says it does no
 
 On an existing database, add the table with `src/backend/db/migrations/003-do-not-call.sql`. It is safe to run twice. `db:reset` creates it from `schema.sql`.
 
-The ending runs in this order: save, then one goodbye, then `end_call`. If the agent says goodbye before it saves, the model speaks again after the tool returns and the caller hears goodbye twice. If it never calls `end_call`, the line stays open until the silence limit. **Tools → System tools → End conversation** must be on.
+The ending runs in this order: one goodbye spoken in the same turn as the `save_call_result` call, then a silent turn that only calls `end_call`. In dashboard tests the model spoke while calling the tool even when told not to, and then spoke again after the tool returned, so the caller heard goodbye twice. Making the goodbye part of the tool turn and the next turn silent gives one goodbye and an automatic hang-up. If it never calls `end_call`, the line stays open until the silence limit. **Tools → System tools → End conversation** must be on.
 
 ## 8. Test in the dashboard
 
@@ -197,9 +197,9 @@ How it works:
 
 1. The page sends `POST /api/calls/start` with `{ listingId, toNumber, connectTo }`. `connectTo` must be on `DEMO_CALL_ALLOWLIST` and differ from `toNumber`; otherwise `403` and no call. The route never writes it to the database, logs or a response.
 2. The route passes `connect_patient: "yes"` and `patient_number` as dynamic variables. Calls without `connectTo` (and browser calls) pass `"no"` and `""`.
-3. The agent asks its questions and saves with `save_call_result`. Only after that returns, and only if both answers were yes, it says "Please hold, I'm connecting the patient now" and calls `transfer_to_number`.
-4. The tool does a Twilio blind transfer: Twilio swaps the agent's audio stream on the office's call for a dial to the patient. The agent's leg should end when the transfer starts, before the patient's phone rings, so it never hears patient and office talk. The live test below checks this.
-5. If the answers are not yes/yes, the opt-out fires, or the transfer fails, the agent says goodbye and hangs up as before.
+3. The agent asks its questions. In the save turn it says one line and calls `save_call_result` together: "Thank you. Please hold, I'm connecting the patient now." when `connect_patient` is yes and both answers are yes, otherwise the usual goodbye.
+4. When the save returns, the agent does not speak. Its next turn is only `transfer_to_number` (connect case) or only `end_call` (every other case). The transfer is a Twilio blind transfer: Twilio swaps the agent's audio stream on the office's call for a dial to the patient. The agent's leg should end when the transfer starts, before the patient's phone rings, so it never hears patient and office talk. The live test below checks this.
+5. If the answers are not yes/yes, the opt-out fires or the line goes silent, the agent never transfers and ends as before. If the transfer fails, it says the goodbye once and calls `end_call`.
 
 ElevenLabs keeps the dynamic variables with the conversation record, so the patient's number sits in its **Call history**. Set transcript retention to the shortest period (step 7a) and clear `DEMO_CALL_ALLOWLIST` after the demo.
 
@@ -207,8 +207,8 @@ ElevenLabs keeps the dynamic variables with the conversation record, so the pati
 
 1. Paste the updated "System prompt" block from `voice/agent-confirm.md`.
 2. **Dynamic variables:** add test values `connect_patient` = `no` and `patient_number` = a teammate's E.164 number.
-3. Agent tab → **Tools** → **Add tool** → **Transfer to Human** (the `transfer_to_number` system tool). Description: `Hand the call to the patient. Use only after save_call_result returned and both answers were yes, and only when connect_patient is yes.`
-4. Add one rule. **Condition:** `save_call_result has returned, takesPlan and acceptingNew were both yes, and {{connect_patient}} is yes.` **Provider:** Twilio, transfer type **Cold** (`twilio_cold_blind_transfer`). **Destination type:** Phone Number, value `{{patient_number}}`.
+3. Agent tab → **Tools** → **Add tool** → **Transfer to Human** (the `transfer_to_number` system tool). Description: `Hand the call to the patient. Call it with no words, as the whole turn right after save_call_result returns, only when both answers were yes and connect_patient is yes.`
+4. Add one rule. **Condition:** `save_call_result has returned, you already said "Please hold" in the save turn, takesPlan and acceptingNew were both yes, and {{connect_patient}} is yes.` **Provider:** Twilio, transfer type **Cold** (`twilio_cold_blind_transfer`). **Destination type:** Phone Number, value `{{patient_number}}`.
 5. If the dashboard only offers the legacy format, click **Edit as JSON** and set the rule to `"transfer_destination": { "type": "phone", "phone_number": "{{patient_number}}" }` and `"transfer_type": "blind"`. Blind needs the number imported through the native Twilio integration, which ours is.
 6. Advanced tab → **Max conversation duration** stays at 90 seconds. The transferred call no longer belongs to the agent, so the limit does not cut patient and office off; check this in the first live test.
 7. Save and publish.
