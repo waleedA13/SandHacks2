@@ -13,7 +13,10 @@ create table listings (
   phone text,
   npi text,
   source_url text not null,
-  scraped_at timestamptz not null default now()
+  scraped_at timestamptz not null default now(),
+  booking_url text,
+  booking_source text check (booking_source in ('zocdoc', 'headway', 'alma', 'rula', 'practice_site')),
+  phone_line_type text not null default 'unknown' check (phone_line_type in ('landline', 'mobile', 'voip', 'unknown'))
 );
 
 create table evidence (
@@ -39,7 +42,8 @@ create table verdicts (
   self_pay_min int,
   self_pay_max int,
   license_status text not null default 'unchecked' check (license_status in ('active', 'inactive', 'not_found', 'unchecked')),
-  license_discipline text not null default 'unknown' check (license_discipline in ('yes', 'no', 'unknown'))
+  license_discipline text not null default 'unknown' check (license_discipline in ('yes', 'no', 'unknown')),
+  sees_self_pay text not null default 'unknown' check (sees_self_pay in ('yes', 'no', 'unknown'))
 );
 
 create table calls (
@@ -49,7 +53,8 @@ create table calls (
   takes_plan text check (takes_plan in ('yes', 'no', 'unknown')),
   accepting_new text check (accepting_new in ('yes', 'no', 'unknown')),
   summary text,
-  called_at timestamptz not null default now()
+  called_at timestamptz not null default now(),
+  source text not null default 'agent' check (source in ('agent', 'caller'))
 );
 
 create table jobs (

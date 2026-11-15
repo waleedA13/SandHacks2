@@ -5,7 +5,15 @@ export type Label =
   | "Unclear"
   | "Likely dead end"
   | "Demo call: available"
-  | "Demo call: unavailable";
+  | "Demo call: unavailable"
+  | "Pay yourself"
+  | "Caller reported: available"
+  | "Caller reported: unavailable";
+
+export type PhoneLineType = "landline" | "mobile" | "voip" | "unknown";
+
+export type BookingSource =
+  "zocdoc" | "headway" | "alma" | "rula" | "practice_site";
 
 export type EvidenceSource =
   "psychology_today" | "practice_site" | "zocdoc" | "headway" | "license_board";
@@ -25,6 +33,9 @@ export type Listing = {
   npi: string | null;
   sourceUrl: string;
   scrapedAt: string;
+  bookingUrl: string | null;
+  bookingSource: BookingSource | null;
+  phoneLineType: PhoneLineType;
 };
 
 export type Evidence = {
@@ -51,6 +62,7 @@ export type Verdict = {
   selfPayMax: number | null;
   licenseStatus: LicenseStatus;
   licenseDiscipline: Tri;
+  seesSelfPay: Tri;
 };
 
 export type Call = {
@@ -61,6 +73,7 @@ export type Call = {
   acceptingNew: Tri | null;
   summary: string | null;
   calledAt: string;
+  source: "agent" | "caller";
 };
 
 export type Job = {
@@ -88,6 +101,13 @@ export type ListingSummary = {
   selfPayMin: number | null;
   selfPayMax: number | null;
   licenseStatus: LicenseStatus;
+  bookingUrl: string | null;
+  bookingSource: BookingSource | null;
+  phoneLineType: PhoneLineType;
+  plan: string;
+  seesSelfPay: Tri;
+  // Distinct evidence sources checked, plus 1 for the insurer directory.
+  sourceCount: number;
   call: {
     takesPlan: Tri | null;
     acceptingNew: Tri | null;

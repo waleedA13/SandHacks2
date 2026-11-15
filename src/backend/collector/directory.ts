@@ -102,12 +102,16 @@ async function scrape(
   }
 }
 
+// Booking link and line type stay at their column defaults until #46 fills them.
 function toListing(
   p: CignaProvider,
   sourceUrl: string,
   insurer: string,
   city: string,
-): Omit<Listing, "id" | "scrapedAt"> {
+): Omit<
+  Listing,
+  "id" | "scrapedAt" | "bookingUrl" | "bookingSource" | "phoneLineType"
+> {
   const [name, ...credentials] = p.name.split(",").map((s) => s.trim());
   const loc = p.locations?.[0];
   const street = [loc?.streetName, loc?.addressLine2].filter(Boolean).join(" ");

@@ -49,7 +49,9 @@ function summaryRows(
   f: Filters = {},
 ) {
   return sql`
-    select l.id, l.name, l.credential, l.address, l.phone,
+    select l.id, l.name, l.credential, l.address, l.phone, l.plan,
+           l.booking_url, l.booking_source, l.phone_line_type, v.sees_self_pay,
+           (select count(distinct source)::int from evidence where listing_id = l.id) + 1 as source_count,
            v.still_practising, v.lists_insurer, v.accepting_new as v_accepting_new,
            v.reason, v.checked_at, v.specialties, v.languages, v.telehealth,
            v.self_pay_min, v.self_pay_max, v.license_status,
@@ -88,6 +90,12 @@ function toSummary(r: Row): ListingSummary {
     selfPayMin: r.self_pay_min,
     selfPayMax: r.self_pay_max,
     licenseStatus: r.license_status ?? "unchecked",
+    bookingUrl: r.booking_url,
+    bookingSource: r.booking_source,
+    phoneLineType: r.phone_line_type,
+    plan: r.plan,
+    seesSelfPay: tri(r.sees_self_pay),
+    sourceCount: r.source_count,
     call: r.called_at
       ? {
           takesPlan: r.takes_plan,
@@ -150,6 +158,9 @@ export async function getDetail(id: string): Promise<Detail | null> {
       npi: l.npi,
       sourceUrl: l.source_url,
       scrapedAt: iso(l.scraped_at)!,
+      bookingUrl: l.booking_url,
+      bookingSource: l.booking_source,
+      phoneLineType: l.phone_line_type,
     },
     verdict: v
       ? {
@@ -167,6 +178,7 @@ export async function getDetail(id: string): Promise<Detail | null> {
           selfPayMax: v.self_pay_max,
           licenseStatus: v.license_status,
           licenseDiscipline: v.license_discipline,
+          seesSelfPay: v.sees_self_pay,
         }
       : null,
     ...finalScore(s),
@@ -184,6 +196,7 @@ export async function getDetail(id: string): Promise<Detail | null> {
       acceptingNew: c.accepting_new,
       summary: c.summary,
       calledAt: iso(c.called_at)!,
+      source: c.source,
     })),
   };
 }
