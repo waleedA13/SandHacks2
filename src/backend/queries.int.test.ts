@@ -249,6 +249,35 @@ describe("recordCall and the final score", () => {
   });
 });
 
+describe("self-pay and caller reports in the final score", () => {
+  it("labels a listing off the plan that sees self-pay clients Pay yourself, score unchanged", async () => {
+    const { id, insurer } = await newListing(["unknown", "no", "unknown"], 25);
+    await sql`update verdicts set sees_self_pay = 'yes' where listing_id = ${id}`;
+    const [row] = await listSummaries(insurer, "San Diego");
+    expect(row).toMatchObject({
+      score: 25,
+      label: "Pay yourself",
+      seesSelfPay: "yes",
+    });
+    expect(await getDetail(id)).toMatchObject({
+      score: 25,
+      label: "Pay yourself",
+    });
+  });
+
+  it("labels the latest done caller report Caller reported", async () => {
+    const { id, insurer } = await newListing(["yes", "yes", "yes"], 100);
+    await sql`insert into calls (listing_id, status, takes_plan, accepting_new, source)
+      values (${id}, 'done', 'yes', 'no', 'caller')`;
+    const [row] = await listSummaries(insurer, "San Diego");
+    expect(row).toMatchObject({
+      score: 0,
+      label: "Caller reported: unavailable",
+    });
+    expect((await getDetail(id))?.label).toBe("Caller reported: unavailable");
+  });
+});
+
 describe("getDetail", () => {
   it("returns listing, verdict, final score, trimmed evidence and calls", async () => {
     const d = await getDetail("00000000-0000-4000-8000-000000000001");

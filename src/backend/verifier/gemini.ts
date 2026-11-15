@@ -18,6 +18,7 @@ export type Facts = {
   selfPayMax: number | null;
   licenseStatus: LicenseStatus;
   licenseDiscipline: Tri;
+  seesSelfPay: Tri;
 };
 
 // The plan's fixed specialty vocabulary.
@@ -60,6 +61,7 @@ const SCHEMA = {
     selfPayMax: fee,
     licenseStatus: { type: "string", enum: LICENSE },
     licenseDiscipline: tri,
+    seesSelfPay: tri,
   },
   required: [
     ...FACT_KEYS,
@@ -71,6 +73,7 @@ const SCHEMA = {
     "selfPayMax",
     "licenseStatus",
     "licenseDiscipline",
+    "seesSelfPay",
   ],
   additionalProperties: false,
 };
@@ -96,6 +99,7 @@ Then fill these facts, each only when the evidence states it. Silence gives [], 
 - telehealth: "yes" if they offer video or phone sessions, "no" if they say in person only, else "unknown".
 - selfPayMin, selfPayMax: whole US dollars per session, only when a page states a session fee.
   One stated price sets both. "From $80 to $160" sets 80 and 160. No stated fee gives null for both. Never estimate a fee.
+- seesSelfPay: does any source say they see clients who pay for themselves (private pay, self-pay, out-of-network, superbill)? Silence is unknown.
 - licenseStatus and licenseDiscipline: take these only from evidence whose source is license_board, never from any other source,
   whatever other pages claim. licenseStatus is "active", "inactive" or "not_found" as that row says, else "unchecked".
   licenseDiscipline is "yes" if that row shows public discipline, "no" if it says there is none, else "unknown".`;
@@ -143,6 +147,7 @@ function parseFacts(text: string | undefined): Facts {
     ["languages", strings(raw.languages)],
     ["telehealth", TRI.includes(raw.telehealth as Tri)],
     ["licenseDiscipline", TRI.includes(raw.licenseDiscipline as Tri)],
+    ["seesSelfPay", TRI.includes(raw.seesSelfPay as Tri)],
     ["licenseStatus", LICENSE.includes(raw.licenseStatus as LicenseStatus)],
     [
       "selfPayMin",
@@ -167,5 +172,6 @@ function parseFacts(text: string | undefined): Facts {
     selfPayMax: raw.selfPayMax as number | null,
     licenseStatus: raw.licenseStatus as LicenseStatus,
     licenseDiscipline: raw.licenseDiscipline as Tri,
+    seesSelfPay: raw.seesSelfPay as Tri,
   };
 }

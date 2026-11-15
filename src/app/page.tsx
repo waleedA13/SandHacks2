@@ -12,8 +12,18 @@ import type { Label, ListingSummary } from "@/shared/types";
 // A loading.tsx would stream results in hidden chunks that only JavaScript can reveal.
 export const instant = false;
 
-const REACHABLE: Label[] = ["Likely available", "Demo call: available"];
-const DEAD_END: Label[] = ["Likely dead end", "Demo call: unavailable"];
+const REACHABLE: Label[] = [
+  "Likely available",
+  "Demo call: available",
+  "Caller reported: available",
+];
+const DEAD_END: Label[] = [
+  "Likely dead end",
+  "Demo call: unavailable",
+  "Caller reported: unavailable",
+];
+// shortcut: Pay yourself sits in "Also worth a try" until #52 gives it its own section.
+const MAYBE: Label[] = ["Unclear", "Pay yourself"];
 
 type Ranked = { listing: ListingSummary; rank: number };
 
@@ -83,7 +93,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const startWith = reachable.slice(0, 3);
   const alsoTry = [
     ...reachable.slice(3),
-    ...ranked.filter((r) => r.listing.label === "Unclear"),
+    ...ranked.filter((r) => MAYBE.includes(r.listing.label)),
   ];
   const deadEnds = ranked.filter((r) => DEAD_END.includes(r.listing.label));
 
