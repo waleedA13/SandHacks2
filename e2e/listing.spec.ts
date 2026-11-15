@@ -52,7 +52,7 @@ test("a listing with no evidence shows no empty sections", async ({ page }) => {
   ).toHaveAttribute("href", "/");
 });
 
-test("an earlier call shows above the widget", async ({ page }) => {
+test("an earlier demo call still shows on the listing", async ({ page }) => {
   await page.goto(WITH_CALL);
   await expect(page.getByText(/^Demo call on .+: the person/)).toBeVisible();
   await expect(page.getByText("Demo call: available")).toBeVisible();
