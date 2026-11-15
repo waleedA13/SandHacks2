@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { cache } from "react";
 import { CallPanel, LabelProvider, LiveBadge } from "@/frontend/CallPanel";
 import { FactRow, LicenseRow } from "@/frontend/FactRow";
 import { fitFromParams, withFit, type FitValues } from "@/frontend/FitFilters";
 import { Icon } from "@/frontend/Icon";
+import { ListingNotFound } from "@/frontend/ListingNotFound";
 import { checkedDate, priceText, telHref } from "@/frontend/format";
 import { first } from "@/frontend/params";
 import { isWebUrl, SourceList } from "@/frontend/SourceList";
@@ -11,6 +13,16 @@ import { getDetail } from "@/backend/queries";
 
 // Same as the home page: block until the data is ready so the page works without JavaScript.
 export const instant = false;
+
+// Shared by generateMetadata and the page, so the listing is read once.
+const loadDetail = cache(getDetail);
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/listing/[id]">): Promise<Metadata> {
+  const { id } = await params;
+  return (await loadDetail(id)) ? {} : { robots: { index: false } };
+}
 
 const NO_INFO = "We found no other information about this listing.";
 
@@ -31,8 +43,9 @@ export default async function ListingPage({
   searchParams,
 }: PageProps<"/listing/[id]">) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const detail = await getDetail(id);
-  if (!detail) notFound();
+  const detail = await loadDetail(id);
+  // Rendered inline, not with notFound(), so it is in the server HTML and works without JavaScript.
+  if (!detail) return <ListingNotFound />;
 
   const { listing, verdict, label, evidence, calls } = detail;
   const lastCall = calls.find((c) => c.status === "done") ?? null;

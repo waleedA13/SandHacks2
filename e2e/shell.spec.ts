@@ -86,4 +86,15 @@ test.describe("with JavaScript off", () => {
     await expect(page).toHaveURL(/\/terms$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Terms");
   });
+
+  test("an unknown listing still shows its message and the shell", async ({
+    page,
+  }) => {
+    await page.goto("/listing/not-a-real-id");
+    await expect(
+      page.getByRole("heading", { name: "We couldn't find that listing." }),
+    ).toBeVisible();
+    await expect(page.getByRole("banner")).toHaveCount(1);
+    await expect(page.getByRole("contentinfo")).toHaveCount(1);
+  });
 });
