@@ -117,6 +117,9 @@ function Conversation(props: Props) {
             listing_id: confirm.listingId,
             therapist_name: confirm.name,
             insurer: confirm.insurer,
+            // The prompt and transfer tool expect these; a browser call never connects anyone.
+            connect_patient: "no",
+            patient_number: "",
           },
         }),
       });

@@ -189,6 +189,42 @@ After the demo, set `DEMO_CALL_ALLOWLIST` to empty in Vercel and redeploy. The r
 
 If the phone does not ring, open the agent's **Call history** in ElevenLabs. A `502` from the route with nothing there means the request was rejected; check `ELEVENLABS_PHONE_NUMBER_ID` and the key's permissions.
 
+## Connect the patient
+
+When a phone check gets yes to both questions, the agent can ring the patient and hand the office's call over to them, so the patient does not have to call back. The panel's **Check and connect me** button starts it. It shows only for listings whose `paths` include `agent_check` (office landlines), and asks for the office stand-in's number, the patient's number and a consent tick.
+
+How it works:
+
+1. The page sends `POST /api/calls/start` with `{ listingId, toNumber, connectTo }`. `connectTo` must be on `DEMO_CALL_ALLOWLIST` and differ from `toNumber`; otherwise `403` and no call. The route never writes it to the database, logs or a response.
+2. The route passes `connect_patient: "yes"` and `patient_number` as dynamic variables. Calls without `connectTo` (and browser calls) pass `"no"` and `""`.
+3. The agent asks its questions. In the save turn it says one line and calls `save_call_result` together: "Thank you. Please hold, I'm connecting the patient now." when `connect_patient` is yes and both answers are yes, otherwise the usual goodbye.
+4. When the save returns, the agent does not speak. Its next turn is only `transfer_to_number` (connect case) or only `end_call` (every other case). The transfer is a Twilio blind transfer: Twilio swaps the agent's audio stream on the office's call for a dial to the patient. The agent's leg should end when the transfer starts, before the patient's phone rings, so it never hears patient and office talk. The live test below checks this.
+5. If the answers are not yes/yes, the opt-out fires or the line goes silent, the agent never transfers and ends as before. If the transfer fails, it says the goodbye once and calls `end_call`.
+
+ElevenLabs keeps the dynamic variables with the conversation record, so the patient's number sits in its **Call history**. Set transcript retention to the shortest period (step 7a) and clear `DEMO_CALL_ALLOWLIST` after the demo.
+
+### Dashboard steps
+
+1. Paste the updated "System prompt" block from `voice/agent-confirm.md`.
+2. **Dynamic variables:** add test values `connect_patient` = `no` and `patient_number` = a teammate's E.164 number.
+3. Agent tab → **Tools** → **Add tool** → **Transfer to Human** (the `transfer_to_number` system tool). Description: `Hand the call to the patient. Call it with no words, as the whole turn right after save_call_result returns, only when both answers were yes and connect_patient is yes.`
+4. Add one rule. **Condition:** `save_call_result has returned, you already said "Please hold" in the save turn, takesPlan and acceptingNew were both yes, and {{connect_patient}} is yes.` **Provider:** Twilio, transfer type **Cold** (`twilio_cold_blind_transfer`). **Destination type:** Phone Number, value `{{patient_number}}`.
+5. If the dashboard only offers the legacy format, click **Edit as JSON** and set the rule to `"transfer_destination": { "type": "phone", "phone_number": "{{patient_number}}" }` and `"transfer_type": "blind"`. Blind needs the number imported through the native Twilio integration, which ours is.
+6. Advanced tab → **Max conversation duration** stays at 90 seconds. The transferred call no longer belongs to the agent, so the limit does not cut patient and office off; check this in the first live test.
+7. Save and publish.
+
+Only if blind transfer will not save, fall back to **Warm** (`twilio_warm_conference_transfer`). ElevenLabs says that type "removes the AI agent so only the caller and transferred participant remain", but the agent is still on the line for a few seconds while the patient answers. Note it in the PR if you switch.
+
+### Live test with two teammates
+
+Put both phones on `DEMO_CALL_ALLOWLIST`. Teammate A plays the office, teammate B the patient.
+
+1. Open a landline listing, press **Check and connect me**, type A's number and B's number, tick the box and press **Start the call**.
+2. A answers yes to both questions. The agent says "Please hold", and B's phone rings from the Twilio number.
+3. A and B talk for a few seconds. In **Call history** the conversation ends at the transfer, before B answered. In the Twilio console the call shows the child `Dial` leg to B.
+4. Run it again with A saying "we're full". The agent says goodbye and B's phone never rings.
+5. Search the Vercel logs and the `calls` table for B's number. Neither should have it.
+
 ## Patient helper agent
 
 The second agent, **TheraCheck patient helper**, talks to the patient instead of an office. It asks for their insurance and city, fetches the ranked list with its `find_therapists` tool, and reads the top three aloud. It is the way to get the list without a screen. The prompt is in `voice/agent-helper.md`.

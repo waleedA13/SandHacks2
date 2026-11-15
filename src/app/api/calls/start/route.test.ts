@@ -91,6 +91,8 @@ describe("POST /api/calls/start", () => {
           listing_id: LISTING,
           therapist_name: "Avery Example",
           insurer: "Aetna",
+          connect_patient: "no",
+          patient_number: "",
         },
       },
     });
@@ -164,6 +166,10 @@ describe("POST /api/calls/start", () => {
     ["a non-UUID listingId", { listingId: "abc", toNumber: TEAMMATE }],
     ["a missing toNumber", { listingId: LISTING }],
     ["a numeric toNumber", { listingId: LISTING, toNumber: 16195550123 }],
+    [
+      "a numeric connectTo",
+      { listingId: LISTING, toNumber: TEAMMATE, connectTo: 16195550188 },
+    ],
   ])("returns 400 for %s", async (_, body) => {
     const res = await post(body);
 
@@ -299,6 +305,109 @@ describe("POST /api/calls/start", () => {
 
       expect(res.status).toBe(502);
       expect(failCall).toHaveBeenCalledWith("call_row_id");
+    });
+  });
+
+  describe("connectTo: ring the patient after a yes/yes check", () => {
+    // The patient's number in every form a leak could take.
+    const PATIENT = OTHER_TEAMMATE;
+    const leaks = (text: string) => /619\D{0,2}555\D?0188/.test(text);
+    const logged = () =>
+      JSON.stringify(
+        (["log", "info", "warn", "error", "debug"] as const).flatMap(
+          (m) => vi.mocked(console[m]).mock?.calls ?? [],
+        ),
+      );
+    const dbArgs = () =>
+      JSON.stringify([
+        vi.mocked(getCallTarget).mock.calls,
+        vi.mocked(claimCallSlot).mock.calls,
+        vi.mocked(failCall).mock.calls,
+      ]);
+
+    beforeEach(() => {
+      for (const m of ["log", "info", "warn", "debug"] as const)
+        vi.spyOn(console, m).mockImplementation(() => {});
+    });
+
+    it("hands the normalised number to the agent only, never to the response, logs or database", async () => {
+      const res = await post({
+        listingId: LISTING,
+        toNumber: TEAMMATE,
+        connectTo: "+1 (619) 555-0188",
+      });
+      const text = await res.text();
+
+      expect(res.status).toBe(200);
+      expect(JSON.parse(text)).toEqual({
+        ok: true,
+        callSid: "CA123",
+        conversationId: "conv_1",
+      });
+      const vars = JSON.parse(fetchMock.mock.calls[0][1].body)
+        .conversation_initiation_client_data.dynamic_variables;
+      expect(vars.connect_patient).toBe("yes");
+      expect(vars.patient_number).toBe(PATIENT);
+      expect(leaks(text)).toBe(false);
+      expect(leaks(logged())).toBe(false);
+      expect(leaks(dbArgs())).toBe(false);
+    });
+
+    it.each([
+      ["a number not on the list", "+14155550000"],
+      ["the listing's own office phone", OFFICE],
+      ["the number being called as the office", TEAMMATE],
+      ["an empty string", ""],
+    ])("refuses %s with 403 and places no call", async (_, connectTo) => {
+      const res = await post({
+        listingId: LISTING,
+        toNumber: TEAMMATE,
+        connectTo,
+      });
+      const text = await res.text();
+
+      expect(res.status).toBe(403);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(claimCallSlot).not.toHaveBeenCalled();
+      expect(text).not.toMatch(/\d{3}\D?\d{4}/);
+    });
+
+    it.each(["mobile", "voip", "unknown"] as const)(
+      "refuses a %s office line with 403",
+      async (lineType) => {
+        vi.mocked(getCallTarget).mockResolvedValue({
+          name: "Avery Example",
+          insurer: "Aetna",
+          optedOut: false,
+          lineType,
+        });
+
+        const res = await post({
+          listingId: LISTING,
+          toNumber: TEAMMATE,
+          connectTo: PATIENT,
+        });
+
+        expect(res.status).toBe(403);
+        expect(fetchMock).not.toHaveBeenCalled();
+      },
+    );
+
+    it("keeps the number out of the 502 and its log when ElevenLabs refuses", async () => {
+      fetchMock.mockResolvedValue(
+        new Response(`{"detail":"cannot dial ${PATIENT}"}`, { status: 400 }),
+      );
+
+      const res = await post({
+        listingId: LISTING,
+        toNumber: TEAMMATE,
+        connectTo: PATIENT,
+      });
+
+      expect(res.status).toBe(502);
+      expect(leaks(await res.text())).toBe(false);
+      expect(leaks(logged())).toBe(false);
+      expect(leaks(dbArgs())).toBe(false);
     });
   });
 });

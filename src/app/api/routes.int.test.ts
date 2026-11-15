@@ -460,3 +460,75 @@ describe("POST /api/calls/start and the office line type", () => {
     expect(dialled).toBe(true);
   });
 });
+
+describe("POST /api/calls/start with connectTo never stores the patient's number", () => {
+  const OFFICE_STANDIN = "+16195550123";
+  const PATIENT = "+16195550177";
+
+  it("leaves no trace in any table or log after a placed and a refused call", async () => {
+    const { id } = await newListing();
+    await sql`update listings set phone = '(760) 555-0002', phone_line_type = 'landline' where id = ${id}`;
+    await sql`update calls set status = 'failed' where status = 'in_progress'`;
+    const realFetch = globalThis.fetch;
+    let upstreamOk = true;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) =>
+        String(input).includes("elevenlabs")
+          ? Promise.resolve(
+              upstreamOk
+                ? Response.json({ success: true, callSid: "CA2" })
+                : new Response(`{"detail":"bad ${PATIENT}"}`, { status: 400 }),
+            )
+          : realFetch(input, init),
+      );
+    const consoles = (["log", "info", "warn", "error", "debug"] as const).map(
+      (m) => vi.spyOn(console, m).mockImplementation(() => {}),
+    );
+    vi.stubEnv("DEMO_CALL_ALLOWLIST", `${OFFICE_STANDIN},${PATIENT}`);
+    vi.stubEnv("ELEVENLABS_API_KEY", "sk_test_key");
+    vi.stubEnv("NEXT_ELEVENLABS_AGENT_ID", "agent_test_id");
+    vi.stubEnv("ELEVENLABS_PHONE_NUMBER_ID", "phnum_test_id");
+    const send = () =>
+      callStart(
+        new Request(`${base}/calls/start`, {
+          method: "POST",
+          body: JSON.stringify({
+            listingId: id,
+            toNumber: OFFICE_STANDIN,
+            connectTo: PATIENT,
+          }),
+        }),
+      );
+    try {
+      const placed = await send();
+      expect(placed.status).toBe(200);
+      await sql`update calls set status = 'failed' where status = 'in_progress'`;
+      upstreamOk = false;
+      const refused = await send();
+      expect(refused.status).toBe(502);
+
+      // Any formatting of 619 555 0177; joining all digits would match across fields.
+      const number = /619\D{0,2}555\D?0177/;
+      const bodies = (await placed.text()) + (await refused.text());
+      const tables = await sql`
+        select table_name from information_schema.tables
+        where table_schema = 'public' and table_type = 'BASE TABLE'`;
+      expect(tables.length).toBeGreaterThan(0);
+      let dump = "";
+      for (const { table_name } of tables) {
+        const rows = await sql.query(
+          `select row_to_json(t)::text as j from "${table_name}" t`,
+        );
+        dump += rows.map((r) => r.j).join("\n");
+      }
+      const logged = JSON.stringify(consoles.map((c) => c.mock.calls));
+      for (const text of [bodies, dump, logged])
+        expect(text).not.toMatch(number);
+    } finally {
+      fetchSpy.mockRestore();
+      consoles.forEach((c) => c.mockRestore());
+      vi.unstubAllEnvs();
+    }
+  });
+});
