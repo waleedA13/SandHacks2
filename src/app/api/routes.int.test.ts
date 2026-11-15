@@ -3,6 +3,7 @@ import { sql } from "@/backend/db/client";
 import { GET as listings } from "./listings/route";
 import { GET as detail } from "./listings/[id]/route";
 import { POST as recheck } from "./listings/[id]/recheck/route";
+import { POST as report } from "./listings/[id]/report/route";
 import { GET as job } from "./jobs/[id]/route";
 import { GET as stats } from "./stats/route";
 import { POST as callResult } from "./calls/result/route";
@@ -203,7 +204,7 @@ describe("opting out of calls", () => {
   async function listingWithPhone() {
     const { id } = await newListing();
     const phone = `(760) 555-${String(Date.now()).slice(-4)}`;
-    await sql`update listings set phone = ${phone} where id = ${id}`;
+    await sql`update listings set phone = ${phone}, phone_line_type = 'landline' where id = ${id}`;
     return { id, digits: `760555${phone.slice(-4)}` };
   }
 
@@ -290,5 +291,172 @@ describe("opting out of calls", () => {
       fetchSpy.mockRestore();
       vi.unstubAllEnvs();
     }
+  });
+});
+
+const sendReport = (id: string, body: unknown, headers: HeadersInit = {}) =>
+  report(
+    new Request(`${base}/listings/${id}/report`, {
+      method: "POST",
+      headers,
+      body: typeof body === "string" ? body : JSON.stringify(body),
+    }),
+    ctx(id),
+  );
+
+describe("POST /api/listings/[id]/report", () => {
+  it("yes/yes moves the listing to Caller reported: available", async () => {
+    const { id, insurer } = await newListing();
+    await sql`update verdicts set accepting_new = 'unknown' where listing_id = ${id}`;
+    const res = await sendReport(id, { answered: "yes", acceptingNew: "yes" });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(await res.json()).toEqual({
+      score: 100,
+      label: "Caller reported: available",
+    });
+    const list = await listings(
+      new Request(
+        `${base}/listings?insurer=${encodeURIComponent(insurer)}&city=San%20Diego`,
+      ),
+    );
+    expect((await list.json())[0].label).toBe("Caller reported: available");
+  });
+
+  it("yes/no gives Caller reported: unavailable", async () => {
+    const { id } = await newListing();
+    const res = await sendReport(id, { answered: "yes", acceptingNew: "no" });
+    expect(await res.json()).toEqual({
+      score: 0,
+      label: "Caller reported: unavailable",
+    });
+  });
+
+  it("nobody answered leaves the label unchanged", async () => {
+    const { id } = await newListing();
+    const res = await sendReport(id, { answered: "no", acceptingNew: "yes" });
+    expect(await res.json()).toEqual({ score: 100, label: "Likely available" });
+  });
+
+  it("returns 429 for a second report within 60 seconds", async () => {
+    const { id } = await newListing();
+    await sendReport(id, { answered: "yes", acceptingNew: "yes" });
+    const res = await sendReport(id, { answered: "yes", acceptingNew: "no" });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("60");
+  });
+
+  it("stores a caller call and nothing about the reporter, whatever the request carries", async () => {
+    const { id } = await newListing();
+    const res = await sendReport(
+      id,
+      {
+        answered: "yes",
+        acceptingNew: "yes",
+        source: "agent",
+        takesPlan: "no",
+        summary: "my name is Pat, call me at 555-0199",
+      },
+      {
+        "x-forwarded-for": "203.0.113.7",
+        "user-agent": "TestAgent/1.0",
+        cookie: "session=abc",
+      },
+    );
+    expect(res.status).toBe(200);
+    const rows = await sql`select * from calls where listing_id = ${id}`;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      source: "caller",
+      takes_plan: "yes",
+      summary: "Reported by someone who called.",
+    });
+    const stored = JSON.stringify(rows);
+    for (const s of ["203.0.113.7", "TestAgent", "abc", "Pat", "555-0199"])
+      expect(stored).not.toContain(s);
+  });
+
+  it.each([
+    ["not JSON", "{"],
+    ["null", "null"],
+    ["an array", ["yes", "yes"]],
+    ["a missing answered", { acceptingNew: "yes" }],
+    ["a missing acceptingNew", { answered: "yes" }],
+    ["answered unknown", { answered: "unknown", acceptingNew: "yes" }],
+    ["acceptingNew maybe", { answered: "yes", acceptingNew: "maybe" }],
+    ["a boolean answered", { answered: true, acceptingNew: "yes" }],
+  ])("returns 400 for %s", async (_, body) => {
+    const { id } = await newListing();
+    const res = await sendReport(id, body);
+    expect(res.status).toBe(400);
+    const [{ n }] =
+      await sql`select count(*)::int as n from calls where listing_id = ${id}`;
+    expect(n).toBe(0);
+  });
+
+  it("returns 400 for a malformed id and 404 for an unknown listing", async () => {
+    const body = { answered: "yes", acceptingNew: "yes" };
+    expect((await sendReport("nope", body)).status).toBe(400);
+    expect((await sendReport(crypto.randomUUID(), body)).status).toBe(404);
+  });
+});
+
+describe("POST /api/calls/start and the office line type", () => {
+  const TEAMMATE = "+16195550123";
+
+  async function start(listingId: string) {
+    const realFetch = globalThis.fetch;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) =>
+        String(input).includes("elevenlabs")
+          ? Promise.resolve(Response.json({ success: true, callSid: "CA1" }))
+          : realFetch(input, init),
+      );
+    vi.stubEnv("DEMO_CALL_ALLOWLIST", TEAMMATE);
+    vi.stubEnv("ELEVENLABS_API_KEY", "sk_test_key");
+    vi.stubEnv("NEXT_ELEVENLABS_AGENT_ID", "agent_test_id");
+    vi.stubEnv("ELEVENLABS_PHONE_NUMBER_ID", "phnum_test_id");
+    try {
+      const res = await callStart(
+        new Request(`${base}/calls/start`, {
+          method: "POST",
+          body: JSON.stringify({ listingId, toNumber: TEAMMATE }),
+        }),
+      );
+      const dialled = fetchSpy.mock.calls.some(([url]) =>
+        String(url).includes("elevenlabs"),
+      );
+      return { res, dialled };
+    } finally {
+      fetchSpy.mockRestore();
+      vi.unstubAllEnvs();
+    }
+  }
+
+  it.each(["mobile", "voip", "unknown"])(
+    "refuses a %s office with 403 and places no call",
+    async (lineType) => {
+      const { id } = await newListing();
+      await sql`update listings set phone = '(760) 555-0000', phone_line_type = ${lineType} where id = ${id}`;
+      const { res, dialled } = await start(id);
+      expect(res.status).toBe(403);
+      expect(await res.json()).toEqual({
+        error: "We only place assistant calls to office landlines.",
+      });
+      expect(dialled).toBe(false);
+      const [{ n }] =
+        await sql`select count(*)::int as n from calls where listing_id = ${id}`;
+      expect(n).toBe(0);
+    },
+  );
+
+  it("lets a landline office through to the existing checks", async () => {
+    const { id } = await newListing();
+    await sql`update listings set phone = '(760) 555-0001', phone_line_type = 'landline' where id = ${id}`;
+    await sql`update calls set status = 'failed' where status = 'in_progress'`;
+    const { res, dialled } = await start(id);
+    expect(res.status).toBe(200);
+    expect(dialled).toBe(true);
   });
 });
