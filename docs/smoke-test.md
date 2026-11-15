@@ -21,7 +21,7 @@ Run: `npx tsx --env-file=.env.local src/backend/collector/smoke.ts [browser|unlo
 4. **Continue as guest** → **Skip** (the "primarily treats" question).
 5. **View 8000 Results** under Licensed Therapists → **Continue** → **Open Access Plus, Open Access Plus Tiered**.
 
-**Shortcut:** the final results URL opens directly in about 16 seconds, skipping all the clicks. It is `CIGNA_RESULTS` in `src/backend/collector/smoke.ts`. Other plans swap `medicalProductCode`/`medicalEcnCode` in that URL.
+**Shortcut:** the final results URL opens directly in about 16 seconds, skipping all the clicks. It is `CIGNA_RESULTS` in `src/backend/collector/smoke.ts`. Other plans swap `medicalProductCode`/`medicalEcnCode` in that URL. Other cities swap the place fields (city, ZIP, latitude, longitude, county); `src/backend/collector/cigna.ts` builds the URL for all six.
 
 **Anthem steps, for the record.** `https://findcare.anthem.com/` (wait about 15 s for it to render) → **Basic search as a guest** → plan type **Medical Plan or Network** → state **California** → **Medical (Employer-Sponsored)** → plan **Advantage PPO** → **Continue** → **Update Location** `92101` → **Behavioral Health**. The dropdowns are type-ahead fields, not `<select>`s. Anthem also links a [machine-readable provider directory](https://www22.anthem.com/cms-data-index.json/index.html), a possible no-scraping source not tested here.
 
@@ -61,3 +61,14 @@ Ran `src/backend/collector/evidence.ts --listing <id>` on the first 20 real Cign
 - **Coverage: 7 of 20 listings (35%) have evidence**: Psychology Today 4, practice site 4, Zocdoc/Headway 0. Below the issue's 50% target.
 - **Why so low:** about half the listings are clinicians at telehealth companies or ABA groups (402 W Broadway, 501 W Broadway) with no page of their own. Most SERP links after the first two are `google.com/goto?url=<opaque token>` redirects that cannot be followed, so they are skipped. Psychology Today still shows its bot check on some fetches after one retry. SERP returns 502 on about 1 in 10 queries; a retry must wait 15 s (`failed_query_rejected`).
 - **Headway profiles list "San Diego, CA" in their menu links**, so the city test ignores `<header>`, `<nav>` and `<footer>` text. Before this fix, a New York nurse practitioner's Headway profile matched a San Diego listing with the same name.
+
+## Six-city run (issue 03, GitHub #7), 2026-11-15
+
+Ran the directory collector for all six cities with `--limit 50`, then `evidence.ts --all` and `npm run verify -- --all`.
+
+- **Listings: 50 per city, 300 in total**, every one with a name, `source_url` and phone. A second pass over all six cities inserted nothing.
+- **Telehealth groups list one clinician in several cities**, each with a local office. With insurer + name + phone as the identity, each city's run took over the previous city's rows (San Diego fell from 50 to 40). The identity is now insurer + city + name + phone.
+- **Results URLs for the five new cities use ZIP-centre latitude and longitude**, not values recorded from the site. Every city returned listings from the right area.
+- **About 1 in 3 directory runs timed out in Bright Data on the first try** (results page over 120 s, or `browser_in_use`). A plain rerun worked every time.
+- **Evidence: 104 of 300 listings (35%) have evidence**, from 1,732 Bright Data requests (about 6 per listing, as in the San Diego trial). Licence evidence from #22 was being added at the same time.
+- **Verifier: the Gemini free tier allows 20 requests per day** for `gemini-3.6-flash`, too few for a full run; it took a paid key. All 312 listings verified: 56 likely real (70+), 2 likely ghost (under 40), the rest Unclear.
