@@ -48,6 +48,10 @@ function summaryRows(
   where: { id?: string; insurer?: string; city?: string },
   f: Filters = {},
 ) {
+  // One box takes a city or a ZIP code: five digits match a whole ZIP in the address.
+  const place = where.city?.trim().slice(0, 60);
+  const zip = place && /^\d{5}$/.test(place) ? place : null;
+  const city = zip ? null : (place ?? null);
   return sql`
     select l.id, l.name, l.credential, l.address, l.phone,
            v.still_practising, v.lists_insurer, v.accepting_new as v_accepting_new,
@@ -63,7 +67,8 @@ function summaryRows(
     ) c on true
     where (${where.id ?? null}::uuid is null or l.id = ${where.id ?? null}::uuid)
       and (${where.insurer ?? null}::text is null or lower(l.insurer) = lower(${where.insurer ?? null}))
-      and (${where.city ?? null}::text is null or lower(l.city) = lower(${where.city ?? null}))
+      and (${city}::text is null or lower(l.city) = lower(${city}))
+      and (${zip}::text is null or l.address ~ ('(^|[^0-9])' || ${zip}::text || '([^0-9]|$)'))
       and (${f.specialty ?? null}::text is null
            or exists (select 1 from unnest(v.specialties) s where lower(s) = lower(${f.specialty ?? null})))
       and (${f.language ?? null}::text is null
@@ -114,6 +119,25 @@ export async function listSummaries(
       (a.score >= 50 ? 1 : -1) * (Number(isCall(b)) - Number(isCall(a))) ||
       a.name.localeCompare(b.name),
   );
+}
+
+// What the search form offers: every insurer and city with listings, A to Z,
+// and the first insurer with its first city, used as the starting search.
+export async function listSearchOptions(): Promise<{
+  insurers: string[];
+  cities: string[];
+  first: { insurer: string; city: string } | null;
+}> {
+  const [insurers, cities, [first]] = await Promise.all([
+    sql`select distinct insurer from listings order by insurer`,
+    sql`select distinct city from listings order by city`,
+    sql`select insurer, city from listings order by insurer, city limit 1`,
+  ]);
+  return {
+    insurers: insurers.map((r) => r.insurer),
+    cities: cities.map((r) => r.city),
+    first: first ? { insurer: first.insurer, city: first.city } : null,
+  };
 }
 
 export type Detail = {
