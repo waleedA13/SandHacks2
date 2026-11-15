@@ -2,28 +2,49 @@ import { FitFilters, type FitValues } from "./FitFilters";
 import { Icon } from "./Icon";
 import { Select } from "./Select";
 
-export const INSURERS = ["Aetna"];
-export const CITIES = [
-  "San Diego",
-  "Los Angeles",
-  "San Francisco",
-  "San Jose",
-  "Sacramento",
-  "Fresno",
-];
+export type SearchOptions = { insurers: string[]; cities: string[] };
 
 const asOptions = (xs: string[]) => xs.map((x) => ({ value: x, label: x }));
 
-function Fields({ insurer, city }: { insurer: string; city: string }) {
+function Fields({
+  insurer,
+  city,
+  options,
+}: {
+  insurer: string;
+  city: string;
+  options: SearchOptions;
+}) {
   return (
     <>
       <Select
         id="insurer"
         label="Insurance company"
-        options={asOptions(INSURERS)}
+        options={asOptions(options.insurers)}
         value={insurer}
       />
-      <Select id="city" label="City" options={asOptions(CITIES)} value={city} />
+      <div className="field">
+        <label htmlFor="city">City or ZIP code</label>
+        <input
+          className="text-input"
+          id="city"
+          name="city"
+          type="text"
+          autoComplete="address-level2"
+          list="city-options"
+          maxLength={60}
+          defaultValue={city}
+          aria-describedby="city-hint"
+        />
+        <datalist id="city-options">
+          {options.cities.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+        <span className="hint" id="city-hint">
+          For example San Diego or 92103.
+        </span>
+      </div>
     </>
   );
 }
@@ -35,11 +56,13 @@ export function SearchForm({
   insurer,
   city,
   collapsed,
+  options,
   fit,
   languages = [],
 }: {
   insurer: string;
   city: string;
+  options: SearchOptions;
   collapsed: boolean;
   fit?: FitValues;
   languages?: string[];
@@ -47,12 +70,12 @@ export function SearchForm({
   if (!collapsed)
     return (
       <form
-        className="search"
+        className="search search-main"
         action="/"
         role="search"
         aria-label="Find therapists"
       >
-        <Fields insurer={insurer} city={city} />
+        <Fields insurer={insurer} city={city} options={options} />
         <button className="btn" type="submit">
           Show therapists
         </button>
@@ -76,8 +99,8 @@ export function SearchForm({
             <Icon name="search" size={18} />
           </i>
         </summary>
-        <div className="search">
-          <Fields insurer={insurer} city={city} />
+        <div className="search search-main">
+          <Fields insurer={insurer} city={city} options={options} />
           <button className="btn" type="submit">
             Show therapists
           </button>

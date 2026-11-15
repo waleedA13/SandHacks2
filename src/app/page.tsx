@@ -5,7 +5,7 @@ import { ListingCard } from "@/frontend/ListingCard";
 import { first } from "@/frontend/params";
 import { SearchForm } from "@/frontend/SearchForm";
 import { ShareShortlist } from "@/frontend/ShareShortlist";
-import { getStats, listSummaries } from "@/backend/queries";
+import { getStats, listSearchOptions, listSummaries } from "@/backend/queries";
 import type { Label, ListingSummary } from "@/shared/types";
 
 // Block until the data is ready, so the full page arrives as HTML and works without JavaScript.
@@ -46,9 +46,13 @@ function CardList({
 }
 
 export default async function Home({ searchParams }: PageProps<"/">) {
-  const params = await searchParams;
-  const insurer = first(params.insurer) ?? "Aetna";
-  const city = first(params.city) ?? "San Diego";
+  const [params, options] = await Promise.all([
+    searchParams,
+    listSearchOptions(),
+  ]);
+  // With no search in the URL, start with the first insurer and city that have listings.
+  const insurer = first(params.insurer) ?? options.first?.insurer ?? "";
+  const city = first(params.city)?.slice(0, 60) ?? options.first?.city ?? "";
 
   const fit = fitFromParams(params);
   const filtering = Boolean(fit.specialty || fit.language || fit.telehealth);
@@ -87,24 +91,32 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         </p>
       </section>
 
-      <SearchForm
-        insurer={insurer}
-        city={city}
-        collapsed={stats.total > 0}
-        fit={fit}
-        languages={languages}
-      />
+      {options.first && (
+        <SearchForm
+          insurer={insurer}
+          city={city}
+          options={options}
+          collapsed={stats.total > 0}
+          fit={fit}
+          languages={languages}
+        />
+      )}
 
       {stats.total === 0 ? (
         <section className="empty">
-          <p>
-            {
-              "We don't have listings for that insurer and city yet. Try Aetna in San Diego."
-            }
-          </p>
-          <Link className="btn" href="/?insurer=Aetna&city=San+Diego">
-            Show Aetna in San Diego
-          </Link>
+          {options.first ? (
+            <>
+              <p>{"We don't have listings for that insurer and place yet."}</p>
+              <Link
+                className="btn"
+                href={`/?${new URLSearchParams(options.first)}`}
+              >
+                Show {options.first.insurer} in {options.first.city}
+              </Link>
+            </>
+          ) : (
+            <p>No listings yet.</p>
+          )}
         </section>
       ) : (
         <>
