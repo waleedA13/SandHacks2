@@ -133,6 +133,12 @@ describe("profileLicenceNumbers", () => {
     ).toEqual(["96724"]);
   });
 
+  it("reads a number written straight after the type", () => {
+    expect(
+      profileLicenceNumbers("Licensed by State of California / PSY27872 Aggie"),
+    ).toEqual(["27872"]);
+  });
+
   it("ignores other states", () => {
     expect(
       profileLicenceNumbers("Licensed by State of Oregon / 1234 Jane"),

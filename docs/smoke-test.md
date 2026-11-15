@@ -121,3 +121,17 @@ Ran the directory collector for all six cities with `--limit 50`, then `evidence
 - **About 1 in 3 directory runs timed out in Bright Data on the first try** (results page over 120 s, or `browser_in_use`). A plain rerun worked every time.
 - **Evidence: 104 of 300 listings (35%) have evidence**, from 1,732 Bright Data requests (about 6 per listing, as in the San Diego trial). Licence evidence from #22 was being added at the same time.
 - **Verifier: the Gemini free tier allows 20 requests per day** for `gemini-3.6-flash`, too few for a full run; it took a paid key. All 312 listings verified: 56 likely real (70+), 2 likely ghost (under 40), the rest Unclear.
+
+## Evidence on the licence number (issue 29, GitHub #65), 2026-11-15
+
+**Why.** 196 of 300 real listings had no evidence. A trial re-run on 3 San Diego listings found nothing (17 Bright Data requests). Many Cigna listings share a telehealth group's placeholder address and toll-free number: 16 San Diego listings share 501 W Broadway Ste 800, and (833) 646-3243 is on 32 listings statewide. The phone-or-city test can never pass on a clinician's own page.
+
+**Change.** `isSamePerson` also accepts a page that shows the listing's name and its board-confirmed licence number as a whole number. `collectEvidence` looks the licence up first so the matcher has the number. Fixed in passing: `profileLicenceNumbers` missed Psychology Today's no-space form ("/ PSY27872"); re-running the licence step then matched 76 listings (was 75).
+
+**Run.** The collector ran on the 46 listings that had a licence record and no web evidence, 4 at a time: 254 Bright Data requests, 6 minutes.
+
+- **10 gained web evidence:** 5 Psychology Today profiles and 5 practice or staff pages. 9 matched on the licence number (for example "Licensed by State of California / 22858", or "LCSW 78811" on a clinic staff page); 1 matched on unique name plus city.
+- **Telehealth case:** one Psychology Today profile is in Greensboro, NC, but shows the California licence number the board confirmed, so it is the same clinician practising by telehealth.
+- **Failures:** Psychology Today's bot check (3), Bright Data refusing government-classed sites (2), SERP redirects (2) and one proxy timeout. These listings keep their licence row.
+
+The other 36 of the 46 still have only the licence row. Overall, 232 of 300 listings have no web evidence and 196 have no evidence at all.

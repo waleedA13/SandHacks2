@@ -63,4 +63,34 @@ describe("isSamePerson", () => {
       isSamePerson({ ...listing, nameIsUnique: false, phone: null }, page),
     ).toBe(false);
   });
+
+  describe("licence number", () => {
+    const withLicence = { ...listing, licenceNumber: "37318" };
+    const noPhoneNoCity = {
+      names: ["Jane Doe"],
+      phones: [otherPhone],
+      text: "Licensed by State of California / LMFT 37318. Office in Fresno.",
+    };
+
+    it("matches same name when the page shows the board-confirmed licence number", () => {
+      expect(isSamePerson(withLicence, noPhoneNoCity)).toBe(true);
+    });
+
+    it("matches a shared name on the licence number", () => {
+      expect(
+        isSamePerson({ ...withLicence, nameIsUnique: false }, noPhoneNoCity),
+      ).toBe(true);
+    });
+
+    it("rejects a different name even with the licence number", () => {
+      expect(
+        isSamePerson(withLicence, { ...noPhoneNoCity, names: ["John Smith"] }),
+      ).toBe(false);
+    });
+
+    it("rejects the number inside a longer number", () => {
+      const page = { ...noPhoneNoCity, text: "Call 1373189 in Fresno" };
+      expect(isSamePerson(withLicence, page)).toBe(false);
+    });
+  });
 });
