@@ -21,7 +21,7 @@ test("a listing with evidence shows facts and sources", async ({ page }) => {
     page.getByRole("heading", { level: 1, name: "Avery Example, LMFT" }),
   ).toBeVisible();
   await expect(page.getByText("Likely available")).toBeVisible();
-  await expect(page.locator(".fact")).toHaveCount(3);
+  await expect(page.locator(".fact")).toHaveCount(4);
   await expect(page.getByText("Still seeing patients here?")).toBeVisible();
 
   const links = page.locator(".source a");

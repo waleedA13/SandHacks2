@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ListingSummary } from "@/shared/types";
 import { Icon } from "./Icon";
-import { checkedDate, telHref } from "./format";
+import { checkedDate, priceText, telHref } from "./format";
 import { LabelBadge } from "./LabelBadge";
 
 const DEAD_END = new Set(["Likely dead end", "Demo call: unavailable"]);
@@ -11,16 +11,18 @@ export function ListingCard({
   rank,
   variant,
   insurer,
-  city,
+  query,
 }: {
   listing: ListingSummary;
   rank: number;
   variant: "full" | "compact";
   insurer: string;
-  city: string;
+  // The results page's query string, so "Back to results" can return to it.
+  query: string;
 }) {
   const { id, name, credential, phone, label } = listing;
   const headingId = `listing-${id}`;
+  const price = priceText(listing.selfPayMin, listing.selfPayMax);
   return (
     <article className={`card card-${variant}`} aria-labelledby={headingId}>
       <LabelBadge label={label} />
@@ -29,6 +31,7 @@ export function ListingCard({
         {credential && <span className="cred">, {credential}</span>}
       </h3>
       <p>{listing.reason}</p>
+      {price && <p className="price">Their posted price: {price}</p>}
       {listing.call && (
         <p className="demo">
           <Icon name="info" />
@@ -62,7 +65,7 @@ export function ListingCard({
         {/* No prefetch: 12 cards would each load a detail page (5 queries each). */}
         <Link
           className="link"
-          href={`/listing/${id}?${new URLSearchParams({ insurer, city })}`}
+          href={`/listing/${id}?${query}`}
           prefetch={false}
         >
           View details<span className="sr-only"> for {name}</span>

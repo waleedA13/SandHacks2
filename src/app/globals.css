@@ -316,6 +316,56 @@ h2 {
   margin-bottom: 12px;
 }
 
+/* ---------- Fit filters ---------- */
+.search-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filters {
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+
+/* A legend can't be a flex item, so it floats to take the full first row. */
+.filters legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  font-family: var(--f-head);
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+.check {
+  flex: 1 1 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+
+.showing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 16px;
+  font-weight: 700;
+}
+
 /* ---------- Summary ---------- */
 .summary {
   display: flex;
@@ -519,6 +569,10 @@ h2 {
   gap: 6px 14px;
 }
 
+.price {
+  font-weight: 700;
+}
+
 .no-phone {
   display: inline-flex;
   align-items: center;
@@ -659,6 +713,27 @@ h2 {
   color: var(--bad-fg);
 }
 
+.fact-neutral {
+  color: var(--ink-soft);
+}
+
+.fact dd a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+
+.fact .fact-note {
+  flex: 1 1 100%;
+  display: block;
+  font-family: var(--f-body);
+  font-weight: 400;
+}
+
+.fact .fact-note a {
+  color: var(--teal);
+  font-weight: 700;
+}
+
 .fact-unknown {
   color: var(--mid-fg);
 }
@@ -720,6 +795,106 @@ h2 {
   background: var(--line);
   color: var(--ink-soft);
   cursor: not-allowed;
+}
+
+/* ---------- Share ---------- */
+.share-js {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.share-title {
+  flex: 1 1 100%;
+  font-family: var(--f-ui);
+  font-weight: 700;
+}
+
+.share-link {
+  overflow-wrap: anywhere;
+}
+
+.print {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.share-status {
+  flex: 1 1 100%;
+  font-weight: 700;
+}
+
+.share-status:empty {
+  display: none;
+}
+
+.print-only {
+  display: none;
+}
+
+/* ---------- Print: only the list ---------- */
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .bar,
+  .skip,
+  .intro,
+  .search,
+  .search-wrap,
+  .showing,
+  .summary,
+  .progress,
+  .share,
+  .script,
+  .actions .link,
+  .honest {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .print-title {
+    font-family: var(--f-head);
+    font-weight: 800;
+    font-size: 1.5rem;
+  }
+
+  .start,
+  .card {
+    padding: 8px 0;
+    background: none;
+    box-shadow: none;
+    border: 0;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .card {
+    break-inside: avoid;
+    border-radius: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* The phone number stays as plain text. */
+  .card .btn {
+    min-height: 0;
+    padding: 0;
+    background: none !important;
+    box-shadow: none;
+    transition: none;
+    color: var(--ink) !important;
+  }
 }
 
 /* ---------- Tap feedback, only when motion is welcome ---------- */
