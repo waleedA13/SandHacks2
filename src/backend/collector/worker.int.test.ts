@@ -71,6 +71,16 @@ describe("runOneJob", () => {
     expect(row.finished_at).not.toBeNull();
   });
 
+  it("fails the job without re-scoring when no evidence is found", async () => {
+    const id = await queue();
+    collect.mockResolvedValue(0);
+
+    expect(await runOneJob()).toBe(true);
+
+    expect(verify).not.toHaveBeenCalled();
+    expect((await job(id)).status).toBe("failed");
+  });
+
   it("returns false and does nothing when no job is queued", async () => {
     const done = await queue("done");
     expect(await runOneJob()).toBe(false);
