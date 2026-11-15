@@ -4,7 +4,8 @@ import { CallPanel, LabelProvider, LiveBadge } from "@/components/CallPanel";
 import { FactRow } from "@/components/FactRow";
 import { Header } from "@/components/Header";
 import { Icon } from "@/components/Icon";
-import { checkedDate, telHref } from "@/components/ListingCard";
+import { checkedDate, telHref } from "@/components/format";
+import { first } from "@/components/params";
 import { SourceList } from "@/components/SourceList";
 import { getDetail } from "@/lib/queries";
 
@@ -13,8 +14,9 @@ export const instant = false;
 
 const NO_INFO = "We found no other information about this listing.";
 
-const first = (v: string | string[] | undefined) =>
-  (Array.isArray(v) ? v[0] : v)?.trim() || undefined;
+// Some verdicts already give this as their reason; don't say it twice.
+const saysNoInfo = (reason?: string) =>
+  /^we found no other information/i.test(reason?.trim() ?? "");
 
 function backHref(insurer?: string, city?: string) {
   if (!insurer && !city) return "/";
@@ -39,7 +41,7 @@ export default async function ListingPage({
   return (
     <div className="page">
       <Header />
-      <LabelProvider>
+      <LabelProvider key={listing.id}>
         <main className="detail">
           <Link className="link back" href={back}>
             <span aria-hidden="true">←</span> Back to results
@@ -109,7 +111,7 @@ export default async function ListingPage({
             </>
           ) : (
             // Some verdicts already say this as their reason; don't repeat it.
-            verdict?.reason !== NO_INFO && <p className="panel">{NO_INFO}</p>
+            !saysNoInfo(verdict?.reason) && <p className="panel">{NO_INFO}</p>
           )}
 
           <section className="panel" aria-labelledby="call-h">

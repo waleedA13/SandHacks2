@@ -1,17 +1,14 @@
 import type { Tri } from "@/lib/types";
-import type { ReactNode } from "react";
-import { Icon } from "./Icon";
+import { Icon, PATHS } from "./Icon";
 
-const ANSWER: Record<Tri, [text: string, className: string, icon: ReactNode]> =
-  {
-    yes: ["Yes", "fact-yes", <path key="y" d="M8 12.5l2.5 2.5L16 9.5" />],
-    no: ["No", "fact-no", <path key="n" d="M9 9l6 6M15 9l-6 6" />],
-    unknown: [
-      "We couldn't tell",
-      "fact-unknown",
-      <path key="u" d="M9.2 9a3 3 0 0 1 5.6 1c0 2-3 2.5-3 4M12 17.5h.01" />,
-    ],
-  };
+const ANSWER: Record<
+  Tri,
+  [text: string, className: string, icon: keyof typeof PATHS]
+> = {
+  yes: ["Yes", "fact-yes", "check"],
+  no: ["No", "fact-no", "cross"],
+  unknown: ["We couldn't tell", "fact-unknown", "question"],
+};
 
 export function FactRow({
   question,
@@ -25,10 +22,7 @@ export function FactRow({
     <div className="fact">
       <dt>{question}</dt>
       <dd className={className}>
-        <Icon size={22}>
-          <circle cx="12" cy="12" r="10" />
-          {icon}
-        </Icon>
+        <Icon name={icon} size={22} />
         {text}
       </dd>
     </div>

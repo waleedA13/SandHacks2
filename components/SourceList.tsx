@@ -1,6 +1,6 @@
 import type { Detail } from "@/lib/queries";
 import type { EvidenceSource } from "@/lib/types";
-import { checkedDate } from "./ListingCard";
+import { checkedDate } from "./format";
 
 const NAME: Record<EvidenceSource, string> = {
   psychology_today: "Psychology Today",
@@ -29,7 +29,7 @@ export function SourceList({ evidence }: { evidence: Detail["evidence"] }) {
   return (
     <ul className="sources">
       {evidence.map((e) => (
-        <li key={e.url} className="source">
+        <li key={`${e.url}|${e.fetchedAt}`} className="source">
           <p className="source-name">{NAME[e.source] ?? e.source}</p>
           <p>&ldquo;{excerpt(e.rawText)}&rdquo;</p>
           <p className="muted">Fetched {checkedDate(e.fetchedAt)}</p>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Icon } from "@/components/Icon";
 import { ListingCard } from "@/components/ListingCard";
+import { first } from "@/components/params";
 import { SearchForm } from "@/components/SearchForm";
 import { getStats, listSummaries } from "@/lib/queries";
 import type { Label, ListingSummary } from "@/lib/types";
@@ -12,9 +13,6 @@ export const instant = false;
 
 const REACHABLE: Label[] = ["Likely available", "Demo call: available"];
 const DEAD_END: Label[] = ["Likely dead end", "Demo call: unavailable"];
-
-const first = (v: string | string[] | undefined) =>
-  (Array.isArray(v) ? v[0] : v)?.trim() || undefined;
 
 type Ranked = { listing: ListingSummary; rank: number };
 

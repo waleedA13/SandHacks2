@@ -1,29 +1,11 @@
 import type { Label } from "@/lib/types";
 import type { ReactNode } from "react";
-import { Icon, PHONE } from "./Icon";
+import { Icon, PATHS, PHONE } from "./Icon";
 
 const STYLE: Record<Label, [className: string, icon: ReactNode]> = {
-  "Likely available": [
-    "badge-ok",
-    <>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M8 12.5l2.5 2.5L16 9.5" />
-    </>,
-  ],
-  Unclear: [
-    "badge-mid",
-    <>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M9.2 9a3 3 0 0 1 5.6 1c0 2-3 2.5-3 4M12 17.5h.01" />
-    </>,
-  ],
-  "Likely dead end": [
-    "badge-bad",
-    <>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M9 9l6 6M15 9l-6 6" />
-    </>,
-  ],
+  "Likely available": ["badge-ok", PATHS.check],
+  Unclear: ["badge-mid", PATHS.question],
+  "Likely dead end": ["badge-bad", PATHS.cross],
   "Demo call: available": [
     "badge-call-ok",
     <>
@@ -39,6 +21,8 @@ const STYLE: Record<Label, [className: string, icon: ReactNode]> = {
     </>,
   ],
 };
+
+export const LABELS = Object.keys(STYLE) as Label[];
 
 export function LabelBadge({ label }: { label: Label }) {
   const [className, icon] = STYLE[label];

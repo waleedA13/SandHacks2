@@ -4,17 +4,9 @@ import type { Call, Label } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { createContext, use, useState, type ReactNode } from "react";
 import { Icon } from "./Icon";
-import { LabelBadge } from "./LabelBadge";
-import { checkedDate } from "./ListingCard";
+import { LABELS, LabelBadge } from "./LabelBadge";
+import { checkedDate } from "./format";
 import { VoiceWidget } from "./VoiceWidget";
-
-const LABELS = new Set<string>([
-  "Likely available",
-  "Unclear",
-  "Likely dead end",
-  "Demo call: available",
-  "Demo call: unavailable",
-]);
 
 // A call result replaces the badge at once; router.refresh() then brings the server's copy.
 const LabelState = createContext<[Label | null, (l: Label) => void] | null>(
@@ -72,7 +64,7 @@ export function CallPanel({
         name={name}
         insurer={insurer}
         onDone={({ label }) => {
-          if (LABELS.has(label)) setFresh(label as Label);
+          if ((LABELS as string[]).includes(label)) setFresh(label as Label);
           router.refresh();
         }}
       />
