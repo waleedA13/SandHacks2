@@ -8,6 +8,7 @@ import {
   getDetail,
   getJob,
   getStats,
+  listSearchOptions,
   listSummaries,
   recordCall,
 } from "@/backend/queries";
@@ -102,6 +103,51 @@ describe("listSummaries", () => {
     });
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every((r) => r.telehealth === "yes")).toBe(true);
+  });
+});
+
+describe("listSearchOptions", () => {
+  it("returns the seed's insurers and cities, sorted, and the first pair", async () => {
+    const o = await listSearchOptions();
+    // Other tests add "TestCo …" insurers; the seed has only Aetna in San Diego.
+    expect(o.insurers.filter((i) => !i.startsWith("TestCo "))).toEqual([
+      "Aetna",
+    ]);
+    expect(o.cities).toEqual(["San Diego"]);
+    expect(o.first).toEqual({ insurer: "Aetna", city: "San Diego" });
+  });
+});
+
+describe("listSummaries by ZIP code", () => {
+  const ids = (r: { id: string }[]) => r.map((x) => x.id);
+
+  it("matches a five-digit ZIP inside the address", async () => {
+    expect(ids(await listSummaries("Aetna", "92103"))).toEqual([
+      "00000000-0000-4000-8000-000000000003",
+    ]);
+    expect(await listSummaries("Aetna", "92101")).toHaveLength(2);
+  });
+
+  it("matches only the whole ZIP", async () => {
+    expect(await listSummaries("Aetna", "9210")).toEqual([]);
+    expect(await listSummaries("Aetna", "192103")).toEqual([]);
+  });
+
+  it("trims the value and caps it at 60 characters", async () => {
+    expect(ids(await listSummaries("Aetna", "  92103 "))).toEqual([
+      "00000000-0000-4000-8000-000000000003",
+    ]);
+    expect(await listSummaries("Aetna", "San Diego" + "x".repeat(500))).toEqual(
+      [],
+    );
+  });
+
+  it("still matches a city name ignoring case", async () => {
+    expect(await listSummaries("aetna", "san diego")).toHaveLength(12);
+  });
+
+  it("getStats counts the ZIP's listings", async () => {
+    expect((await getStats("Aetna", "92103")).total).toBe(1);
   });
 });
 
