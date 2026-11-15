@@ -38,6 +38,10 @@ export function ListingCard({
         {credential && <span className="cred">, {credential}</span>}
       </h3>
       <p>{listing.reason}</p>
+      <p className="sources-count">
+        Checked in {listing.sourceCount}{" "}
+        {listing.sourceCount === 1 ? "place" : "places"}
+      </p>
       {price && <p className="price">Their posted price: {price}</p>}
       {listing.call && !listing.call.summary?.startsWith(CALLER_REPORT) && (
         <p className="demo">

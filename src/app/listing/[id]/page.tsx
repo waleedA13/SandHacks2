@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cache } from "react";
 import { BookingPanel } from "@/frontend/BookingPanel";
 import { LabelProvider, LiveBadge } from "@/frontend/CallPanel";
+import { CostHelp } from "@/frontend/CostHelp";
 import { FactRow, LicenseRow } from "@/frontend/FactRow";
 import { fitFromParams, withFit, type FitValues } from "@/frontend/FitFilters";
 import { Icon } from "@/frontend/Icon";
@@ -93,18 +94,6 @@ export default async function ListingPage({
           ) : (
             <p className="muted no-phone">No phone number listed</p>
           )}
-          {price ? (
-            <div>
-              <p className="price">Their posted price: {price}</p>
-              <p className="muted">
-                {
-                  "This is the therapist's own price if you pay yourself. It is not what your insurance charges."
-                }
-              </p>
-            </div>
-          ) : (
-            <p className="muted">No price posted</p>
-          )}
         </section>
 
         <section className="panel" aria-labelledby="why-h">
@@ -155,6 +144,8 @@ export default async function ListingPage({
           // Some verdicts already say this as their reason; don't repeat it.
           !saysNoInfo(verdict?.reason) && <p className="panel">{NO_INFO}</p>
         )}
+
+        <CostHelp insurer={listing.insurer} name={listing.name} price={price} />
 
         <BookingPanel
           listing={listing}
