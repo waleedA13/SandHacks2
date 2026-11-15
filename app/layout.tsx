@@ -1,4 +1,23 @@
 import type { Metadata } from "next";
+import { Atkinson_Hyperlegible_Next, Figtree, Nunito } from "next/font/google";
+import "./globals.css";
+
+const body = Atkinson_Hyperlegible_Next({
+  subsets: ["latin"],
+  variable: "--font-body",
+  // next/font has no fallback metrics for this family yet.
+  adjustFontFallback: false,
+});
+const head = Nunito({
+  subsets: ["latin"],
+  weight: "800",
+  variable: "--font-head",
+});
+const ui = Figtree({
+  subsets: ["latin"],
+  weight: "700",
+  variable: "--font-ui",
+});
 
 export const metadata: Metadata = {
   title: "TheraCheck",
@@ -9,7 +28,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={`${body.variable} ${head.variable} ${ui.variable}`}>
+        {children}
+      </body>
     </html>
   );
 }
