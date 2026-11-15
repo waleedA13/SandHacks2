@@ -32,14 +32,13 @@ test.describe("with JavaScript off", () => {
 
   test("the call panel says it needs JavaScript", async ({ page }) => {
     await page.goto(WITH_CALL);
-    await expect(
-      page.getByText("The demo call needs JavaScript", { exact: false }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("You can still phone the office yourself.", {
-        exact: false,
-      }),
-    ).toBeVisible();
+    // getByText skips everything inside <noscript>, so find the message by its class.
+    const message = page.locator(".no-js");
+    await expect(message).toBeVisible();
+    await expect(message).toContainText("The demo call needs JavaScript");
+    await expect(message).toContainText(
+      "You can still phone the office yourself.",
+    );
     await expect(
       page.getByRole("button", { name: "Start demo call" }),
     ).toBeHidden();
