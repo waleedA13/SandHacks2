@@ -29,11 +29,11 @@ Use the label wording from the plan exactly: `Likely available`, `Unclear`, `Lik
 
 ## Files
 
-- Create: `app/page.tsx`, `components/SearchForm.tsx`, `components/ListingCard.tsx`, `components/AccuracyBanner.tsx`, `components/LabelBadge.tsx`, `app/globals.css`
+- Create: `src/app/page.tsx`, `src/frontend/SearchForm.tsx`, `src/frontend/ListingCard.tsx`, `src/frontend/AccuracyBanner.tsx`, `src/frontend/LabelBadge.tsx`, `src/app/globals.css`
 
 ## Interfaces
 
-- **Consumes:** `listSummaries(insurer, city)` and `getStats(insurer, city)` from `lib/queries.ts` (server-side), or the fixtures directly until issue 06 is merged. Type `ListingSummary`.
+- **Consumes:** `listSummaries(insurer, city)` and `getStats(insurer, city)` from `src/backend/queries.ts` (server-side), or the fixtures directly until issue 06 is merged. Type `ListingSummary`.
 - **Produces:** `<LabelBadge label />` and `<ListingCard listing />`, reused by issue 09.
 
 ## Acceptance check
@@ -51,10 +51,10 @@ Use the label wording from the plan exactly: `Likely available`, `Unclear`, `Lik
 Read CLAUDE.md, the plan's "Personas", "Features and user stories" and "Shared contract", and docs/issues/08-search-results-page.md.
 Use the frontend-design skill for the visual direction. The audience includes a stressed 24-year-old on a phone and a 67-year-old with low vision: calm, high contrast, large type, nothing playful.
 
-Build app/page.tsx as a server component that reads insurer and city from the query string and renders the five sections in the issue.
+Build src/app/page.tsx as a server component that reads insurer and city from the query string and renders the five sections in the issue.
 Build SearchForm as a plain GET form that works without JavaScript. Build LabelBadge with text + icon + colour for the five labels in the plan. Build ListingCard and AccuracyBanner.
-Read data through listSummaries and getStats from lib/queries.ts; if that file does not exist yet, read the same shapes from a local fixture and leave one clearly marked line to swap.
+Read data through listSummaries and getStats from src/backend/queries.ts; if that file does not exist yet, read the same shapes from a local fixture and leave one clearly marked line to swap.
 Mobile-first single column; it may widen to two columns above 900px. Minimum body text 18px. Meet WCAG AA contrast.
 Check it at 320px, 390px and 1280px widths, and with JavaScript disabled, and show me screenshots.
-Only touch app/page.tsx, app/globals.css and components/. Do not commit; show me the diff and a proposed commit message.
+Only touch src/app/page.tsx, src/app/globals.css and src/frontend/. Do not commit; show me the diff and a proposed commit message.
 ```

@@ -20,7 +20,7 @@
 - **No real offices are called.** The voice agent calls a teammate or runs in the browser. The agent always opens with: "This is an automated assistant calling for a patient."
 - **Use the NPI Registry API, do not scrape it.**
 - **Secrets live in `.env.local` only.** Never commit keys. `.env.example` lists the names.
-- **Each vendor in one file:** `collector/brightdata.ts`, `verifier/gemini.ts`, `components/VoiceWidget.tsx`.
+- **Each vendor in one file:** `src/backend/collector/brightdata.ts`, `src/backend/verifier/gemini.ts`, `src/frontend/VoiceWidget.tsx`.
 - **Only public professional information about therapists** is stored: name, credential, office address, office phone, public profile text.
 - **Accessibility:** mobile-first single column, server-rendered, no login, WCAG AA contrast, real buttons and labelled inputs, works at 320px width.
 
@@ -131,7 +131,7 @@ Share the top three results by text, messaging app or link, with no account and 
 
 Everything below is fixed by issue 01. Changing it needs a message to the whole team first.
 
-### Tables (`db/schema.sql`)
+### Tables (`src/backend/db/schema.sql`)
 
 | Table      | Columns                                                                                                                                                                                                                                                                                                                                                         |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -143,7 +143,7 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 
 `tri` is text limited to `yes`, `no`, `unknown`.
 
-### Types (`lib/types.ts`)
+### Types (`src/shared/types.ts`)
 
 `Tri`, `Listing`, `Evidence`, `Verdict`, `Call`, `Job` mirror the tables in camelCase. `ListingSummary` is `{ id, name, credential, address, phone, score, label, reason, checkedAt, specialties, languages, telehealth, selfPayMin, selfPayMax, licenseStatus, call: { takesPlan, acceptingNew, summary, calledAt } | null }`.
 
@@ -158,7 +158,7 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 | `GET /api/jobs/[id]`               | `{ status }`                                                                                                                                           |
 | `POST /api/calls/result`           | body `{ listingId, takesPlan, acceptingNew, summary }`; inserts a `done` call and changes nothing else; returns the listing's final `{ score, label }` |
 
-### Score and labels (`lib/score.ts`)
+### Score and labels (`src/shared/score.ts`)
 
 `scoreVerdict(v: { stillPractising: Tri; listsInsurer: Tri; acceptingNew: Tri }, call?: { takesPlan: Tri; acceptingNew: Tri }): { score: number; label: Label }`
 
@@ -175,18 +175,18 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 
 ## File structure and owners
 
-| Path                                                                            | Responsibility                                    | Owner                       |
-| ------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------- |
-| `db/schema.sql`, `db/seed.sql`                                                  | Tables and 12 fixture listings with verdicts      | Waleed                      |
-| `lib/db.ts`, `lib/types.ts`, `lib/score.ts`, `lib/score.test.ts`                | Database client, shared types, scoring            | Waleed (01), then shared    |
-| `collector/brightdata.ts`                                                       | The only file that calls Bright Data              | Waleed                      |
-| `collector/directory.ts`, `collector/evidence.ts`, `collector/worker.ts`        | Scrape listings, scrape evidence, run queued jobs | Waleed                      |
-| `verifier/gemini.ts`, `verifier/verify.ts`                                      | Evidence to three facts, score and reason         | Aditya                      |
-| `app/api/**`                                                                    | The six routes above                              | Aditya                      |
-| `voice/agent-confirm.md`, `voice/agent-helper.md`, `voice/README.md`            | Agent prompts and setup notes                     | Aditya                      |
-| `components/VoiceWidget.tsx`                                                    | The only file that loads the ElevenLabs client    | Aditya builds, Tracy places |
-| `app/page.tsx`, `app/listing/[id]/page.tsx`, `components/**`, `app/globals.css` | Pages and UI                                      | Tracy                       |
-| `docs/demo-script.md`                                                           | 3-minute pitch and video shot list                | All                         |
+| Path                                                                                                         | Responsibility                                    | Owner                       |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | --------------------------- |
+| `src/backend/db/schema.sql`, `src/backend/db/seed.sql`                                                       | Tables and 12 fixture listings with verdicts      | Waleed                      |
+| `src/backend/db/client.ts`, `src/shared/types.ts`, `src/shared/score.ts`, `src/shared/score.test.ts`         | Database client, shared types, scoring            | Waleed (01), then shared    |
+| `src/backend/collector/brightdata.ts`                                                                        | The only file that calls Bright Data              | Waleed                      |
+| `src/backend/collector/directory.ts`, `src/backend/collector/evidence.ts`, `src/backend/collector/worker.ts` | Scrape listings, scrape evidence, run queued jobs | Waleed                      |
+| `src/backend/verifier/gemini.ts`, `src/backend/verifier/verify.ts`                                           | Evidence to three facts, score and reason         | Aditya                      |
+| `src/app/api/**`                                                                                             | The six routes above                              | Aditya                      |
+| `voice/agent-confirm.md`, `voice/agent-helper.md`, `voice/README.md`                                         | Agent prompts and setup notes                     | Aditya                      |
+| `src/frontend/VoiceWidget.tsx`                                                                               | The only file that loads the ElevenLabs client    | Aditya builds, Tracy places |
+| `src/app/page.tsx`, `src/app/listing/[id]/page.tsx`, `src/frontend/**`, `src/app/globals.css`                | Pages and UI                                      | Tracy                       |
+| `docs/demo-script.md`                                                                                        | 3-minute pitch and video shot list                | All                         |
 
 Stay inside your own paths. If you need a change elsewhere, ask the owner.
 

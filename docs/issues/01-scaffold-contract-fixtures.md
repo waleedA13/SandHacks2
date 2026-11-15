@@ -10,18 +10,18 @@ Enables all of them. Nobody can start until this is merged.
 
 - A Next.js (App Router, TypeScript) app at the repo root, deployable to Vercel.
 - A Neon database with the five tables from the plan's "Shared contract".
-- `db/seed.sql` with 12 made-up fixture listings for insurer `Aetna`, city `San Diego`, state `CA`. Give them a spread of verdicts: 4 that score 70 or more, 4 between 40 and 69, 4 below 40. Add 2 evidence rows each for at least 6 of them, and one `done` call for one listing. Fill the fit, fee and licence columns for at least 8 of them: a mix of specialties from the plan's fixed list, at least two with `spanish`, some with a fee range and some with none, one `inactive` licence and two `not_found`. Use obviously fake names and `555` phone numbers.
-- `lib/db.ts`, `lib/types.ts`, `lib/score.ts` exactly as the contract says.
+- `src/backend/db/seed.sql` with 12 made-up fixture listings for insurer `Aetna`, city `San Diego`, state `CA`. Give them a spread of verdicts: 4 that score 70 or more, 4 between 40 and 69, 4 below 40. Add 2 evidence rows each for at least 6 of them, and one `done` call for one listing. Fill the fit, fee and licence columns for at least 8 of them: a mix of specialties from the plan's fixed list, at least two with `spanish`, some with a fee range and some with none, one `inactive` licence and two `not_found`. Use obviously fake names and `555` phone numbers.
+- `src/backend/db/client.ts`, `src/shared/types.ts`, `src/shared/score.ts` exactly as the contract says.
 - `.env.example` with the variable names from the plan; `.env.local` git-ignored.
 - **A live deployment.** Deploy the placeholder app to Vercel, set `DATABASE_URL` and `CALLS_WEBHOOK_SECRET` there, and post the URL to the team. The voice agent in issue 07 needs a public URL to save call results, so this cannot wait.
 
 ## Files
 
-- Create: `package.json`, `app/layout.tsx`, `app/page.tsx` (placeholder), `db/schema.sql`, `db/seed.sql`, `lib/db.ts`, `lib/types.ts`, `lib/score.ts`, `lib/score.test.ts`, `.env.example`, `.gitignore`
+- Create: `package.json`, `src/app/layout.tsx`, `src/app/page.tsx` (placeholder), `src/backend/db/schema.sql`, `src/backend/db/seed.sql`, `src/backend/db/client.ts`, `src/shared/types.ts`, `src/shared/score.ts`, `src/shared/score.test.ts`, `.env.example`, `.gitignore`
 
 ## Interfaces
 
-- **Produces:** tables `listings`, `evidence`, `verdicts`, `calls`, `jobs`; types `Tri`, `Listing`, `Evidence`, `Verdict`, `Call`, `Job`, `ListingSummary`, `Label`; `scoreVerdict(v, call?)`; `sql` client exported from `lib/db.ts`; scripts `npm run dev`, `npm test`, `npm run db:reset` (applies schema then seed).
+- **Produces:** tables `listings`, `evidence`, `verdicts`, `calls`, `jobs`; types `Tri`, `Listing`, `Evidence`, `Verdict`, `Call`, `Job`, `ListingSummary`, `Label`; `scoreVerdict(v, call?)`; `sql` client exported from `src/backend/db/client.ts`; scripts `npm run dev`, `npm test`, `npm run db:reset` (applies schema then seed).
 
 ## Acceptance check
 
@@ -45,9 +45,9 @@ Read CLAUDE.md and docs/superpowers/plans/2026-11-14-ghost-network-check.md, esp
 Implement issue docs/issues/01-scaffold-contract-fixtures.md.
 
 Scaffold a Next.js App Router TypeScript app at the repo root. Add the Neon serverless driver and Vitest.
-Write db/schema.sql for the five tables exactly as the contract lists them, with tri columns constrained to yes/no/unknown.
-Write db/seed.sql with the 12 fixture listings described in the issue.
-Write lib/types.ts, lib/db.ts and lib/score.ts to the contract. Write lib/score.test.ts first with the cases in the acceptance check, see it fail, then implement scoreVerdict.
+Write src/backend/db/schema.sql for the five tables exactly as the contract lists them, with tri columns constrained to yes/no/unknown.
+Write src/backend/db/seed.sql with the 12 fixture listings described in the issue.
+Write src/shared/types.ts, src/backend/db/client.ts and src/shared/score.ts to the contract. Write src/shared/score.test.ts first with the cases in the acceptance check, see it fail, then implement scoreVerdict.
 Add npm scripts dev, test and db:reset. Add .env.example and make sure .env.local is ignored.
 Do not add anything the contract does not name. Do not commit; show me the diff and a proposed commit message.
 ```

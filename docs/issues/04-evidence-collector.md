@@ -20,14 +20,14 @@ For each listing, find what the rest of the public web says about that therapist
 
 ## Files
 
-- Create: `collector/evidence.ts`, `collector/match.ts`, `collector/match.test.ts`
+- Create: `src/backend/collector/evidence.ts`, `src/backend/collector/match.ts`, `src/backend/collector/match.test.ts`
 
 ## Interfaces
 
-- **Consumes:** `unlock`, `serp` from `collector/brightdata.ts`; `normalizeName`, `normalizePhone` from `collector/normalize.ts`; `sql`; `Listing`, `Evidence`.
-- **Produces:** `isSamePerson(listing: { name: string; phone: string | null; city: string; nameIsUnique: boolean }, page: { names: string[]; phones: string[]; text: string }): boolean` in `collector/match.ts`.
-- **Produces:** `collectEvidence(listingId: string): Promise<number>` exported from `collector/evidence.ts` (returns rows written; replaces that listing's old evidence). Issue 11's worker calls this.
-- **Produces:** command `npx tsx collector/evidence.ts --all` and `--listing <id>`.
+- **Consumes:** `unlock`, `serp` from `src/backend/collector/brightdata.ts`; `normalizeName`, `normalizePhone` from `src/backend/collector/normalize.ts`; `sql`; `Listing`, `Evidence`.
+- **Produces:** `isSamePerson(listing: { name: string; phone: string | null; city: string; nameIsUnique: boolean }, page: { names: string[]; phones: string[]; text: string }): boolean` in `src/backend/collector/match.ts`.
+- **Produces:** `collectEvidence(listingId: string): Promise<number>` exported from `src/backend/collector/evidence.ts` (returns rows written; replaces that listing's old evidence). Issue 11's worker calls this.
+- **Produces:** command `npx tsx src/backend/collector/evidence.ts --all` and `--listing <id>`.
 - `raw_text` is plain text with HTML stripped, cut to 8,000 characters.
 
 ## Acceptance check
@@ -50,10 +50,10 @@ For each listing, find what the rest of the public web says about that therapist
 ```
 Read CLAUDE.md, the plan's "Shared contract" and "Review Focus", docs/smoke-test.md and docs/issues/04-evidence-collector.md.
 
-Write collector/match.test.ts with the isSamePerson cases in the acceptance check, see it fail, then write collector/match.ts.
-Write collector/evidence.ts exporting collectEvidence(listingId). For one listing it tries the three sources in the issue, using unlock() and serp() from collector/brightdata.ts only. For each candidate page, extract the names and phone numbers on it, call isSamePerson (set nameIsUnique from a count of that normalised name in listings), and store the stripped text (max 8,000 characters) in evidence only on a match. Delete that listing's previous evidence first.
+Write src/backend/collector/match.test.ts with the isSamePerson cases in the acceptance check, see it fail, then write src/backend/collector/match.ts.
+Write src/backend/collector/evidence.ts exporting collectEvidence(listingId). For one listing it tries the three sources in the issue, using unlock() and serp() from src/backend/collector/brightdata.ts only. For each candidate page, extract the names and phone numbers on it, call isSamePerson (set nameIsUnique from a count of that normalised name in listings), and store the stripped text (max 8,000 characters) in evidence only on a match. Delete that listing's previous evidence first.
 Run the three sources for a listing in parallel. Process at most 5 listings at once. Log one line per source tried: matched, no match, or failed.
 Add a CLI with --all and --listing <id>.
 Never invent evidence. If a fetch fails, log it and move on.
-Do not touch app/, verifier/ or components/. Do not commit; show me the diff and a proposed commit message.
+Do not touch src/app/, src/backend/verifier/ or src/frontend/. Do not commit; show me the diff and a proposed commit message.
 ```

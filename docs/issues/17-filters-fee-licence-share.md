@@ -33,8 +33,8 @@ Start only after the Sat 9 PM checkpoint shows the core working. The four parts 
 
 ## Files
 
-- Create: `components/ShareShortlist.tsx`, `components/FitFilters.tsx`
-- Modify: `app/page.tsx`, `components/SearchForm.tsx`, `components/ListingCard.tsx`, `app/listing/[id]/page.tsx`, `components/FactRow.tsx`, `app/globals.css`
+- Create: `src/frontend/ShareShortlist.tsx`, `src/frontend/FitFilters.tsx`
+- Modify: `src/app/page.tsx`, `src/frontend/SearchForm.tsx`, `src/frontend/ListingCard.tsx`, `src/app/listing/[id]/page.tsx`, `src/frontend/FactRow.tsx`, `src/app/globals.css`
 
 ## Interfaces
 
@@ -57,10 +57,10 @@ Start only after the Sat 9 PM checkpoint shows the core working. The four parts 
 Read CLAUDE.md, the plan's "Features and user stories" (F7 to F10), "Shared contract" and "Fixed vocabularies", and docs/issues/17-filters-fee-licence-share.md.
 
 Build the four parts in the order given, each one finished before the next.
-1. components/ShareShortlist.tsx: a client component that uses navigator.share when available and otherwise shows Copy and an sms: link. It takes the top three listings and the current URL as props. No network calls and nothing stored. Add a print stylesheet.
-2. components/FitFilters.tsx: plain form controls inside the existing GET form in SearchForm, mapping the fixed specialty values to plain-word labels. Pass the filters to listSummaries in app/page.tsx. Add the count line, the clear link and the no-match message.
+1. src/frontend/ShareShortlist.tsx: a client component that uses navigator.share when available and otherwise shows Copy and an sms: link. It takes the top three listings and the current URL as props. No network calls and nothing stored. Add a print stylesheet.
+2. src/frontend/FitFilters.tsx: plain form controls inside the existing GET form in SearchForm, mapping the fixed specialty values to plain-word labels. Pass the filters to listSummaries in src/app/page.tsx. Add the count line, the clear link and the no-match message.
 3. The price line on ListingCard and the detail page, with the exact wording in the issue.
 4. The licence row in FactRow on the detail page, with the exact wording in the issue. Never write "unlicensed".
 Keep the existing visual style. Check at 320px and 1280px and with JavaScript disabled, and show me screenshots.
-Only touch app/page.tsx, app/listing/, app/globals.css and components/ (not VoiceWidget.tsx). Do not commit; show me the diff and a proposed commit message.
+Only touch src/app/page.tsx, src/app/listing/, src/app/globals.css and src/frontend/ (not VoiceWidget.tsx). Do not commit; show me the diff and a proposed commit message.
 ```

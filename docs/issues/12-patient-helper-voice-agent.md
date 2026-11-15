@@ -31,7 +31,7 @@ Rules:
 ## Files
 
 - Create: `voice/agent-helper.md`
-- Modify: `voice/README.md` (setup for the second agent), `components/VoiceWidget.tsx` (add `mode="helper"`), `.env.example` (add `NEXT_PUBLIC_ELEVENLABS_HELPER_AGENT_ID`)
+- Modify: `voice/README.md` (setup for the second agent), `src/frontend/VoiceWidget.tsx` (add `mode="helper"`), `.env.example` (add `NEXT_PUBLIC_ELEVENLABS_HELPER_AGENT_ID`)
 
 ## Interfaces
 
@@ -54,6 +54,6 @@ Read CLAUDE.md, the plan's "Global Constraints" and "Features and user stories" 
 
 Write voice/agent-helper.md: system prompt and first message for the conversation and rules in the issue, including the 988 rule and the instruction to read phone numbers digit by digit and to say only what the find_therapists tool returns.
 Extend voice/README.md with dashboard setup for this second agent and its find_therapists server tool (GET /api/listings with insurer and city as query parameters).
-Extend components/VoiceWidget.tsx with mode="helper", reading the agent id from NEXT_PUBLIC_ELEVENLABS_HELPER_AGENT_ID. Do not break mode="confirm".
+Extend src/frontend/VoiceWidget.tsx with mode="helper", reading the agent id from NEXT_PUBLIC_ELEVENLABS_HELPER_AGENT_ID. Do not break mode="confirm".
 Do not commit; show me the diff and a proposed commit message.
 ```

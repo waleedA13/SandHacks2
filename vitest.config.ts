@@ -4,7 +4,7 @@ import { parseEnv } from "node:util";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
+  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   test: {
     projects: [
       {

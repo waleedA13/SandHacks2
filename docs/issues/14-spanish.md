@@ -26,12 +26,12 @@ Reasons written by Gemini are stored in English. For Spanish, show the English r
 
 ## Files
 
-- Create: `lib/i18n.ts` (one object per language, keyed by string id)
-- Modify: `app/layout.tsx`, `app/page.tsx`, `app/listing/[id]/page.tsx`, `components/**`, `voice/agent-helper.md`
+- Create: `src/frontend/i18n.ts` (one object per language, keyed by string id)
+- Modify: `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/listing/[id]/page.tsx`, `src/frontend/**`, `voice/agent-helper.md`
 
 ## Interfaces
 
-- **Produces:** `t(lang: "en" | "es", key: string): string` in `lib/i18n.ts`.
+- **Produces:** `t(lang: "en" | "es", key: string): string` in `src/frontend/i18n.ts`.
 
 ## Acceptance check
 
@@ -45,7 +45,7 @@ Reasons written by Gemini are stored in English. For Spanish, show the English r
 ```
 Read CLAUDE.md, the plan's "Personas" (Elena) and docs/issues/14-spanish.md.
 
-Create lib/i18n.ts with en and es objects and a t(lang, key) function. Move every fixed string from both pages and the components into it. Do not add a translation library.
+Create src/frontend/i18n.ts with en and es objects and a t(lang, key) function. Move every fixed string from both pages and the components into it. Do not add a translation library.
 Add an English / Español switch to the header that sets ?lang= and preserves the rest of the URL.
 Write the Spanish in plain, everyday Latin American Spanish, and list any phrase you are unsure about so a Spanish speaker can check it.
 Do not commit; show me the diff and a proposed commit message.

@@ -26,14 +26,14 @@ Rules:
 
 ## Files
 
-- Create: `verifier/gemini.ts`, `verifier/verify.ts`, `verifier/verify.test.ts`
+- Create: `src/backend/verifier/gemini.ts`, `src/backend/verifier/verify.ts`, `src/backend/verifier/verify.test.ts`
 
 ## Interfaces
 
-- **Consumes:** `sql`; `scoreVerdict` from `lib/score.ts`; `Evidence`, `Verdict`, `Tri`.
-- **Produces:** `extractFacts(input: { name: string; insurer: string; evidence: { source: string; text: string }[] }): Promise<{ stillPractising: Tri; listsInsurer: Tri; acceptingNew: Tri; reason: string }>` in `verifier/gemini.ts`, the only file that calls Gemini.
-- **Produces:** `verifyListing(listingId: string): Promise<Verdict>` exported from `verifier/verify.ts`. Issue 11's worker calls this.
-- **Produces:** command `npx tsx verifier/verify.ts --all` and `--listing <id>`.
+- **Consumes:** `sql`; `scoreVerdict` from `src/shared/score.ts`; `Evidence`, `Verdict`, `Tri`.
+- **Produces:** `extractFacts(input: { name: string; insurer: string; evidence: { source: string; text: string }[] }): Promise<{ stillPractising: Tri; listsInsurer: Tri; acceptingNew: Tri; reason: string }>` in `src/backend/verifier/gemini.ts`, the only file that calls Gemini.
+- **Produces:** `verifyListing(listingId: string): Promise<Verdict>` exported from `src/backend/verifier/verify.ts`. Issue 11's worker calls this.
+- **Produces:** command `npx tsx src/backend/verifier/verify.ts --all` and `--listing <id>`.
 
 ## Acceptance check
 
@@ -48,11 +48,11 @@ Rules:
 
 ```
 Read CLAUDE.md, the plan's "Shared contract" and "Review Focus", and docs/issues/05-verifier-gemini.md.
-Check the current Gemini API docs for the Flash-tier model name and for structured (JSON schema) output before writing verifier/gemini.ts.
+Check the current Gemini API docs for the Flash-tier model name and for structured (JSON schema) output before writing src/backend/verifier/gemini.ts.
 
-Write verifier/verify.test.ts with the cases in the acceptance check, mocking extractFacts, and see it fail.
-Write verifier/gemini.ts with extractFacts: one request, structured output constrained to the three tri-state fields plus reason, temperature 0. The instruction must say to answer "unknown" unless the evidence states it, and to write the reason in one plain sentence that names the source.
-Write verifier/verify.ts with verifyListing: load the listing and its evidence, short-circuit when there is none, otherwise call extractFacts, score with scoreVerdict from lib/score.ts, and upsert the verdicts row with checked_at = now.
+Write src/backend/verifier/verify.test.ts with the cases in the acceptance check, mocking extractFacts, and see it fail.
+Write src/backend/verifier/gemini.ts with extractFacts: one request, structured output constrained to the three tri-state fields plus reason, temperature 0. The instruction must say to answer "unknown" unless the evidence states it, and to write the reason in one plain sentence that names the source.
+Write src/backend/verifier/verify.ts with verifyListing: load the listing and its evidence, short-circuit when there is none, otherwise call extractFacts, score with scoreVerdict from src/shared/score.ts, and upsert the verdicts row with checked_at = now.
 Add a CLI with --all (at most 5 at once) and --listing <id>.
-Do not change lib/score.ts or anything under collector/, app/ or components/. Do not commit; show me the diff and a proposed commit message.
+Do not change src/shared/score.ts or anything under src/backend/collector/, src/app/ or src/frontend/. Do not commit; show me the diff and a proposed commit message.
 ```

@@ -26,12 +26,12 @@ Insurer and city matching is case-insensitive.
 
 ## Files
 
-- Create: `app/api/listings/route.ts`, `app/api/listings/[id]/route.ts`, `app/api/listings/[id]/recheck/route.ts`, `app/api/jobs/[id]/route.ts`, `app/api/stats/route.ts`, `app/api/calls/result/route.ts`, `lib/queries.ts`, `lib/queries.test.ts`
+- Create: `src/app/api/listings/route.ts`, `src/app/api/listings/[id]/route.ts`, `src/app/api/listings/[id]/recheck/route.ts`, `src/app/api/jobs/[id]/route.ts`, `src/app/api/stats/route.ts`, `src/app/api/calls/result/route.ts`, `src/backend/queries.ts`, `src/backend/queries.test.ts`
 
 ## Interfaces
 
 - **Consumes:** `sql`, types, `scoreVerdict`.
-- **Produces:** the six routes; `lib/queries.ts` with `listSummaries(insurer, city)`, `getDetail(id)`, `getStats(insurer, city)`, `recordCall(input)`, so pages can call the same functions on the server.
+- **Produces:** the six routes; `src/backend/queries.ts` with `listSummaries(insurer, city)`, `getDetail(id)`, `getStats(insurer, city)`, `recordCall(input)`, so pages can call the same functions on the server.
 
 ## Acceptance check
 
@@ -47,10 +47,10 @@ Insurer and city matching is case-insensitive.
 ```
 Read CLAUDE.md, the plan's "Shared contract" and docs/issues/06-api-routes.md.
 
-Write lib/queries.test.ts: after recordCall with both "no", listSummaries gives that listing final score 0 and label "Demo call: unavailable" while verdicts.score is unchanged; rewriting the verdict with a new web score leaves the final score at 0; both "yes" gives 100. Add a test for the rule that a second recheck request returns the existing queued job. See it fail.
-Write lib/queries.ts with listSummaries, getDetail, getStats, recordCall and enqueueRecheck using the sql client from lib/db.ts and scoreVerdict from lib/score.ts. Compute the final score and label at read time from the verdict and the latest done call. recordCall only inserts the call; nothing in this file writes to verdicts.
-Write the six route handlers as thin wrappers over lib/queries.ts, with the validation and status codes in the issue.
-Routes must only touch the database. Do not import anything from collector/ or verifier/.
+Write src/backend/queries.test.ts: after recordCall with both "no", listSummaries gives that listing final score 0 and label "Demo call: unavailable" while verdicts.score is unchanged; rewriting the verdict with a new web score leaves the final score at 0; both "yes" gives 100. Add a test for the rule that a second recheck request returns the existing queued job. See it fail.
+Write src/backend/queries.ts with listSummaries, getDetail, getStats, recordCall and enqueueRecheck using the sql client from src/backend/db/client.ts and scoreVerdict from src/shared/score.ts. Compute the final score and label at read time from the verdict and the latest done call. recordCall only inserts the call; nothing in this file writes to verdicts.
+Write the six route handlers as thin wrappers over src/backend/queries.ts, with the validation and status codes in the issue.
+Routes must only touch the database. Do not import anything from src/backend/collector/ or src/backend/verifier/.
 Run the curl checks in the acceptance list against the seeded database and show me the output.
 Do not commit; show me the diff and a proposed commit message.
 ```

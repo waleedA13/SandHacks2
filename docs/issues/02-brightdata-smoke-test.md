@@ -20,20 +20,20 @@ For each, record: worked or not, seconds taken, and what came back.
 
 ## Fallback if no insurer directory works by 4:00 PM
 
-Tell the team. Then open the chosen directory in a normal browser, copy 30 listings by hand into `db/demo-listings.csv`, and load those. Bright Data still does all the evidence scraping in issue 04. Say plainly in the pitch that the directory list was entered by hand.
+Tell the team. Then open the chosen directory in a normal browser, copy 30 listings by hand into `src/backend/db/demo-listings.csv`, and load those. Bright Data still does all the evidence scraping in issue 04. Say plainly in the pitch that the directory list was entered by hand.
 
 ## Files
 
-- Create: `collector/brightdata.ts`, `collector/smoke.ts`, `docs/smoke-test.md`
+- Create: `src/backend/collector/brightdata.ts`, `src/backend/collector/smoke.ts`, `docs/smoke-test.md`
 
 ## Interfaces
 
-- **Produces:** `collector/brightdata.ts` exporting `unlock(url: string): Promise<string>` (page HTML), `serp(query: string): Promise<{ title: string; url: string }[]>`, `openBrowser(): Promise<Browser>` (Playwright browser connected to Bright Data). This is the only file that knows Bright Data's endpoints and zones.
+- **Produces:** `src/backend/collector/brightdata.ts` exporting `unlock(url: string): Promise<string>` (page HTML), `serp(query: string): Promise<{ title: string; url: string }[]>`, `openBrowser(): Promise<Browser>` (Playwright browser connected to Bright Data). This is the only file that knows Bright Data's endpoints and zones.
 - **Produces:** the chosen insurer name, written at the top of `docs/smoke-test.md`.
 
 ## Acceptance check
 
-- `npx tsx collector/smoke.ts` prints a pass or fail line for each of the three products.
+- `npx tsx src/backend/collector/smoke.ts` prints a pass or fail line for each of the three products.
 - `docs/smoke-test.md` names the insurer, the working search steps, and the measured seconds per request.
 - The team has been told the result.
 
@@ -43,8 +43,8 @@ Tell the team. Then open the chosen directory in a normal browser, copy 30 listi
 Read CLAUDE.md, the plan, and docs/issues/02-brightdata-smoke-test.md.
 Look up the current Bright Data docs for Browser API (connecting Playwright over CDP), Web Unlocker (API request format) and SERP API before writing anything; do not rely on memory for endpoints or parameters.
 
-Create collector/brightdata.ts with unlock, serp and openBrowser, reading credentials from the env names in .env.example.
-Create collector/smoke.ts that tries each product against the targets in the issue and prints pass/fail and seconds.
+Create src/backend/collector/brightdata.ts with unlock, serp and openBrowser, reading credentials from the env names in .env.example.
+Create src/backend/collector/smoke.ts that tries each product against the targets in the issue and prints pass/fail and seconds.
 For the insurer directory, drive the guest search step by step and save a screenshot at each step so I can see where it gets stuck. Try the insurers in the order given and stop at the first that works.
 Write the results to docs/smoke-test.md.
 This is a spike: no tests, keep it short. Tell me plainly if a site cannot be read rather than working around it with fake data.

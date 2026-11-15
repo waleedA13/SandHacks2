@@ -15,17 +15,17 @@
 
 ## Tech stack
 
-| Layer            | What we use                                                                         |
-| ---------------- | ----------------------------------------------------------------------------------- |
-| App              | Next.js 16 (App Router, TypeScript), React 19, server-rendered pages                |
-| Hosting          | Vercel                                                                              |
-| Database         | Neon Postgres, through `@neondatabase/serverless` (`lib/db.ts`)                     |
-| Scraping         | Bright Data Browser API, Web Unlocker and SERP API (`collector/brightdata.ts` only) |
-| Reading evidence | Gemini API, Flash tier with structured output (`verifier/gemini.ts` only)           |
-| Voice            | ElevenLabs Agents (`components/VoiceWidget.tsx` only)                               |
-| Tests            | Vitest                                                                              |
-| Scripts          | `tsx` runs the TypeScript pipeline scripts by hand                                  |
-| Runtime          | Node.js 24, npm                                                                     |
+| Layer            | What we use                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| App              | Next.js 16 (App Router, TypeScript), React 19, server-rendered pages                            |
+| Hosting          | Vercel                                                                                          |
+| Database         | Neon Postgres, through `@neondatabase/serverless` (`src/backend/db/client.ts`)                  |
+| Scraping         | Bright Data Browser API, Web Unlocker and SERP API (`src/backend/collector/brightdata.ts` only) |
+| Reading evidence | Gemini API, Flash tier with structured output (`src/backend/verifier/gemini.ts` only)           |
+| Voice            | ElevenLabs Agents (`src/frontend/VoiceWidget.tsx` only)                                         |
+| Tests            | Vitest                                                                                          |
+| Scripts          | `tsx` runs the TypeScript pipeline scripts by hand                                              |
+| Runtime          | Node.js 24, npm                                                                                 |
 
 The four parts (collector, verifier, web app, voice agent) talk only through the database. Pages and API routes read the database; they never call Bright Data or Gemini while a user waits.
 
@@ -33,12 +33,16 @@ The four parts (collector, verifier, web app, voice agent) talk only through the
 
 ```
 .
-├── app/                # Next.js pages and API routes
-├── components/         # UI components
-├── lib/                # Database client, shared types, scoring (+ tests)
-├── db/                 # schema.sql, seed.sql (fixtures) and reset.ts
-├── collector/          # Bright Data scrapers and the job worker
-├── verifier/           # Gemini verifier
+├── src/
+│   ├── app/            # Next.js routing: pages and api/ routes (Next requires them together here)
+│   ├── frontend/       # UI components used by the pages
+│   ├── backend/        # Server-only code
+│   │   ├── db/         # client.ts (sql), schema.sql, seed.sql, reset.ts
+│   │   ├── collector/  # Bright Data scrapers and the job worker
+│   │   ├── verifier/   # Gemini verifier
+│   │   └── queries.ts  # Reads and writes used by pages and API routes
+│   └── shared/         # Used by both sides: types.ts, score.ts
+├── e2e/                # Playwright end-to-end tests
 ├── voice/              # Voice agent prompts and setup notes
 ├── docs/               # Plan, spec, issues and decision records
 ├── .github/            # Issue/PR templates, CODEOWNERS, CI workflows, Dependabot
@@ -57,23 +61,23 @@ npm run dev                  # http://localhost:3000
 
 ## Commands
 
-| Command                 | What it does                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------ |
-| `npm run dev`           | Start the dev server                                                           |
-| `npm run format`        | Format every file with Prettier                                                |
-| `npm run format:check`  | Check formatting without changing files                                        |
-| `npm run lint`          | Run ESLint                                                                     |
-| `npm run typecheck`     | Generate Next.js route types and run `tsc --noEmit`                            |
-| `npm run audit`         | Fail on high or critical `npm audit` advisories                                |
-| `npm run build`         | Production build                                                               |
-| `npm test`              | Same as `test:unit`                                                            |
-| `npm run test:unit`     | Unit tests (`*.test.ts`), no database or network                               |
-| `npm run db:test:up`    | Start Postgres and the Neon HTTP proxy in Docker                               |
-| `npm run db:test:reset` | Apply `db/schema.sql` and `db/seed.sql` to the Docker database                 |
-| `npm run test:int`      | Reset the Docker database, then run integration tests (`*.int.test.ts`)        |
-| `npm run test:e2e`      | Build the app and run Playwright on desktop and phone sizes                    |
-| `npm run db:test:down`  | Stop the Docker database and delete its data                                   |
-| `npm run db:reset`      | Reset the database in `.env.local`. This drops every table. Never run it in CI |
+| Command                 | What it does                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `npm run dev`           | Start the dev server                                                                   |
+| `npm run format`        | Format every file with Prettier                                                        |
+| `npm run format:check`  | Check formatting without changing files                                                |
+| `npm run lint`          | Run ESLint                                                                             |
+| `npm run typecheck`     | Generate Next.js route types and run `tsc --noEmit`                                    |
+| `npm run audit`         | Fail on high or critical `npm audit` advisories                                        |
+| `npm run build`         | Production build                                                                       |
+| `npm test`              | Same as `test:unit`                                                                    |
+| `npm run test:unit`     | Unit tests (`*.test.ts`), no database or network                                       |
+| `npm run db:test:up`    | Start Postgres and the Neon HTTP proxy in Docker                                       |
+| `npm run db:test:reset` | Apply `src/backend/db/schema.sql` and `src/backend/db/seed.sql` to the Docker database |
+| `npm run test:int`      | Reset the Docker database, then run integration tests (`*.int.test.ts`)                |
+| `npm run test:e2e`      | Build the app and run Playwright on desktop and phone sizes                            |
+| `npm run db:test:down`  | Stop the Docker database and delete its data                                           |
+| `npm run db:reset`      | Reset the database in `.env.local`. This drops every table. Never run it in CI         |
 
 ## Continuous integration
 
@@ -84,7 +88,7 @@ npm run dev                  # http://localhost:3000
 3. **Integration:** `db:test:up`, then `test:int`
 4. **E2E:** `db:test:up`, `db:test:reset`, then `test:e2e`. If it fails, the Playwright report is uploaded as an artifact for 7 days.
 
-CI needs no secrets. Integration and e2e tests read `DATABASE_URL` from the committed `.env.test`, which points at a Postgres container on `db.localtest.me` through the [local Neon HTTP proxy](https://github.com/TimoWilhelm/local-neon-http-proxy). `lib/neon-local.ts` sends the Neon driver to that proxy only when the host is `db.localtest.me`, so the team Neon database stays out of reach. Tests never call Gemini, Bright Data, ElevenLabs or Twilio.
+CI needs no secrets. Integration and e2e tests read `DATABASE_URL` from the committed `.env.test`, which points at a Postgres container on `db.localtest.me` through the [local Neon HTTP proxy](https://github.com/TimoWilhelm/local-neon-http-proxy). `src/backend/db/neon-local.ts` sends the Neon driver to that proxy only when the host is `db.localtest.me`, so the team Neon database stays out of reach. Tests never call Gemini, Bright Data, ElevenLabs or Twilio.
 
 To run the same checks on your machine, start Docker, then run:
 

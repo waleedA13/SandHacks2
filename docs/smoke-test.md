@@ -2,7 +2,7 @@
 
 **Chosen insurer: Cigna**, plan **Open Access Plus (OAP)**, San Diego 92101, "Licensed Therapists". Guest search, no login. 8,000 in-network results; 20 listings per page, each with name, address and phone.
 
-Run: `npx tsx --env-file=.env.local collector/smoke.ts [browser|unlock|serp]`. Results from 2026-11-14.
+Run: `npx tsx --env-file=.env.local src/backend/collector/smoke.ts [browser|unlock|serp]`. Results from 2026-11-14.
 
 ## 1. Browser API on insurer directories
 
@@ -21,7 +21,7 @@ Run: `npx tsx --env-file=.env.local collector/smoke.ts [browser|unlock|serp]`. R
 4. **Continue as guest** → **Skip** (the "primarily treats" question).
 5. **View 8000 Results** under Licensed Therapists → **Continue** → **Open Access Plus, Open Access Plus Tiered**.
 
-**Shortcut:** the final results URL opens directly in about 16 seconds, skipping all the clicks. It is `CIGNA_RESULTS` in `collector/smoke.ts`. Other plans swap `medicalProductCode`/`medicalEcnCode` in that URL.
+**Shortcut:** the final results URL opens directly in about 16 seconds, skipping all the clicks. It is `CIGNA_RESULTS` in `src/backend/collector/smoke.ts`. Other plans swap `medicalProductCode`/`medicalEcnCode` in that URL.
 
 **Anthem steps, for the record.** `https://findcare.anthem.com/` (wait about 15 s for it to render) → **Basic search as a guest** → plan type **Medical Plan or Network** → state **California** → **Medical (Employer-Sponsored)** → plan **Advantage PPO** → **Continue** → **Update Location** `92101` → **Behavioral Health**. The dropdowns are type-ahead fields, not `<select>`s. Anthem also links a [machine-readable provider directory](https://www22.anthem.com/cms-data-index.json/index.html), a possible no-scraping source not tested here.
 
@@ -49,6 +49,6 @@ Page-driving notes for issue 03: plan options and "View … Results" are `<butto
 - **Use the Cigna results URL directly** and page through it; don't replay the clicks.
 - **Don't put quotes in SERP queries.** Unquoted name searches worked every time.
 - **Some SERP links are `google.com/goto?url=…` redirects**, not the real page URL.
-- **Errors come back as HTTP 200.** The real status is in the `x-brd-error` and `x-brd-status-code` response headers. `collector/brightdata.ts` turns those into thrown errors.
+- **Errors come back as HTTP 200.** The real status is in the `x-brd-error` and `x-brd-status-code` response headers. `src/backend/collector/brightdata.ts` turns those into thrown errors.
 - **SERP parsed JSON:** add `brd_json=1` to the Google URL with `format: "raw"`. `format: "json"` returned HTML.
 - **A 200 from Web Unlocker can still be a bot-check page.** Check the page title before trusting it.

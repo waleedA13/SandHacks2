@@ -21,8 +21,8 @@ Rules:
 
 ## Files
 
-- Create: `app/api/calls/start/route.ts`
-- Modify: `voice/README.md` (Twilio setup), `.env.example` (add `DEMO_CALL_ALLOWLIST`, comma-separated), `components/CallPanel.tsx` (a "Call a phone instead" option, with Tracy)
+- Create: `src/app/api/calls/start/route.ts`
+- Modify: `voice/README.md` (Twilio setup), `.env.example` (add `DEMO_CALL_ALLOWLIST`, comma-separated), `src/frontend/CallPanel.tsx` (a "Call a phone instead" option, with Tracy)
 
 ## Interfaces
 
@@ -41,7 +41,7 @@ Rules:
 Read CLAUDE.md, the plan's "Global Constraints", voice/README.md and docs/issues/13-real-phone-call.md.
 Read the current ElevenLabs Agents docs on Twilio phone numbers and outbound calls before writing anything.
 
-Write app/api/calls/start/route.ts: validate that toNumber is in DEMO_CALL_ALLOWLIST and return 403 otherwise; then start an outbound call with the confirm agent, passing therapist name, insurer and listing id as variables.
+Write src/app/api/calls/start/route.ts: validate that toNumber is in DEMO_CALL_ALLOWLIST and return 403 otherwise; then start an outbound call with the confirm agent, passing therapist name, insurer and listing id as variables.
 Add the Twilio setup steps to voice/README.md.
 The allow-list check is a safety control: do not add any way around it, and write one test proving a number off the list is refused.
 Do not commit; show me the diff and a proposed commit message.

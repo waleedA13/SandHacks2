@@ -10,7 +10,7 @@
 CLAUDE.md
 
 # Real listings copied by hand must not be published
-db/demo-listings.csv
+**/demo-listings.csv
 
 # Dependencies
 node_modules/

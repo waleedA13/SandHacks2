@@ -34,11 +34,11 @@ States to design:
 
 ## Files
 
-- Create: `app/listing/[id]/page.tsx`, `components/FactRow.tsx`, `components/SourceList.tsx`, `components/CallPanel.tsx`
+- Create: `src/app/listing/[id]/page.tsx`, `src/frontend/FactRow.tsx`, `src/frontend/SourceList.tsx`, `src/frontend/CallPanel.tsx`
 
 ## Interfaces
 
-- **Consumes:** `getDetail(id)` from `lib/queries.ts`; `<LabelBadge />` from issue 08; `<VoiceWidget mode="confirm" listingId name insurer onDone />` from issue 07.
+- **Consumes:** `getDetail(id)` from `src/backend/queries.ts`; `<LabelBadge />` from issue 08; `<VoiceWidget mode="confirm" listingId name insurer onDone />` from issue 07.
 - **Produces:** `<CallPanel listing />`, the client component that wraps the widget and shows the result. Issue 11 adds the re-check button beside it.
 
 ## Acceptance check
@@ -52,12 +52,12 @@ States to design:
 ## Prompt for your Claude
 
 ```
-Read CLAUDE.md, the plan's "Personas", "Features and user stories" and "Shared contract", and docs/issues/09-listing-detail.md. Read components/VoiceWidget.tsx to see its props; do not change it.
+Read CLAUDE.md, the plan's "Personas", "Features and user stories" and "Shared contract", and docs/issues/09-listing-detail.md. Read src/frontend/VoiceWidget.tsx to see its props; do not change it.
 
-Build app/listing/[id]/page.tsx as a server component using getDetail from lib/queries.ts, with the six sections in the issue and the three states.
+Build src/app/listing/[id]/page.tsx as a server component using getDetail from src/backend/queries.ts, with the six sections in the issue and the three states.
 Build FactRow (question, tri-state answer shown as Yes / No / We couldn't tell, with icon and text), SourceList and CallPanel.
 CallPanel is a client component: it renders VoiceWidget in confirm mode, and on onDone updates the badge and shows the confirmed result in an aria-live region.
 Keep the visual language from issue 08. Reuse LabelBadge.
 Check at 320px and 1280px and with a screen reader, and show me screenshots.
-Only touch app/listing/ and components/ (not VoiceWidget.tsx). Do not commit; show me the diff and a proposed commit message.
+Only touch src/app/listing/ and src/frontend/ (not VoiceWidget.tsx). Do not commit; show me the diff and a proposed commit message.
 ```
