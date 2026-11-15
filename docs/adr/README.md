@@ -10,6 +10,7 @@ We record significant technical decisions as ADRs, following [Michael Nygard's f
 
 ## Index
 
-| ADR                                           | Title                         | Status   |
-| --------------------------------------------- | ----------------------------- | -------- |
-| [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |
+| ADR                                           | Title                                | Status   |
+| --------------------------------------------- | ------------------------------------ | -------- |
+| [0001](0001-record-architecture-decisions.md) | Record architecture decisions        | Accepted |
+| [0002](0002-licence-data-from-dca-files.md)   | Licence data from DCA's public files | Proposed |
