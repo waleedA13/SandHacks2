@@ -20,9 +20,9 @@
   --mid-bg: #fbebc7;
   --mid-fg: #6e4a00;
   --mid-line: #eed39a;
-  --bad-bg: #f7ddd6;
-  --bad-fg: #8a2e1e;
-  --bad-line: #e9bdb2;
+  --bad-bg: #eef0ef;
+  --bad-fg: #4b5b5c;
+  --bad-line: #d3dcd9;
 
   /* Type scale: body is --step-0 (18px at default size). rem, so it follows the browser's text size. */
   --step--1: 1rem;
@@ -205,13 +205,17 @@ main {
 }
 
 .crisis {
-  /* Shares the logo's row and wraps inside it on a narrow phone. */
+  /* Shares the logo's row; a phone gets the short wording. */
   flex: 1 1 0;
   min-width: 0;
   margin-left: auto;
   color: var(--ink-soft);
   font-size: var(--step--1);
   text-align: right;
+}
+
+.crisis .wide {
+  display: none;
 }
 
 .site-footer {
@@ -1181,6 +1185,10 @@ h2 {
 
   .crisis {
     font-size: var(--step-0);
+  }
+
+  .crisis .wide {
+    display: inline;
   }
 
   /* One row: the links sit between the logo and 988. */
