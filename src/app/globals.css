@@ -319,6 +319,27 @@ h2 {
   pointer-events: none;
 }
 
+/* The city box has a hint under it, so line the fields up by their labels. */
+.search-main {
+  align-items: flex-start;
+}
+
+.text-input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0 0.875rem;
+  border: 2px solid var(--field);
+  border-radius: 0.75rem;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
 .search .btn {
   flex: 1 1 100%;
 }
@@ -988,6 +1009,11 @@ h2 {
 
   .search .btn {
     flex: 0 0 auto;
+  }
+
+  /* The hint under the city box would push an inline button out of line. */
+  .search-main .btn {
+    flex: 1 1 100%;
   }
 
   .crisis {
