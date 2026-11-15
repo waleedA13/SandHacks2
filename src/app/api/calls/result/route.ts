@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { isUuid, recordCall } from "@/backend/queries";
+import { isUuid, recordCall, takeStartedCall } from "@/backend/queries";
 
 const TRI = ["yes", "no", "unknown"];
 // Hash both sides so the comparison is constant-time even when the lengths differ.
@@ -34,6 +34,12 @@ export async function POST(request: Request) {
           "body must be { listingId: uuid, takesPlan, acceptingNew: yes|no|unknown, summary?: string }",
       },
       { status: 400 },
+    );
+
+  if (!(await takeStartedCall(body.listingId)))
+    return Response.json(
+      { error: "no call in progress for this listing" },
+      { status: 409 },
     );
 
   const result = await recordCall(body);

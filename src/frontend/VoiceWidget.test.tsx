@@ -85,6 +85,8 @@ describe("VoiceWidget", () => {
     await waitFor(() => expect(sdk.startSession).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenCalledWith("/api/voice/token", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: '{"agent":"confirm","listingId":"l-1"}',
     });
     expect(sdk.startSession).toHaveBeenCalledWith({
       conversationToken: "tok_1",

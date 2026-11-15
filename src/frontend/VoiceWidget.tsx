@@ -97,16 +97,15 @@ function Conversation(props: Props) {
     setNote("");
     setLastLine("");
     try {
-      const res = await fetch(
-        "/api/voice/token",
-        confirm
-          ? { method: "POST" }
-          : {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ agent: "helper" }),
-            },
-      );
+      const res = await fetch("/api/voice/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          confirm
+            ? { agent: "confirm", listingId: confirm.listingId }
+            : { agent: "helper" },
+        ),
+      });
       if (!res.ok) throw new Error();
       const { token } = (await res.json()) as { token: string };
       conversation.startSession({
