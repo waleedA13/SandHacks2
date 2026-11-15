@@ -104,9 +104,10 @@ test("the detail page explains costs with only the posted price", async ({
     ),
   ).toBeVisible();
 
-  // No dollar amounts anywhere on the page except the therapist's own.
+  // No dollar amounts anywhere on the page except the therapist's own. They can appear
+  // more than once: the Sources section quotes the practice site's own "$175-$225".
   const main = await page.locator("main").innerText();
-  expect(main.match(/\$\d+/g)).toEqual(["$175", "$225"]);
+  expect(new Set(main.match(/\$\d+/g))).toEqual(new Set(["$175", "$225"]));
 });
 
 test("every detail page has the cost panel, with no price when none is posted", async ({
