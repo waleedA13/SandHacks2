@@ -86,7 +86,8 @@ export function FitFilters({
           label="Language"
           value={values.language ?? ""}
           options={[
-            { value: "", label: "Any language" },
+            // Every listing offers English; stored languages are only the extra ones.
+            { value: "", label: "English" },
             ...langs.map((l) => ({ value: l, label: languageLabel(l) })),
           ]}
         />
