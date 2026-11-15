@@ -16,7 +16,7 @@ function excerpt(text: string) {
 }
 
 // Evidence URLs come from scraped pages; only link plain web addresses.
-function isWebUrl(url: string) {
+export function isWebUrl(url: string) {
   try {
     const { protocol } = new URL(url);
     return protocol === "http:" || protocol === "https:";

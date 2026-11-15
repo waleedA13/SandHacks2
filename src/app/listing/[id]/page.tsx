@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CallPanel, LabelProvider, LiveBadge } from "@/frontend/CallPanel";
-import { FactRow } from "@/frontend/FactRow";
+import { FactRow, LicenseRow } from "@/frontend/FactRow";
 import { Header } from "@/frontend/Header";
 import { Icon } from "@/frontend/Icon";
 import { checkedDate, priceText, telHref } from "@/frontend/format";
 import { first } from "@/frontend/params";
-import { SourceList } from "@/frontend/SourceList";
+import { isWebUrl, SourceList } from "@/frontend/SourceList";
 import { getDetail } from "@/backend/queries";
 
 // Same as the home page: block until the data is ready so the page works without JavaScript.
@@ -37,6 +37,9 @@ export default async function ListingPage({
   const { listing, verdict, label, evidence, calls } = detail;
   const lastCall = calls.find((c) => c.status === "done") ?? null;
   const back = backHref(first(query.insurer), first(query.city));
+  const boardUrl = evidence.find(
+    (e) => e.source === "license_board" && isWebUrl(e.url),
+  )?.url;
   const price = priceText(
     verdict?.selfPayMin ?? null,
     verdict?.selfPayMax ?? null,
@@ -116,6 +119,11 @@ export default async function ListingPage({
                   <FactRow
                     question="Taking new patients?"
                     answer={verdict?.acceptingNew ?? "unknown"}
+                  />
+                  <LicenseRow
+                    status={verdict?.licenseStatus ?? "unchecked"}
+                    discipline={verdict?.licenseDiscipline ?? "unknown"}
+                    boardUrl={boardUrl}
                   />
                 </dl>
               </section>
