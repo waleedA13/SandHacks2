@@ -1,6 +1,7 @@
 import type { BookingPath, BookingSource, Call, Listing } from "@/shared/types";
 import { CallPanel, LastCall } from "./CallPanel";
 import { CallYourself } from "./CallYourself";
+import { isWebUrl } from "./SourceList";
 
 const SOURCE_NAMES: Record<BookingSource, string> = {
   zocdoc: "with Zocdoc",
@@ -37,7 +38,7 @@ export function BookingPanel({
         <LastCall call={lastCall} />
       )}
       {paths.map((path) => {
-        if (path === "book_online" && bookingUrl)
+        if (path === "book_online" && bookingUrl && isWebUrl(bookingUrl))
           return (
             <div key={path} id="book-online" className="path">
               <h3>Book online</h3>

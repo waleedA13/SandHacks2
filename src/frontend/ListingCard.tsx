@@ -3,6 +3,7 @@ import type { ListingSummary } from "@/shared/types";
 import { Icon } from "./Icon";
 import { checkedDate, priceText, telHref } from "./format";
 import { LabelBadge } from "./LabelBadge";
+import { isWebUrl } from "./SourceList";
 
 const DEAD_END = new Set([
   "Likely dead end",
@@ -80,7 +81,11 @@ export function ListingCard({
           // The first path is the main button; the others are smaller links.
           const cls =
             i > 0 ? "link" : `btn${DEAD_END.has(label) ? " btn-outline" : ""}`;
-          if (path === "book_online" && listing.bookingUrl)
+          if (
+            path === "book_online" &&
+            listing.bookingUrl &&
+            isWebUrl(listing.bookingUrl)
+          )
             return (
               <a
                 key={path}

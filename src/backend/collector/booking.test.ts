@@ -28,6 +28,11 @@ describe("findBooking", () => {
     });
   });
 
+  it("does not classify a look-alike host as a profile", () => {
+    const url = "https://evil.example/zocdoc.com/doctor/x";
+    expect(findBooking("zocdoc", url, page(""))).toBeNull();
+  });
+
   it("takes a Headway profile URL as the booking link", () => {
     const url = "https://headway.co/providers/jane-doe";
     expect(findBooking("headway", url, page(""))).toEqual({

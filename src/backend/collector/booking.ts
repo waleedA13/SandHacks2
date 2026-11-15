@@ -2,18 +2,27 @@ import type { BookingSource, EvidenceSource } from "@/shared/types";
 
 export type Booking = { url: string; source: BookingSource };
 
-const PROFILES: [RegExp, BookingSource][] = [
-  [/zocdoc\.com\/doctor\//, "zocdoc"],
-  [/headway\.co\/providers\//, "headway"],
-  [/helloalma\.com\/providers\//, "alma"],
-  [/rula\.com\/therapists\//, "rula"],
+const PROFILES: [RegExp, RegExp, BookingSource][] = [
+  [/(^|\.)zocdoc\.com$/, /^\/doctor\//, "zocdoc"],
+  [/(^|\.)headway\.co$/, /^\/providers\//, "headway"],
+  [/(^|\.)helloalma\.com$/, /^\/providers\//, "alma"],
+  [/(^|\.)rula\.com$/, /^\/therapists\//, "rula"],
 ];
 // SimplePractice clients book on clientsecure.me; TherapyNotes on therapyportal.com.
 const BOOKING_HOSTS =
   /(^|\.)(simplepractice\.com|clientsecure\.me|therapynotes\.com|therapyportal\.com|janeapp\.com|intakeq\.com|therapyappointment\.com)$/;
 
-const profileSource = (url: string) =>
-  PROFILES.find(([re]) => re.test(url))?.[1] ?? null;
+const profileSource = (url: string) => {
+  try {
+    const { hostname, pathname } = new URL(url);
+    return (
+      PROFILES.find(([h, p]) => h.test(hostname) && p.test(pathname))?.[2] ??
+      null
+    );
+  } catch {
+    return null;
+  }
+};
 
 /** A booking link on one page that already passed the identity check, or null. Stores the URL only; never opens it. */
 export function findBooking(
