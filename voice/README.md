@@ -260,7 +260,7 @@ It uses the same `ELEVENLABS_API_KEY` as the confirm agent.
 
 ### H4. Voice
 
-Pick a calm, clear voice. Set **TTS model family** to **Multilingual** (or Flash, if replies feel slow): English-only models cannot speak Spanish. Set speed a little below the default, for example 0.9, so callers can write numbers down.
+Pick a calm, clear voice. Set **TTS model family** to **Turbo**: it speaks Spanish and sounds natural, while Flash felt rushed in Spanish. English-only models cannot speak Spanish. Set speed a little below the default, about 0.85 to 0.9, so callers can write numbers down.
 
 ### H5. The `find_therapists` tool
 
