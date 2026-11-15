@@ -52,3 +52,12 @@ Page-driving notes for issue 03: plan options and "View … Results" are `<butto
 - **Errors come back as HTTP 200.** The real status is in the `x-brd-error` and `x-brd-status-code` response headers. `src/backend/collector/brightdata.ts` turns those into thrown errors.
 - **SERP parsed JSON:** add `brd_json=1` to the Google URL with `format: "raw"`. `format: "json"` returned HTML.
 - **A 200 from Web Unlocker can still be a bot-check page.** Check the page title before trusting it.
+
+## Evidence collector run (issue 04, GitHub #8), 2026-11-14
+
+Ran `src/backend/collector/evidence.ts --listing <id>` on the first 20 real Cigna San Diego listings (5 at a time), not `--all`, to cap spend.
+
+- **Requests: 187 Bright Data requests in total** (SERP + Web Unlocker, including debugging and re-runs after two matching fixes). The CLI prints the count per run. A full run averages about 6 requests per listing. Failed SERP requests are not billed (Bright Data SERP error catalog). Dollar cost not checked; see the Bright Data dashboard.
+- **Coverage: 7 of 20 listings (35%) have evidence**: Psychology Today 4, practice site 4, Zocdoc/Headway 0. Below the issue's 50% target.
+- **Why so low:** about half the listings are clinicians at telehealth companies or ABA groups (402 W Broadway, 501 W Broadway) with no page of their own. Most SERP links after the first two are `google.com/goto?url=<opaque token>` redirects that cannot be followed, so they are skipped. Psychology Today still shows its bot check on some fetches after one retry. SERP returns 502 on about 1 in 10 queries; a retry must wait 15 s (`failed_query_rejected`).
+- **Headway profiles list "San Diego, CA" in their menu links**, so the city test ignores `<header>`, `<nav>` and `<footer>` text. Before this fix, a New York nurse practitioner's Headway profile matched a San Diego listing with the same name.
