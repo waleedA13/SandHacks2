@@ -360,7 +360,8 @@ describe("POST /api/listings/[id]/report", () => {
       {
         "x-forwarded-for": "203.0.113.7",
         "user-agent": "TestAgent/1.0",
-        cookie: "session=abc",
+        // Not hex, so it can never turn up inside a random uuid in the stored row.
+        cookie: "session=reporter-cookie-zq",
       },
     );
     expect(res.status).toBe(200);
@@ -372,7 +373,13 @@ describe("POST /api/listings/[id]/report", () => {
       summary: "Reported by someone who called.",
     });
     const stored = JSON.stringify(rows);
-    for (const s of ["203.0.113.7", "TestAgent", "abc", "Pat", "555-0199"])
+    for (const s of [
+      "203.0.113.7",
+      "TestAgent",
+      "reporter-cookie-zq",
+      "Pat",
+      "555-0199",
+    ])
       expect(stored).not.toContain(s);
   });
 
