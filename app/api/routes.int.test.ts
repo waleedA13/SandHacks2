@@ -23,7 +23,9 @@ async function newListing() {
   return { id: row.id as string, insurer };
 }
 
-afterAll(() => sql`delete from listings where insurer like 'RouteCo %'`);
+afterAll(async () => {
+  await sql`delete from listings where insurer like 'RouteCo %'`;
+});
 
 const post = (body: unknown, secret: string | null = SECRET) =>
   callResult(

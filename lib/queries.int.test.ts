@@ -24,7 +24,9 @@ async function newListing(facts?: [string, string, string], webScore = 50) {
 }
 
 // Cascades to verdicts, evidence, calls and jobs, so db/seed.int.test.ts still counts 12.
-afterAll(() => sql`delete from listings where insurer like 'TestCo %'`);
+afterAll(async () => {
+  await sql`delete from listings where insurer like 'TestCo %'`;
+});
 
 const webScore = async (id: string) =>
   (await sql`select score from verdicts where listing_id = ${id}`)[0].score;
