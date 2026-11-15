@@ -30,7 +30,7 @@ export async function lookupLineType(phone: string): Promise<PhoneLineType> {
     };
     return TYPES[data.line_type_intelligence?.type ?? ""] ?? "unknown";
   } catch (e) {
-    console.warn(`line type lookup failed for ${phone}: ${e}`);
+    console.warn(`line type lookup failed: ${e}`);
     return "unknown";
   }
 }
