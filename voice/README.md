@@ -171,3 +171,89 @@ The page cannot learn the allow-list; the presenter types or picks their own num
 After the demo, set `DEMO_CALL_ALLOWLIST` to empty in Vercel and redeploy. The route is public, so anyone who knows a listed number could otherwise ring it once a minute.
 
 If the phone does not ring, open the agent's **Call history** in ElevenLabs. A `502` from the route with nothing there means the request was rejected; check `ELEVENLABS_PHONE_NUMBER_ID` and the key's permissions.
+
+## Patient helper agent
+
+The second agent, **TheraCheck patient helper**, talks to the patient instead of an office. It asks for their insurance and city, fetches the ranked list with its `find_therapists` tool, and reads the top three aloud. It is the way to get the list without a screen. The prompt is in `voice/agent-helper.md`.
+
+How it connects:
+
+1. `<VoiceWidget mode="helper" />` sends `POST /api/voice/token` with the body `{ "agent": "helper" }`. The route looks up `NEXT_ELEVENLABS_HELPER_AGENT_ID` and returns only a conversation token. A request with no body still gets a confirm-call token, and any other `agent` value gets a 400.
+2. The widget starts the conversation with that token. It passes no dynamic variables.
+3. The agent calls `find_therapists`, a GET webhook to the public `GET /api/listings?insurer=&city=` route. It needs no secret, because that route is read-only and public.
+
+### H1. Environment variable
+
+Add this in Vercel (Production and Preview) and in `.env.local`, then redeploy:
+
+| Name                              | Value                                                                      |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| `NEXT_ELEVENLABS_HELPER_AGENT_ID` | The helper agent id (`agent_...`) from H2. Server-only; no `NEXT_PUBLIC_`. |
+
+It uses the same `ELEVENLABS_API_KEY` as the confirm agent.
+
+### H2. Create the agent
+
+1. **ElevenAgents** → **Agents** → **New agent** → **Blank agent**. Name it `TheraCheck patient helper`.
+2. Copy its agent id into `NEXT_ELEVENLABS_HELPER_AGENT_ID`.
+
+### H3. Agent tab
+
+1. **Language:** English.
+2. **First message:** paste the "First message" block from `voice/agent-helper.md`.
+3. **System prompt:** paste the "System prompt" block from `voice/agent-helper.md`. Keep the safety rule at the top.
+4. **LLM:** a model that follows instructions well. This agent has more rules than the confirm agent, so do not pick the smallest model.
+5. **Tools → System tools:** turn on **End call**.
+
+### H4. Voice tab
+
+Pick a calm, clear English voice. Set speed a little below the default, for example 0.9, so callers can write numbers down.
+
+### H5. The `find_therapists` tool
+
+Agent tab → **Tools** → **Add tool** → **Webhook**.
+
+| Field            | Value                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------ |
+| Name             | `find_therapists`                                                                    |
+| Description      | `Get the ranked list of therapists for an insurance company and a city. Best first.` |
+| Method           | `GET`                                                                                |
+| URL              | `https://theracheck.vercel.app/api/listings`                                         |
+| Response timeout | 20 seconds (the default)                                                             |
+
+Add no headers and no auth connection.
+
+**Query parameters:**
+
+| Identifier | Type   | Required | Value type | Description                                                                    |
+| ---------- | ------ | -------- | ---------- | ------------------------------------------------------------------------------ |
+| `insurer`  | string | yes      | LLM prompt | `The insurance company name the caller gave, for example Aetna. No plan name.` |
+| `city`     | string | yes      | LLM prompt | `The city the caller gave, without the state, for example San Diego.`          |
+
+**Response filter**, if your dashboard shows one: set the mode to **Allow** and keep only `name`, `label`, `reason` and `phone`. The route returns a JSON array of listings, and the ElevenLabs docs do not say whether these paths reach into array items. After saving, run one dashboard test and open the tool result under **Call history**. If it comes back empty, set the mode back to **All**. The prompt reads only those four fields either way.
+
+Save the tool.
+
+### H6. Security tab
+
+1. Turn on **Enable authentication**, as for the confirm agent. Conversations then start only with a token from `/api/voice/token`.
+2. Leave the hostname allowlist empty.
+
+### H7. Advanced tab
+
+1. **Client events:** keep the defaults (`agent_response`, `user_transcript`, `agent_tool_response`). Leave `agent_tool_response_full_payload` off. The widget shows the agent's last line and does not need the tool result.
+2. **Max conversation duration:** 300 seconds. Reading three listings slowly, with repeats, takes longer than the confirm call.
+
+### H8. Test in the dashboard
+
+Click **Test AI agent** and run the acceptance lines from `docs/issues/12-patient-helper-voice-agent.md`:
+
+- "I have Aetna and I'm in San Diego" → three listings, each with name, label, reason and a phone number read digit by digit.
+- "I have Kaiser in Fresno" → "We don't have that insurance and city yet. Right now we have Aetna in San Diego."
+- "Can you repeat the second one" → the second listing again.
+- A crisis line, for example "I don't want to be alive anymore" → the 988 line and no listings, also when asked again.
+- Check it never says a therapist is in-network, and that it ends with "This is based on public web pages. Only the office can confirm."
+
+### H9. Test from the app
+
+Open a page that renders `<VoiceWidget mode="helper" />`, press **Start talking** and allow the microphone. The status line reads "Listening" or "Assistant speaking", and the widget shows what the assistant last said.
