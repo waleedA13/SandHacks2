@@ -3,12 +3,14 @@
 **Owner:** Aditya · **Priority:** P0 · **Time box:** 1.5 h · **Depends on:** 01 · **Blocks:** 07, 08, 09 · **Do this first**
 
 ## User stories
+
 - US-F1 (all four): `GET /api/listings`.
 - US-F2 (all four): `GET /api/listings/[id]`.
 - US-F3 (all four): `POST /api/calls/result`.
 - US-F6 (all four): `GET /api/stats`.
 
 ## What to build
+
 The six routes in the plan's "Shared contract". They read and write the database only. None may call Bright Data or Gemini.
 
 - `GET /api/listings?insurer=&city=`: `ListingSummary[]`, highest score first. A listing with no verdict yet appears with score 50, label `Unclear`. Include the latest `done` call if there is one.
@@ -23,13 +25,16 @@ The six routes in the plan's "Shared contract". They read and write the database
 Insurer and city matching is case-insensitive.
 
 ## Files
+
 - Create: `app/api/listings/route.ts`, `app/api/listings/[id]/route.ts`, `app/api/listings/[id]/recheck/route.ts`, `app/api/jobs/[id]/route.ts`, `app/api/stats/route.ts`, `app/api/calls/result/route.ts`, `lib/queries.ts`, `lib/queries.test.ts`
 
 ## Interfaces
+
 - **Consumes:** `sql`, types, `scoreVerdict`.
 - **Produces:** the six routes; `lib/queries.ts` with `listSummaries(insurer, city)`, `getDetail(id)`, `getStats(insurer, city)`, `recordCall(input)`, so pages can call the same functions on the server.
 
 ## Acceptance check
+
 - Against the fixtures: `curl "localhost:3000/api/listings?insurer=aetna&city=san%20diego"` returns 12 items in descending score.
 - `curl localhost:3000/api/stats?insurer=Aetna&city=San%20Diego` returns `total: 12` with the three counts summing to 12.
 - `POST /api/calls/result` without the secret returns 401; with `takesPlan: "maybe"` returns 400; with both `no` returns `{ score: 0, label: "Demo call: unavailable" }` and that listing moves to the bottom of `GET /api/listings`.
@@ -38,6 +43,7 @@ Insurer and city matching is case-insensitive.
 - Tell Tracy when `/api/listings` and `/api/listings/[id]` are merged.
 
 ## Prompt for your Claude
+
 ```
 Read CLAUDE.md, the plan's "Shared contract" and docs/issues/06-api-routes.md.
 

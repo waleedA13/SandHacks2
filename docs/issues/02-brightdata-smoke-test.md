@@ -3,9 +3,11 @@
 **Owner:** Waleed · **Priority:** P0 · **Time box:** 75 min, hard stop Sat 4:00 PM · **Depends on:** 01
 
 ## User stories
+
 US-F1-M, US-F1-R, US-F1-E, US-F1-D depend on a directory we can actually read.
 
 ## What to build
+
 A throwaway script that proves each Bright Data product works against our real targets, and a decision on which insurer the demo uses. Nothing was tested through Bright Data during research, so this is the riskiest hour of the project.
 
 Test in this order and record results in `docs/smoke-test.md`:
@@ -17,21 +19,26 @@ Test in this order and record results in `docs/smoke-test.md`:
 For each, record: worked or not, seconds taken, and what came back.
 
 ## Fallback if no insurer directory works by 4:00 PM
+
 Tell the team. Then open the chosen directory in a normal browser, copy 30 listings by hand into `db/demo-listings.csv`, and load those. Bright Data still does all the evidence scraping in issue 04. Say plainly in the pitch that the directory list was entered by hand.
 
 ## Files
+
 - Create: `collector/brightdata.ts`, `collector/smoke.ts`, `docs/smoke-test.md`
 
 ## Interfaces
+
 - **Produces:** `collector/brightdata.ts` exporting `unlock(url: string): Promise<string>` (page HTML), `serp(query: string): Promise<{ title: string; url: string }[]>`, `openBrowser(): Promise<Browser>` (Playwright browser connected to Bright Data). This is the only file that knows Bright Data's endpoints and zones.
 - **Produces:** the chosen insurer name, written at the top of `docs/smoke-test.md`.
 
 ## Acceptance check
+
 - `npx tsx collector/smoke.ts` prints a pass or fail line for each of the three products.
 - `docs/smoke-test.md` names the insurer, the working search steps, and the measured seconds per request.
 - The team has been told the result.
 
 ## Prompt for your Claude
+
 ```
 Read CLAUDE.md, the plan, and docs/issues/02-brightdata-smoke-test.md.
 Look up the current Bright Data docs for Browser API (connecting Playwright over CDP), Web Unlocker (API request format) and SERP API before writing anything; do not rely on memory for endpoints or parameters.

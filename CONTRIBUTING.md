@@ -21,7 +21,7 @@ Thanks for helping build TheraCheck. This guide keeps the team working fast in o
 ## Ground rules
 
 - `main` should always run. Don't push directly to it.
-- Never commit secrets. Put them in `.env` (git-ignored) and add the variable *name* to `.env.example`.
+- Never commit secrets. Put them in `.env` (git-ignored) and add the variable _name_ to `.env.example`.
 - Keep pull requests focused: one feature or fix per PR.
 - Add or update tests when you change behaviour.
 - Update `CHANGELOG.md` under **Unreleased** for user-facing changes.

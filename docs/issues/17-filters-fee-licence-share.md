@@ -5,6 +5,7 @@
 Start only after the Sat 9 PM checkpoint shows the core working. The four parts are independent; ship them in this order and stop when time runs out.
 
 ## User stories
+
 - **Share:** US-F10-M, US-F10-R, US-F10-E, US-F10-D.
 - **Filters:** US-F7-M, US-F7-R, US-F7-E, US-F7-D.
 - **Fee:** US-F8-M, US-F8-R, US-F8-E, US-F8-D.
@@ -13,6 +14,7 @@ Start only after the Sat 9 PM checkpoint shows the core working. The four parts 
 ## What to build
 
 **1. Send me my shortlist (results page).** A "Send me the top 3" button above the results. No account, no server, and nothing about the user is stored.
+
 - On phones it opens the device's own share sheet (Messages, WhatsApp, email) with the text below.
 - Where the browser has no share sheet, show two fallbacks: "Copy" and "Text it to me" (an `sms:` link with the text filled in).
 - A "Print" link, with a print style that shows only the list.
@@ -23,20 +25,24 @@ Start only after the Sat 9 PM checkpoint shows the core working. The four parts 
 **3. Self-pay price (card and detail page).** One line where a fee exists: "Their posted price: $150 a session" or "$80 to $160 a session". On the detail page add: "This is the therapist's own price if you pay yourself. It is not what your insurance charges." With no fee, show nothing on the card and "No price posted" on the detail page.
 
 **4. Licence (detail page).** One row in "What we found":
+
 - `active`: "California licence: active", linking to the board record in the sources list.
 - `inactive`: "California licence: not active", shown as a warning.
 - `not_found` or `unchecked`: "We could not match a licence record." Never word this as "unlicensed".
 - Discipline `yes`: add "The board lists a disciplinary action. See the board's record."
 
 ## Files
+
 - Create: `components/ShareShortlist.tsx`, `components/FitFilters.tsx`
 - Modify: `app/page.tsx`, `components/SearchForm.tsx`, `components/ListingCard.tsx`, `app/listing/[id]/page.tsx`, `components/FactRow.tsx`, `app/globals.css`
 
 ## Interfaces
+
 - **Consumes:** `listSummaries(insurer, city, filters)` and the new `ListingSummary` and detail fields from issue 16.
 - **Produces:** nothing other issues depend on.
 
 ## Acceptance check
+
 - On a real phone, "Send me the top 3" opens the share sheet and the message arrives with three names, phones and a working link.
 - On desktop Firefox the copy and text fallbacks appear, and copying is confirmed in words a screen reader announces.
 - With JavaScript off, the filters still work and the share button is replaced by a plain line showing the link.
@@ -46,6 +52,7 @@ Start only after the Sat 9 PM checkpoint shows the core working. The four parts 
 - Everything still fits at 320px.
 
 ## Prompt for your Claude
+
 ```
 Read CLAUDE.md, the plan's "Features and user stories" (F7 to F10), "Shared contract" and "Fixed vocabularies", and docs/issues/17-filters-fee-licence-share.md.
 

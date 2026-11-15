@@ -26,18 +26,19 @@
 
 ## Personas
 
-| ID | Persona | Situation | Device and needs |
-|---|---|---|---|
-| M | **Maya, 24, grad student** | First time looking for a therapist on her student plan; has already hit three dead numbers | Phone only, between classes, wants an answer in under a minute |
-| R | **Robert, 67, retiree** | Looking for a therapist after his wife's death; low vision, tires of phone trees | Older Android phone with large text, or just a voice conversation |
-| E | **Elena, 41, parent** | Finding care for her teenage son; more comfortable in Spanish | Phone, slow connection, wants plain language |
-| D | **Dana, 35, campus care navigator** | Helps dozens of students a month find in-network care | Laptop, wants a list she can trust and share, and a number that shows how bad the directory is |
+| ID  | Persona                             | Situation                                                                                  | Device and needs                                                                               |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| M   | **Maya, 24, grad student**          | First time looking for a therapist on her student plan; has already hit three dead numbers | Phone only, between classes, wants an answer in under a minute                                 |
+| R   | **Robert, 67, retiree**             | Looking for a therapist after his wife's death; low vision, tires of phone trees           | Older Android phone with large text, or just a voice conversation                              |
+| E   | **Elena, 41, parent**               | Finding care for her teenage son; more comfortable in Spanish                              | Phone, slow connection, wants plain language                                                   |
+| D   | **Dana, 35, campus care navigator** | Helps dozens of students a month find in-network care                                      | Laptop, wants a list she can trust and share, and a number that shows how bad the directory is |
 
 ## Features and user stories
 
 Priority: **P0** must ship, **P1** ship if on schedule at the Sat 9 PM checkpoint, **P2** stretch.
 
 ### F1. Ranked shortlist (P0)
+
 Pick an insurer and city; get listings ordered by score.
 
 - **US-F1-M:** As Maya, I want to pick my insurer and city and see the therapists most likely to answer first, so that my first call works.
@@ -46,6 +47,7 @@ Pick an insurer and city; get listings ordered by score.
 - **US-F1-D:** As Dana, I want the whole ranked list for a plan on one page, so that I can hand a student the top five.
 
 ### F2. Evidence and freshness (P0)
+
 Each listing shows why it got its score, links to sources, and when it was last checked.
 
 - **US-F2-M:** As Maya, I want one line saying why a listing is ranked low, so that I can skip it with confidence.
@@ -54,6 +56,7 @@ Each listing shows why it got its score, links to sources, and when it was last 
 - **US-F2-D:** As Dana, I want links to the source pages behind each result, so that I can verify before recommending.
 
 ### F3. Call to confirm (P0 in browser, P2 as a real phone call)
+
 A voice agent asks the office two questions: do you take this plan, and are you accepting new patients. The answer updates the ranking.
 
 - **US-F3-M:** As Maya, I want the app to make the call for me, so that I do not spend my break on hold.
@@ -62,6 +65,7 @@ A voice agent asks the office two questions: do you take this plan, and are you 
 - **US-F3-D:** As Dana, I want confirmed results marked differently from web-based guesses, so that I know which are certain.
 
 ### F4. Voice access (P1)
+
 Talk to an assistant instead of using the screen; it asks for insurer and city and reads the top matches.
 
 - **US-F4-M:** As Maya, I want to ask out loud while walking, so that I do not have to type.
@@ -70,6 +74,7 @@ Talk to an assistant instead of using the screen; it asks for insurer and city a
 - **US-F4-D:** As Dana, I want a voice option I can point students to, so that those who struggle with forms still get help.
 
 ### F5. Live re-check (P1)
+
 Ask for a fresh check of one listing; the page updates when it finishes.
 
 - **US-F5-M:** As Maya, I want to re-check the one therapist I like, so that I know today's status before calling.
@@ -78,6 +83,7 @@ Ask for a fresh check of one listing; the page updates when it finishes.
 - **US-F5-D:** As Dana, I want to refresh stale listings before a student appointment, so that my advice is current.
 
 ### F6. Directory accuracy score (P0)
+
 One number for the chosen insurer and city: how many listings look like dead ends.
 
 - **US-F6-M:** As Maya, I want to know it is the directory that is broken and not me, so that I do not give up.
@@ -86,6 +92,7 @@ One number for the chosen insurer and city: how many listings look like dead end
 - **US-F6-D:** As Dana, I want a figure I can quote to my department, so that I can argue for better coverage.
 
 ### F7. Fit filters (P1)
+
 Narrow the list by what the therapist treats, the languages they speak, and whether they offer telehealth.
 
 - **US-F7-M:** As Maya, I want to filter to therapists who treat anxiety and offer telehealth, so that I only see ones who fit my problem and schedule.
@@ -94,6 +101,7 @@ Narrow the list by what the therapist treats, the languages they speak, and whet
 - **US-F7-D:** As Dana, I want to combine filters and share the filtered link, so that each student gets a list that fits them.
 
 ### F8. Self-pay price (P1)
+
 Show the session fee a therapist publishes, where they publish one.
 
 - **US-F8-M:** As Maya, I want to see the posted fee, so that I know what I would pay if they turn out not to take my plan.
@@ -102,6 +110,7 @@ Show the session fee a therapist publishes, where they publish one.
 - **US-F8-D:** As Dana, I want to see which listings publish no fee, so that I can warn students to ask.
 
 ### F9. Licence check (P1)
+
 Show whether the California licensing board lists the therapist's licence as active.
 
 - **US-F9-M:** As Maya, I want to see that a therapist's licence is active, so that I can trust someone I found online.
@@ -110,6 +119,7 @@ Show whether the California licensing board lists the therapist's licence as act
 - **US-F9-D:** As Dana, I want a link to the board's own record, so that I can verify before recommending.
 
 ### F10. Send me my shortlist (P1)
+
 Share the top three results by text, messaging app or link, with no account and nothing stored about the user.
 
 - **US-F10-M:** As Maya, I want to text the top three to myself, so that I can call them after class.
@@ -123,13 +133,13 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 
 ### Tables (`db/schema.sql`)
 
-| Table | Columns |
-|---|---|
-| `listings` | `id` uuid pk, `insurer` text, `plan` text, `city` text, `state` text, `name` text, `credential` text null, `address` text null, `phone` text null, `npi` text null, `source_url` text, `scraped_at` timestamptz |
-| `evidence` | `id` uuid pk, `listing_id` uuid fk, `source` text (`psychology_today`, `practice_site`, `zocdoc`, `headway`, `license_board`), `url` text, `raw_text` text, `fetched_at` timestamptz |
+| Table      | Columns                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `listings` | `id` uuid pk, `insurer` text, `plan` text, `city` text, `state` text, `name` text, `credential` text null, `address` text null, `phone` text null, `npi` text null, `source_url` text, `scraped_at` timestamptz                                                                                                                                                 |
+| `evidence` | `id` uuid pk, `listing_id` uuid fk, `source` text (`psychology_today`, `practice_site`, `zocdoc`, `headway`, `license_board`), `url` text, `raw_text` text, `fetched_at` timestamptz                                                                                                                                                                            |
 | `verdicts` | `listing_id` uuid pk fk, `still_practising` tri, `lists_insurer` tri, `accepting_new` tri, `score` int, `reason` text, `checked_at` timestamptz, `specialties` text[], `languages` text[], `telehealth` tri, `self_pay_min` int null, `self_pay_max` int null, `license_status` text (`active`, `inactive`, `not_found`, `unchecked`), `license_discipline` tri |
-| `calls` | `id` uuid pk, `listing_id` uuid fk, `status` text (`in_progress`, `done`, `failed`), `takes_plan` tri null, `accepting_new` tri null, `summary` text null, `called_at` timestamptz |
-| `jobs` | `id` uuid pk, `listing_id` uuid fk, `kind` text (`recheck`), `status` text (`queued`, `running`, `done`, `failed`), `created_at` timestamptz, `finished_at` timestamptz null |
+| `calls`    | `id` uuid pk, `listing_id` uuid fk, `status` text (`in_progress`, `done`, `failed`), `takes_plan` tri null, `accepting_new` tri null, `summary` text null, `called_at` timestamptz                                                                                                                                                                              |
+| `jobs`     | `id` uuid pk, `listing_id` uuid fk, `kind` text (`recheck`), `status` text (`queued`, `running`, `done`, `failed`), `created_at` timestamptz, `finished_at` timestamptz null                                                                                                                                                                                    |
 
 `tri` is text limited to `yes`, `no`, `unknown`.
 
@@ -139,14 +149,14 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 
 ### API (Next.js routes)
 
-| Route | Returns |
-|---|---|
-| `GET /api/listings?insurer=&city=` | `ListingSummary[]`, highest score first. Optional filters: `specialty=`, `language=`, `telehealth=yes` |
-| `GET /api/listings/[id]` | `{ listing, verdict, evidence[], calls[] }` |
-| `GET /api/stats?insurer=&city=` | `{ total, likelyAvailable, unclear, likelyDeadEnd, deadEndPct }` |
-| `POST /api/listings/[id]/recheck` | `{ jobId }`; inserts a `queued` job |
-| `GET /api/jobs/[id]` | `{ status }` |
-| `POST /api/calls/result` | body `{ listingId, takesPlan, acceptingNew, summary }`; inserts a `done` call and changes nothing else; returns the listing's final `{ score, label }` |
+| Route                              | Returns                                                                                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/listings?insurer=&city=` | `ListingSummary[]`, highest score first. Optional filters: `specialty=`, `language=`, `telehealth=yes`                                                 |
+| `GET /api/listings/[id]`           | `{ listing, verdict, evidence[], calls[] }`                                                                                                            |
+| `GET /api/stats?insurer=&city=`    | `{ total, likelyAvailable, unclear, likelyDeadEnd, deadEndPct }`                                                                                       |
+| `POST /api/listings/[id]/recheck`  | `{ jobId }`; inserts a `queued` job                                                                                                                    |
+| `GET /api/jobs/[id]`               | `{ status }`                                                                                                                                           |
+| `POST /api/calls/result`           | body `{ listingId, takesPlan, acceptingNew, summary }`; inserts a `done` call and changes nothing else; returns the listing's final `{ score, label }` |
 
 ### Score and labels (`lib/score.ts`)
 
@@ -165,43 +175,43 @@ Everything below is fixed by issue 01. Changing it needs a message to the whole 
 
 ## File structure and owners
 
-| Path | Responsibility | Owner |
-|---|---|---|
-| `db/schema.sql`, `db/seed.sql` | Tables and 12 fixture listings with verdicts | Waleed |
-| `lib/db.ts`, `lib/types.ts`, `lib/score.ts`, `lib/score.test.ts` | Database client, shared types, scoring | Waleed (01), then shared |
-| `collector/brightdata.ts` | The only file that calls Bright Data | Waleed |
-| `collector/directory.ts`, `collector/evidence.ts`, `collector/worker.ts` | Scrape listings, scrape evidence, run queued jobs | Waleed |
-| `verifier/gemini.ts`, `verifier/verify.ts` | Evidence to three facts, score and reason | Aditya |
-| `app/api/**` | The six routes above | Aditya |
-| `voice/agent-confirm.md`, `voice/agent-helper.md`, `voice/README.md` | Agent prompts and setup notes | Aditya |
-| `components/VoiceWidget.tsx` | The only file that loads the ElevenLabs client | Aditya builds, Tracy places |
-| `app/page.tsx`, `app/listing/[id]/page.tsx`, `components/**`, `app/globals.css` | Pages and UI | Tracy |
-| `docs/demo-script.md` | 3-minute pitch and video shot list | All |
+| Path                                                                            | Responsibility                                    | Owner                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------- |
+| `db/schema.sql`, `db/seed.sql`                                                  | Tables and 12 fixture listings with verdicts      | Waleed                      |
+| `lib/db.ts`, `lib/types.ts`, `lib/score.ts`, `lib/score.test.ts`                | Database client, shared types, scoring            | Waleed (01), then shared    |
+| `collector/brightdata.ts`                                                       | The only file that calls Bright Data              | Waleed                      |
+| `collector/directory.ts`, `collector/evidence.ts`, `collector/worker.ts`        | Scrape listings, scrape evidence, run queued jobs | Waleed                      |
+| `verifier/gemini.ts`, `verifier/verify.ts`                                      | Evidence to three facts, score and reason         | Aditya                      |
+| `app/api/**`                                                                    | The six routes above                              | Aditya                      |
+| `voice/agent-confirm.md`, `voice/agent-helper.md`, `voice/README.md`            | Agent prompts and setup notes                     | Aditya                      |
+| `components/VoiceWidget.tsx`                                                    | The only file that loads the ElevenLabs client    | Aditya builds, Tracy places |
+| `app/page.tsx`, `app/listing/[id]/page.tsx`, `components/**`, `app/globals.css` | Pages and UI                                      | Tracy                       |
+| `docs/demo-script.md`                                                           | 3-minute pitch and video shot list                | All                         |
 
 Stay inside your own paths. If you need a change elsewhere, ask the owner.
 
 ## Issues
 
-| # | Issue | Owner | Priority | Stories | Depends on | Time box |
-|---|---|---|---|---|---|---|
-| 01 | Scaffold, database contract and fixtures | Waleed | P0 | all | none | 45 min |
-| 02 | Bright Data smoke test and insurer choice | Waleed | P0 | F1 | 01 | 75 min |
-| 03 | Directory collector | Waleed | P0 | F1, F6 | 02 | 2 h |
-| 04 | Evidence collector | Waleed | P0 | F2 | 02 | 2 h |
-| 05 | Verifier with Gemini | Aditya | P0 | F1, F2 | 01 | 2 h |
-| 06 | Read and write API routes | Aditya | P0 | F1, F2, F3, F6 | 01 | 1.5 h |
-| 07 | Confirm-call voice agent in the browser | Aditya | P0 | F3 | 06 | 2 h |
-| 08 | Search and ranked results page | Tracy | P0 | F1, F6 | 01 | 2.5 h |
-| 09 | Listing detail with evidence and call panel | Tracy | P0 | F2, F3 | 08, 07 | 2 h |
-| 10 | Accessibility and device pass | Tracy | P0 | F1-F6 for R and E | 08, 09 | 1.5 h |
-| 11 | Live re-check | Waleed, Tracy | P1 | F5 | 03, 04, 05, 09 | 1.5 h |
-| 12 | Patient helper voice agent | Aditya | P1 | F4 | 06, 07 | 1.5 h |
-| 13 | Real phone call through Twilio | Aditya | P2 | F3 | 07 | 1.5 h |
-| 14 | Spanish page text and voice | Tracy, Aditya | P2 | all for E | 10 | 1 h |
-| 15 | Demo data, pitch, video and Devpost | All | P0 | none | all P0 | 2 h |
-| 16 | Fit, fee and licence facts in the verifier and API | Aditya | P1 | F7, F8, F9 | 05, 06 | 1 h |
-| 17 | Filters, fee, licence and share on the pages | Tracy | P1 | F7, F8, F9, F10 | 08, 09, 16 | 2 h |
-| 18 | Licence evidence collector | Waleed | P1 | F9 | 02, 04 | 1.5 h |
+| #   | Issue                                              | Owner         | Priority | Stories           | Depends on     | Time box |
+| --- | -------------------------------------------------- | ------------- | -------- | ----------------- | -------------- | -------- |
+| 01  | Scaffold, database contract and fixtures           | Waleed        | P0       | all               | none           | 45 min   |
+| 02  | Bright Data smoke test and insurer choice          | Waleed        | P0       | F1                | 01             | 75 min   |
+| 03  | Directory collector                                | Waleed        | P0       | F1, F6            | 02             | 2 h      |
+| 04  | Evidence collector                                 | Waleed        | P0       | F2                | 02             | 2 h      |
+| 05  | Verifier with Gemini                               | Aditya        | P0       | F1, F2            | 01             | 2 h      |
+| 06  | Read and write API routes                          | Aditya        | P0       | F1, F2, F3, F6    | 01             | 1.5 h    |
+| 07  | Confirm-call voice agent in the browser            | Aditya        | P0       | F3                | 06             | 2 h      |
+| 08  | Search and ranked results page                     | Tracy         | P0       | F1, F6            | 01             | 2.5 h    |
+| 09  | Listing detail with evidence and call panel        | Tracy         | P0       | F2, F3            | 08, 07         | 2 h      |
+| 10  | Accessibility and device pass                      | Tracy         | P0       | F1-F6 for R and E | 08, 09         | 1.5 h    |
+| 11  | Live re-check                                      | Waleed, Tracy | P1       | F5                | 03, 04, 05, 09 | 1.5 h    |
+| 12  | Patient helper voice agent                         | Aditya        | P1       | F4                | 06, 07         | 1.5 h    |
+| 13  | Real phone call through Twilio                     | Aditya        | P2       | F3                | 07             | 1.5 h    |
+| 14  | Spanish page text and voice                        | Tracy, Aditya | P2       | all for E         | 10             | 1 h      |
+| 15  | Demo data, pitch, video and Devpost                | All           | P0       | none              | all P0         | 2 h      |
+| 16  | Fit, fee and licence facts in the verifier and API | Aditya        | P1       | F7, F8, F9        | 05, 06         | 1 h      |
+| 17  | Filters, fee, licence and share on the pages       | Tracy         | P1       | F7, F8, F9, F10   | 08, 09, 16     | 2 h      |
+| 18  | Licence evidence collector                         | Waleed        | P1       | F9                | 02, 04         | 1.5 h    |
 
 The columns for issues 16-18 are in the contract from the start, so issue 01 creates them and nobody changes the schema later. Until 16 and 18 run, those columns are empty and the pages hide the matching lines.
 
@@ -213,15 +223,15 @@ Issues 05, 06 and 08 start from the fixtures in issue 01, so nobody waits for re
 
 ## Schedule
 
-| When | Checkpoint |
-|---|---|
-| Sat 2:00-2:45 PM | Issue 01 merged. Everyone has accounts, keys and the app running locally. |
-| Sat 4:00 PM | Issue 02 decided: which insurer directory works. If none does, see the fallback in issue 02. |
-| Sat 6:00 PM | Vertical slice on fixtures: results page reads the API; the agent holds the two-question conversation in a browser. |
+| When                       | Checkpoint                                                                                                           |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Sat 2:00-2:45 PM           | Issue 01 merged. Everyone has accounts, keys and the app running locally.                                            |
+| Sat 4:00 PM                | Issue 02 decided: which insurer directory works. If none does, see the fallback in issue 02.                         |
+| Sat 6:00 PM                | Vertical slice on fixtures: results page reads the API; the agent holds the two-question conversation in a browser.  |
 | Sat 9:00 PM (space closes) | Real listings, evidence and verdicts in Neon. Call result changes a ranking on screen. Decide which P1 issues to do. |
-| Sun 7:00-9:30 AM | P1 work, accessibility pass, final demo data scrape. **Feature freeze 9:30 AM.** |
-| Sun 9:30-11:00 AM | Record the 3-minute video, write the Devpost answers. Initial submission by 11:00. |
-| Sun 12:00 PM | Final submission. Last commit before this. |
+| Sun 7:00-9:30 AM           | P1 work, accessibility pass, final demo data scrape. **Feature freeze 9:30 AM.**                                     |
+| Sun 9:30-11:00 AM          | Record the 3-minute video, write the Devpost answers. Initial submission by 11:00.                                   |
+| Sun 12:00 PM               | Final submission. Last commit before this.                                                                           |
 
 ## Review Focus
 

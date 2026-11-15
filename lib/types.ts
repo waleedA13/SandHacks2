@@ -8,11 +8,7 @@ export type Label =
   | "Demo call: unavailable";
 
 export type EvidenceSource =
-  | "psychology_today"
-  | "practice_site"
-  | "zocdoc"
-  | "headway"
-  | "license_board";
+  "psychology_today" | "practice_site" | "zocdoc" | "headway" | "license_board";
 
 export type LicenseStatus = "active" | "inactive" | "not_found" | "unchecked";
 
