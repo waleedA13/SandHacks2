@@ -9,6 +9,7 @@ import { fitFromParams, withFit, type FitValues } from "@/frontend/FitFilters";
 import { ListingNotFound } from "@/frontend/ListingNotFound";
 import { checkedDate, priceText, saysNoInfo } from "@/frontend/format";
 import { first } from "@/frontend/params";
+import { RecheckButton } from "@/frontend/RecheckButton";
 import { isWebUrl, SourceList } from "@/frontend/SourceList";
 import { getDetail } from "@/backend/queries";
 
@@ -26,6 +27,11 @@ export async function generateMetadata({
 }
 
 const NO_INFO = "We found no other information about this listing.";
+
+// The page is rendered per request (it reads searchParams), so "now" is this visit.
+function lastChecked(iso: string) {
+  return Date.now() - Date.parse(iso) < 60_000 ? "just now" : checkedDate(iso);
+}
 
 function backHref(insurer?: string, city?: string, fit: FitValues = {}) {
   const q = new URLSearchParams();
@@ -96,12 +102,16 @@ export default async function ListingPage({
               <>
                 <p className="reason">{verdict.reason}</p>
                 <p className="muted">
-                  Last checked {checkedDate(verdict.checkedAt)}
+                  Last checked {lastChecked(verdict.checkedAt)}
                 </p>
               </>
             ) : (
               <p className="reason">Not checked yet</p>
             )}
+            <RecheckButton
+              listingId={listing.id}
+              checkedAt={verdict?.checkedAt ?? null}
+            />
           </section>
 
           {evidence.length > 0 ? (
