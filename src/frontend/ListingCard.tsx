@@ -4,7 +4,14 @@ import { Icon } from "./Icon";
 import { checkedDate, priceText, telHref } from "./format";
 import { LabelBadge } from "./LabelBadge";
 
-const DEAD_END = new Set(["Likely dead end", "Demo call: unavailable"]);
+const DEAD_END = new Set([
+  "Likely dead end",
+  "Demo call: unavailable",
+  "Caller reported: unavailable",
+]);
+
+// recordReport's summary for a caller report: that call is a person's, not a demo call.
+const CALLER_REPORT = "Reported by someone who called.";
 
 export function ListingCard({
   listing,
@@ -20,7 +27,7 @@ export function ListingCard({
   // The results page's query string, so "Back to results" can return to it.
   query: string;
 }) {
-  const { id, name, credential, phone, label } = listing;
+  const { id, name, credential, phone, label, paths } = listing;
   const headingId = `listing-${id}`;
   const price = priceText(listing.selfPayMin, listing.selfPayMax);
   return (
@@ -32,7 +39,7 @@ export function ListingCard({
       </h3>
       <p>{listing.reason}</p>
       {price && <p className="price">Their posted price: {price}</p>}
-      {listing.call && (
+      {listing.call && !listing.call.summary?.startsWith(CALLER_REPORT) && (
         <p className="demo">
           <Icon name="info" />
           <span>Demo call. No real office was contacted.</span>
@@ -50,18 +57,51 @@ export function ListingCard({
         </ol>
       </details>
       <div className="actions">
-        {phone ? (
-          <a
-            className={`btn call${DEAD_END.has(label) ? " btn-outline" : ""}`}
-            href={telHref(phone)}
-            aria-label={`Call ${name} at ${phone}`}
-          >
-            <Icon name="phone" size={18} />
-            {phone}
-          </a>
-        ) : (
-          <span className="muted no-phone">No phone number listed</span>
+        {paths.length === 0 && (
+          <span className="muted no-phone">No way to contact listed.</span>
         )}
+        {paths.map((path, i) => {
+          // The first path is the main button; the others are smaller links.
+          const cls =
+            i > 0 ? "link" : `btn${DEAD_END.has(label) ? " btn-outline" : ""}`;
+          if (path === "book_online" && listing.bookingUrl)
+            return (
+              <a
+                key={path}
+                className={cls}
+                href={listing.bookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Book online
+                <span className="sr-only">
+                  {" "}
+                  with {name} (opens in a new tab)
+                </span>
+              </a>
+            );
+          if (path === "agent_check")
+            return (
+              <Link
+                key={path}
+                className={cls}
+                href={`/listing/${id}?${query}#assistant`}
+                prefetch={false}
+              >
+                Ask the assistant to call
+                <span className="sr-only"> {name}</span>
+              </Link>
+            );
+          if (path === "call_yourself" && phone)
+            return (
+              <a key={path} className={cls} href={telHref(phone)}>
+                {i === 0 && <Icon name="phone" size={18} />}
+                Call {phone}
+                <span className="sr-only">, {name}</span>
+              </a>
+            );
+          return null;
+        })}
         {/* No prefetch: 12 cards would each load a detail page (5 queries each). */}
         <Link
           className="link"

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-const WITH_CALL = "/listing/00000000-0000-4000-8000-000000000004";
+// A landline listing: only landlines offer the assistant call panel (mobiles never do, #48).
+const WITH_CALL = "/listing/00000000-0000-4000-8000-000000000002";
 
 test("the first Tab reaches a skip link that jumps to the main content", async ({
   page,

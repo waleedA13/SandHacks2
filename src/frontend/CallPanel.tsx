@@ -34,6 +34,32 @@ export function LiveBadge({ label }: { label: Label }) {
   );
 }
 
+// Sets the badge at once after a call or a report; router.refresh() then brings the server's copy.
+export function useSetLabel() {
+  return (use(LabelState) ?? [null, () => {}])[1];
+}
+
+export function LastCall({
+  call,
+}: {
+  call: Pick<Call, "summary" | "calledAt">;
+}) {
+  return (
+    <div className="last-call">
+      <p>
+        Demo call on {checkedDate(call.calledAt)}
+        {call.summary
+          ? `: ${call.summary.replace(/^Demo call:\s*/i, "")}`
+          : "."}
+      </p>
+      <p className="demo">
+        <Icon name="info" />
+        <span>No real office was contacted.</span>
+      </p>
+    </div>
+  );
+}
+
 export function CallPanel({
   listingId,
   name,
@@ -50,25 +76,12 @@ export function CallPanel({
   paths?: BookingPath[];
 }) {
   const router = useRouter();
-  const [, setFresh] = use(LabelState) ?? [null, () => {}];
+  const setFresh = useSetLabel();
 
   return (
     <div className="call-panel">
       <p>Our assistant will ask the office two questions for you.</p>
-      {lastCall && (
-        <div className="last-call">
-          <p>
-            Demo call on {checkedDate(lastCall.calledAt)}
-            {lastCall.summary
-              ? `: ${lastCall.summary.replace(/^Demo call:\s*/i, "")}`
-              : "."}
-          </p>
-          <p className="demo">
-            <Icon name="info" />
-            <span>No real office was contacted.</span>
-          </p>
-        </div>
-      )}
+      {lastCall && <LastCall call={lastCall} />}
       {/* Without JavaScript the call buttons do nothing, so hide them and say why. */}
       <noscript>
         <style>{".voice { display: none; }"}</style>
