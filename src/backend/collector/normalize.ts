@@ -41,3 +41,12 @@ export function normalizeName(raw: string): string {
     .filter((w) => w && !CREDENTIALS.has(w))
     .join(" ");
 }
+
+/** One listing's identity, so a re-run updates instead of duplicating. City is part of it: telehealth groups list the same clinician at an office in each city. */
+export const listingKey = (
+  insurer: string,
+  city: string,
+  name: string,
+  phone: string | null,
+) =>
+  `${insurer}|${city}|${normalizeName(name)}|${phone ? normalizePhone(phone) : ""}`;

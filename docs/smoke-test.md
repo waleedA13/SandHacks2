@@ -21,7 +21,7 @@ Run: `npx tsx --env-file=.env.local src/backend/collector/smoke.ts [browser|unlo
 4. **Continue as guest** → **Skip** (the "primarily treats" question).
 5. **View 8000 Results** under Licensed Therapists → **Continue** → **Open Access Plus, Open Access Plus Tiered**.
 
-**Shortcut:** the final results URL opens directly in about 16 seconds, skipping all the clicks. It is `CIGNA_RESULTS` in `src/backend/collector/smoke.ts`. Other plans swap `medicalProductCode`/`medicalEcnCode` in that URL.
+**Shortcut:** the final results URL opens directly in about 16 seconds, skipping all the clicks. It is `CIGNA_RESULTS` in `src/backend/collector/smoke.ts`. Other plans swap `medicalProductCode`/`medicalEcnCode` in that URL. Other cities swap the place fields (city, ZIP, latitude, longitude, county); `src/backend/collector/cigna.ts` builds the URL for all six.
 
 **Anthem steps, for the record.** `https://findcare.anthem.com/` (wait about 15 s for it to render) → **Basic search as a guest** → plan type **Medical Plan or Network** → state **California** → **Medical (Employer-Sponsored)** → plan **Advantage PPO** → **Continue** → **Update Location** `92101` → **Behavioral Health**. The dropdowns are type-ahead fields, not `<select>`s. Anthem also links a [machine-readable provider directory](https://www22.anthem.com/cms-data-index.json/index.html), a possible no-scraping source not tested here.
 
@@ -110,3 +110,14 @@ The Medical and Osteopathic Board files are not used, because no listing is an M
 | Angel Esparza, LCSW, Los Angeles    | Name and city           | A name search returns exactly 1 licensee: LCSW 108482, renewed & current, expires 2028-06-30, South Gate |
 
 Notes: the board's detail page for 79279 gives an issuance date of 2017-09-07, while the file's "Original Issue Date" is 2012-08-20, so the two fields measure different things. Record pages live at `/details/<board code>/<type>/<number>/<hash>`, and we can't build the hash ourselves, so the evidence still links to the search page.
+
+## Six-city run (issue 03, GitHub #7), 2026-11-15
+
+Ran the directory collector for all six cities with `--limit 50`, then `evidence.ts --all` and `npm run verify -- --all`.
+
+- **Listings: 50 per city, 300 in total**, every one with a name, `source_url` and phone. A second pass over all six cities inserted nothing.
+- **Telehealth groups list one clinician in several cities**, each with a local office. With insurer + name + phone as the identity, each city's run took over the previous city's rows (San Diego fell from 50 to 40). The identity is now insurer + city + name + phone.
+- **Results URLs for the five new cities use ZIP-centre latitude and longitude**, not values recorded from the site. Every city returned listings from the right area.
+- **About 1 in 3 directory runs timed out in Bright Data on the first try** (results page over 120 s, or `browser_in_use`). A plain rerun worked every time.
+- **Evidence: 104 of 300 listings (35%) have evidence**, from 1,732 Bright Data requests (about 6 per listing, as in the San Diego trial). Licence evidence from #22 was being added at the same time.
+- **Verifier: the Gemini free tier allows 20 requests per day** for `gemini-3.6-flash`, too few for a full run; it took a paid key. All 312 listings verified: 56 likely real (70+), 2 likely ghost (under 40), the rest Unclear.

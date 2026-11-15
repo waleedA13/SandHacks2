@@ -5,24 +5,9 @@ import type { Page, Response } from "@playwright/test";
 import { sql } from "@/backend/db/client";
 import type { Listing } from "@/shared/types";
 import { openBrowser } from "./brightdata";
-import { normalizeName, normalizePhone } from "./normalize";
+import { PLACES, cignaResultsUrl } from "./cigna";
+import { listingKey } from "./normalize";
 import { lookupNpi } from "./npi";
-
-const CITY_BY_ZIP: Record<string, string> = {
-  "92101": "San Diego",
-  "90012": "Los Angeles",
-  "94102": "San Francisco",
-  "95113": "San Jose",
-  "95814": "Sacramento",
-  "93721": "Fresno",
-};
-
-// Results URLs found by clicking through the site (docs/smoke-test.md). Other ZIPs need
-// the same click-through once to learn the latitude, longitude and county the site uses.
-const RESULTS_URL: Record<string, string> = {
-  "92101":
-    "https://hcpdirectory.cigna.com/web/public/consumer/directory/cbh-providers?city=San%20Diego&zipCode=92101&stateCode=CA&country=US&formattedAddress=San%20Diego,%20CA%2092101&latitude=32.72162107&longitude=-117.1611869&searchLocation=San%20Diego,%20CA%2092101&county=San%20diego&numberOfCounties=1&providerGroupCode=B&clinicalSpecialtyCode1=DD,TO,TH,AA,AI,AF,AM,AB,AG,AT,AR,BP,BF,BD,BR,CD,CE,DL,DB,DS,DV,ED,EC,CC,FB,FY,FI,FR,GA,GI,AX,DR,GF,GT,HV,LD,MC,ML,MO,MI,NT,OC,PM,PA,PH,MH,PT,MJ,MM,PS,PD,SI,SD,SO,GL,TM,WI&specialtyCode=BN,CN,PJ,SW&categoryId=15801&title=Licensed%20Therapists&providerGroupCodes=B&searchCategoryType=doctor-type&searchCategoryCode=HSC02&searchTerm=Behavioral%20Health%20Counselor&consumerCode=HDC001&behavioralProductCode=MHSR&behavioralNetworkCode=6&behavioralEcnCode=MHSR6&medicalProductCode=OAP&medicalEcnCode=OA001",
-};
 
 const PLAN = "Open Access Plus";
 const STATE = "CA";
@@ -92,9 +77,10 @@ async function scrape(
         if (found.length >= limit) return found;
       }
       console.log(`page done, ${found.length} listings so far`);
-      providers = await providersFrom(page, () =>
-        page.getByRole("button", { name: "Next page" }).click(),
-      );
+      const next = page.getByRole("button", { name: "Next page" });
+      // On the last page the button is missing or disabled, and clicking it would hang.
+      if (!(await next.count()) || (await next.first().isDisabled())) break;
+      providers = await providersFrom(page, () => next.first().click());
     }
     return found;
   } finally {
@@ -133,9 +119,6 @@ function toListing(
   };
 }
 
-const identity = (insurer: string, name: string, phone: string | null) =>
-  `${insurer}|${normalizeName(name)}|${phone ? normalizePhone(phone) : ""}`;
-
 async function main() {
   const { values } = parseArgs({
     options: {
@@ -149,33 +132,30 @@ async function main() {
   const limit = Number(values.limit);
   if (insurer !== "Cigna")
     throw new Error("Only --insurer Cigna has recorded search steps");
-  const city = CITY_BY_ZIP[zip];
+  const city = PLACES[zip]?.city;
   if (!city) throw new Error(`ZIP ${zip} is not one of the six target cities`);
-  const url = RESULTS_URL[zip];
-  if (!url)
-    throw new Error(
-      `No Cigna results URL recorded for ${zip} yet; see docs/smoke-test.md`,
-    );
 
-  const scraped = await scrape(url, limit);
+  const scraped = await scrape(cignaResultsUrl(zip), limit);
   console.log(`scraped ${scraped.length} listings from ${insurer}`);
 
   const existing = new Map<string, string>();
   const rows = await sql`
-    select id, name, phone from listings
+    select id, city, name, phone from listings
     where insurer = ${insurer} and source_url not like 'https://example.com/%'`;
-  for (const r of rows) existing.set(identity(insurer, r.name, r.phone), r.id);
+  for (const r of rows)
+    existing.set(listingKey(insurer, r.city, r.name, r.phone), r.id);
 
   for (const { provider, sourceUrl } of scraped) {
     const l = toListing(provider, sourceUrl, insurer, city);
     if (provider.firstName && provider.lastName)
+      // The office's own city (La Jolla, Chula Vista…), not the search city, matches the registry.
       l.npi = await lookupNpi(
         provider.firstName,
         provider.lastName,
-        city,
+        provider.locations?.[0]?.city ?? city,
         STATE,
       );
-    const key = identity(insurer, l.name, l.phone);
+    const key = listingKey(insurer, city, l.name, l.phone);
     const id = existing.get(key);
     if (id) {
       await sql`

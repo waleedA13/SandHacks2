@@ -26,7 +26,7 @@ Store the city name from the table above, not whatever the directory prints, so 
 
 - Capture name, credential, office address, office phone, and the URL the listing came from.
 - Look up each person in the NPI Registry API by name, city and state. Store the NPI only when exactly one result matches; otherwise leave it null.
-- Running it twice must not create duplicates: treat insurer + name + phone as the identity.
+- Running it twice must not create duplicates: treat insurer + city + name + phone as the identity. (City was added during the six-city run: telehealth groups list the same clinician at an office in several cities, and without it each city's run took over the previous city's rows.)
 
 ## Files
 
