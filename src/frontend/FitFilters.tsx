@@ -1,4 +1,3 @@
-import { Icon } from "./Icon";
 import { first } from "./params";
 import { Select } from "./Select";
 
@@ -45,65 +44,60 @@ export function withFit(q: URLSearchParams, fit: FitValues) {
   return q;
 }
 
-// Plain controls inside the search form, so filters live in the URL and work without JavaScript.
-// Folded into a native <details> so the results come first; open when a filter is set.
-export function FitFilters({
+// Plain controls inside the one search form, so filters live in the URL and work without JavaScript.
+export function FitFields({
   values,
   languages,
 }: {
   values: FitValues;
   languages: string[];
 }) {
-  const active = Boolean(
-    values.specialty || values.language || values.telehealth,
-  );
   // Keep a language from the URL selectable even if no listing here has it.
   const langs = [...new Set([...languages, values.language ?? ""])].filter(
     Boolean,
   );
   return (
-    <details className="narrow" open={active}>
-      <summary>
-        <span>Narrow the list</span>
-        <Icon name="chevron" size={18} />
-      </summary>
-      <fieldset className="search filters">
-        <legend className="sr-only">Narrow the list</legend>
-        <Select
-          id="specialty"
-          label="What do you need help with?"
-          value={values.specialty ?? ""}
-          options={[
-            { value: "", label: "Anything" },
-            ...Object.entries(SPECIALTIES).map(([value, label]) => ({
-              value,
-              label,
-            })),
-          ]}
+    <>
+      <Select
+        id="specialty"
+        label="What do you need help with?"
+        value={values.specialty ?? ""}
+        options={[
+          { value: "", label: "Anything" },
+          ...Object.entries(SPECIALTIES).map(([value, label]) => ({
+            value,
+            label,
+          })),
+        ]}
+      />
+      <Select
+        id="language"
+        label="Language"
+        value={values.language ?? ""}
+        options={[
+          // Every listing offers English; stored languages are only the extra ones.
+          { value: "", label: "English" },
+          ...langs.map((l) => ({ value: l, label: languageLabel(l) })),
+        ]}
+      />
+      <label className="check">
+        <input
+          type="checkbox"
+          name="telehealth"
+          value="yes"
+          defaultChecked={values.telehealth === "yes"}
         />
-        <Select
-          id="language"
-          label="Language"
-          value={values.language ?? ""}
-          options={[
-            // Every listing offers English; stored languages are only the extra ones.
-            { value: "", label: "English" },
-            ...langs.map((l) => ({ value: l, label: languageLabel(l) })),
-          ]}
-        />
-        <label className="check">
-          <input
-            type="checkbox"
-            name="telehealth"
-            value="yes"
-            defaultChecked={values.telehealth === "yes"}
-          />
-          Video or phone sessions
-        </label>
-        <button className="btn" type="submit">
-          Show therapists
-        </button>
-      </fieldset>
-    </details>
+        Video or phone sessions
+      </label>
+    </>
   );
+}
+
+// The filters that are set, as short words for the search summary.
+export function fitSummary(values: FitValues): string[] {
+  return [
+    values.specialty && SPECIALTIES[values.specialty],
+    values.language && languageLabel(values.language),
+    values.telehealth === "yes" && "Video or phone",
+  ].filter((x): x is string => Boolean(x));
 }

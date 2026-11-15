@@ -66,7 +66,7 @@ test.describe("with JavaScript off", () => {
     await page.goto(SD);
     const filters = page.getByLabel("What do you need help with?");
     await expect(filters).toBeHidden();
-    await page.locator(".narrow summary").click();
+    await page.locator(".search-pill summary").click();
     await expect(filters).toBeVisible();
   });
 });
