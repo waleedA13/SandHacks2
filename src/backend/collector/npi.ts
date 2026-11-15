@@ -1,7 +1,21 @@
 const API = "https://npiregistry.cms.hhs.gov/api/";
 
-/** The NPI when the public registry has exactly one match, else null. */
+/** The NPI when the public registry has exactly one match, else null (also when the registry fails, so one hiccup doesn't lose a scrape). */
 export async function lookupNpi(
+  firstName: string,
+  lastName: string,
+  city: string,
+  state: string,
+): Promise<string | null> {
+  try {
+    return await query(firstName, lastName, city, state);
+  } catch (e) {
+    console.warn(`NPI lookup failed for ${firstName} ${lastName}: ${e}`);
+    return null;
+  }
+}
+
+async function query(
   firstName: string,
   lastName: string,
   city: string,
