@@ -28,11 +28,13 @@ function finalScore(r: Row): { score: number; label: Label } {
     stillPractising: tri(r.still_practising),
     listsInsurer: tri(r.lists_insurer),
     acceptingNew: tri(r.v_accepting_new),
+    seesSelfPay: tri(r.sees_self_pay),
   };
   return r.called_at
     ? scoreVerdict(facts, {
         takesPlan: tri(r.takes_plan),
         acceptingNew: tri(r.c_accepting_new),
+        source: r.c_source,
       })
     : scoreVerdict(facts);
 }
@@ -59,11 +61,11 @@ function summaryRows(
            v.still_practising, v.lists_insurer, v.accepting_new as v_accepting_new,
            v.reason, v.checked_at, v.specialties, v.languages, v.telehealth,
            v.self_pay_min, v.self_pay_max, v.license_status,
-           c.takes_plan, c.accepting_new as c_accepting_new, c.summary, c.called_at
+           c.takes_plan, c.accepting_new as c_accepting_new, c.summary, c.called_at, c.source as c_source
     from listings l
     left join verdicts v on v.listing_id = l.id
     left join lateral (
-      select takes_plan, accepting_new, summary, called_at from calls
+      select takes_plan, accepting_new, summary, called_at, source from calls
       where listing_id = l.id and status = 'done'
       order by called_at desc limit 1
     ) c on true
@@ -112,7 +114,8 @@ function toSummary(r: Row): ListingSummary {
   };
 }
 
-const isCall = (s: ListingSummary) => s.label.startsWith("Demo call");
+const isCall = (s: ListingSummary) =>
+  s.label.startsWith("Demo call") || s.label.startsWith("Caller reported");
 
 export async function listSummaries(
   insurer: string,
