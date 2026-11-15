@@ -11,7 +11,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: "unit",
-          include: ["**/*.test.ts"],
+          include: ["**/*.test.{ts,tsx}"],
           exclude: ["**/*.int.test.ts", "e2e/**", "node_modules/**"],
         },
       },
