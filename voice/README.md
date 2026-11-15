@@ -99,3 +99,75 @@ You need issue #10's `/api/calls/result` deployed, the env variables set, and a 
 2. The status line reads "Listening" or "Assistant speaking". After the save it reads `Saved. Demo call: ...`.
 
 For a local run the tool still needs a public URL, because ElevenLabs calls the webhook from its servers. Point the tool URL at a tunnel to `localhost:3000` (for example `ngrok http 3000`) while testing, note the tunnel in the PR, and set the URL back to the Vercel domain afterwards.
+
+## Real phone calls (Twilio)
+
+The same confirm agent can ring a real phone instead of talking in the browser. `POST /api/calls/start` asks ElevenLabs to place an outbound call through the Twilio number imported into ElevenLabs. On stage it rings a teammate's phone, and the teammate plays the receptionist.
+
+**It only ever dials a number on `DEMO_CALL_ALLOWLIST`.** Any other number, including the listing's own office phone, gets a `403` and no call. The route never reads the listing's phone. No real office is called during the hackathon.
+
+### Already done
+
+- A Twilio number is bought, the account is upgraded, and the number is imported into ElevenLabs. Test calls from the ElevenLabs dashboard work.
+- Voicemail detection is on for the agent.
+
+### Environment variables
+
+Add these in Vercel (Production and Preview) next to the ones in step 1, then redeploy:
+
+| Name                         | Value                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `ELEVENLABS_PHONE_NUMBER_ID` | The imported number's id (`phnum_...`), from **ElevenAgents** → **Phone numbers**. Server-only.         |
+| `DEMO_CALL_ALLOWLIST`        | Teammates' phones as E.164, comma-separated, no spaces: `+16195550123,+16195550188`. Empty refuses all. |
+
+`ELEVENLABS_API_KEY` and `NEXT_ELEVENLABS_AGENT_ID` from step 1 are reused. The key needs ElevenAgents write access to place calls.
+
+### The route
+
+`POST /api/calls/start` with JSON `{ "listingId": "<uuid>", "toNumber": "+16195550123" }`:
+
+| Status | Meaning                                                              |
+| ------ | -------------------------------------------------------------------- |
+| `200`  | `{ ok: true, callSid, conversationId }`. The phone is ringing.       |
+| `400`  | The body is malformed or `listingId` is not a UUID.                  |
+| `403`  | `toNumber` is not on the allow-list.                                 |
+| `404`  | No listing with that id.                                             |
+| `429`  | Another call started less than 60 seconds ago. Wait and press again. |
+| `500`  | An env variable is missing.                                          |
+| `502`  | ElevenLabs refused the call. Look at the agent's **Call history**.   |
+
+The route strips spaces, dashes, dots and parentheses from `toNumber`, then requires an exact match with one allow-list entry. `+1 (619) 555-0123` matches `+16195550123`; a number one digit off does not.
+
+The agent gets the same dynamic variables as the browser call: `listing_id`, `therapist_name` and `insurer`. At the end it saves the answers through the same `save_call_result` tool, so the listing's badge updates the same way.
+
+To stop a double press or a loop from ringing a phone over and over and spending money, the route allows one outbound call per 60 seconds for the whole app. Each started call is stored as an `in_progress` row in `calls`; the result the agent saves is a separate `done` row. A call ElevenLabs refuses is marked `failed` and frees the slot at once.
+
+From a client component (the "Call a phone instead" option in `components/CallPanel.tsx`):
+
+```ts
+const res = await fetch("/api/calls/start", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ listingId, toNumber }),
+});
+// 403: not on the allow-list. 429: wait a minute. Anything else not ok: the call did not start.
+```
+
+The page cannot learn the allow-list; the presenter types or picks their own number.
+
+### Test with a teammate's phone
+
+1. Put the teammate's number in `DEMO_CALL_ALLOWLIST` in Vercel and redeploy.
+2. Check the refusal first. It places no call:
+   ```bash
+   curl -i -X POST https://<your-vercel-domain>/api/calls/start -H "Content-Type: application/json" -d '{"listingId":"<id>","toNumber":"+15555550100"}'
+   ```
+   Expect `403`.
+3. Send the same request with the teammate's number. Their phone rings within a few seconds.
+4. The first thing the agent says is that it is an automated assistant. The teammate answers the two questions as the receptionist.
+5. After the call, reload the listing. Its badge reads `Demo call: ...`. Under **Call history** the conversation shows `save_call_result` returning `200`.
+6. Save the recording of one good call from **Call history** as the backup for the video.
+
+After the demo, set `DEMO_CALL_ALLOWLIST` to empty in Vercel and redeploy. The route is public, so anyone who knows a listed number could otherwise ring it once a minute.
+
+If the phone does not ring, open the agent's **Call history** in ElevenLabs. A `502` from the route with nothing there means the request was rejected; check `ELEVENLABS_PHONE_NUMBER_ID` and the key's permissions.

@@ -249,3 +249,32 @@ export async function getJob(
   const [row] = await sql`select status from jobs where id = ${id}`;
   return row ? { status: row.status } : null;
 }
+
+// Name and insurer only: the phone is never read here, so it can never be dialled.
+export async function getCallTarget(
+  id: string,
+): Promise<{ name: string; insurer: string } | null> {
+  if (!isUuid(id)) return null;
+  const [row] = await sql`select name, insurer from listings where id = ${id}`;
+  return row ? { name: row.name, insurer: row.insurer } : null;
+}
+
+// Each outbound call costs money and rings a phone, so at most one starts per 60 seconds.
+// Returns the new in_progress call's id, or null while another call holds the slot.
+// shortcut: two truly concurrent requests can both claim it; an advisory lock would close that.
+export async function claimCallSlot(listingId: string): Promise<string | null> {
+  const [row] = await sql`
+    insert into calls (listing_id, status)
+    select ${listingId}::uuid, 'in_progress'
+    where not exists (
+      select 1 from calls
+      where status = 'in_progress' and called_at > now() - interval '60 seconds'
+    )
+    returning id`;
+  return row?.id ?? null;
+}
+
+// Marks a call that never started so it no longer holds the slot.
+export async function failCall(id: string) {
+  await sql`update calls set status = 'failed' where id = ${id}`;
+}

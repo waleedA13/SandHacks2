@@ -1,7 +1,10 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { sql } from "@/lib/db";
 import {
+  claimCallSlot,
   enqueueRecheck,
+  failCall,
+  getCallTarget,
   getDetail,
   getJob,
   getStats,
@@ -273,5 +276,60 @@ describe("enqueueRecheck and getJob", () => {
     expect(await enqueueRecheck(crypto.randomUUID())).toBeNull();
     expect(await getJob(crypto.randomUUID())).toBeNull();
     expect(await getJob("nope")).toBeNull();
+  });
+});
+
+describe("getCallTarget", () => {
+  it("returns only the name and insurer, never the phone", async () => {
+    const t = await getCallTarget("00000000-0000-4000-8000-000000000001");
+    expect(Object.keys(t!).sort()).toEqual(["insurer", "name"]);
+    expect(t!.insurer).toBe("Aetna");
+  });
+
+  it("returns null for unknown or malformed ids", async () => {
+    expect(await getCallTarget(crypto.randomUUID())).toBeNull();
+    expect(await getCallTarget("nope")).toBeNull();
+  });
+});
+
+describe("claimCallSlot and failCall", () => {
+  // The slot is global, so age out any outbound call another test started.
+  beforeEach(async () => {
+    await sql`update calls set called_at = now() - interval '61 seconds'
+              where status = 'in_progress'`;
+  });
+
+  it("records an in_progress call and refuses a second within 60 seconds", async () => {
+    const a = await newListing();
+    const b = await newListing();
+    const id = await claimCallSlot(a.id);
+    expect(id).toEqual(expect.any(String));
+    const [row] =
+      await sql`select listing_id, status from calls where id = ${id}`;
+    expect(row).toEqual({ listing_id: a.id, status: "in_progress" });
+    expect(await claimCallSlot(b.id)).toBeNull();
+  });
+
+  it("frees the slot once the call is older than 60 seconds", async () => {
+    const { id: listing } = await newListing();
+    const first = await claimCallSlot(listing);
+    await sql`update calls set called_at = now() - interval '61 seconds' where id = ${first}`;
+    expect(await claimCallSlot(listing)).not.toBeNull();
+  });
+
+  it("frees the slot when the call failed to start", async () => {
+    const { id: listing } = await newListing();
+    const first = await claimCallSlot(listing);
+    await failCall(first!);
+    const [row] = await sql`select status from calls where id = ${first}`;
+    expect(row.status).toBe("failed");
+    expect(await claimCallSlot(listing)).not.toBeNull();
+  });
+
+  it("does not change the listing's score", async () => {
+    const { id, insurer } = await newListing(["yes", "yes", "yes"], 100);
+    const before = (await listSummaries(insurer, "San Diego"))[0];
+    await claimCallSlot(id);
+    expect((await listSummaries(insurer, "San Diego"))[0]).toEqual(before);
   });
 });
