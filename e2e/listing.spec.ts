@@ -59,7 +59,7 @@ test("an earlier call shows above the widget", async ({ page }) => {
 });
 
 test("an unknown listing shows a not-found page", async ({ page }) => {
-  // The status stays 200: the page shell streams before notFound() runs.
+  // The status stays 200: the page renders the not-found message itself.
   await page.goto("/listing/not-a-real-id");
   await expect(
     page.getByRole("heading", { name: "We couldn't find that listing." }),

@@ -1,7 +1,5 @@
 "use client";
 
-import { Header } from "@/frontend/Header";
-
 export default function Error({
   retry,
 }: {
@@ -9,17 +7,14 @@ export default function Error({
   retry: () => void;
 }) {
   return (
-    <div className="page">
-      <Header />
-      <main id="main">
-        <section className="empty" role="alert">
-          <h1>{"We couldn't load the listings."}</h1>
-          <p>Check your connection, then try again.</p>
-          <button className="btn" type="button" onClick={() => retry()}>
-            Try again
-          </button>
-        </section>
-      </main>
-    </div>
+    <main id="main">
+      <section className="empty" role="alert">
+        <h1>{"We couldn't load the listings."}</h1>
+        <p>Check your connection, then try again.</p>
+        <button className="btn" type="button" onClick={() => retry()}>
+          Try again
+        </button>
+      </section>
+    </main>
   );
 }

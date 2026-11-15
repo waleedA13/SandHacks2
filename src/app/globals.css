@@ -121,20 +121,72 @@ svg {
 }
 
 /* ---------- Page shell ---------- */
+/* A column as tall as the window, so the footer rests at the bottom of a short page. */
 .page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   max-width: 1180px;
   margin: 0 auto;
   padding: 12px 16px 32px;
 }
 
 main {
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
+/* Wraps onto more lines on a narrow phone; no menu needed. */
 .bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 24px;
   margin-bottom: 8px;
+}
+
+.bar-nav,
+.foot-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+}
+
+.bar-nav a,
+.foot-nav a,
+.crisis a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--f-ui);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+
+.bar-nav a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.bar-nav a:hover {
+  color: var(--teal);
+  text-decoration: underline;
+}
+
+.crisis {
+  color: var(--ink-soft);
+}
+
+.site-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
 }
 
 .logo {
@@ -622,11 +674,6 @@ h2 {
   border-radius: 999px;
 }
 
-.honest {
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
-}
-
 /* ---------- Listing detail ---------- */
 .detail {
   max-width: 760px;
@@ -854,7 +901,7 @@ h2 {
   .share,
   .script,
   .actions .link,
-  .honest {
+  .site-footer {
     display: none !important;
   }
 
@@ -935,6 +982,10 @@ h2 {
 
   .search .btn {
     flex: 0 0 auto;
+  }
+
+  .crisis {
+    margin-left: auto;
   }
 
   .start {
