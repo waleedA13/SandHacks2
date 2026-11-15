@@ -1,8 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
 import { fitFromParams, withFit } from "@/frontend/FitFilters";
-import { Header } from "@/frontend/Header";
-import { Icon } from "@/frontend/Icon";
 import { ListingCard } from "@/frontend/ListingCard";
 import { first } from "@/frontend/params";
 import { SearchForm } from "@/frontend/SearchForm";
@@ -80,144 +78,136 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const deadEnds = ranked.filter((r) => DEAD_END.includes(r.listing.label));
 
   return (
-    <div className="page">
-      <Header />
-      <main id="main">
-        <section className="intro">
-          <h1>Find a therapist who will actually pick up.</h1>
-          <p className="lede">
-            Finding care should be easier. We rank listings using public web
-            pages, so you can call the offices most likely to answer first.
-          </p>
-        </section>
-
-        <SearchForm
-          insurer={insurer}
-          city={city}
-          collapsed={stats.total > 0}
-          fit={fit}
-          languages={languages}
-        />
-
-        {stats.total === 0 ? (
-          <section className="empty">
-            <p>
-              {
-                "We don't have listings for that insurer and city yet. Try Aetna in San Diego."
-              }
-            </p>
-            <Link className="btn" href="/?insurer=Aetna&city=San+Diego">
-              Show Aetna in San Diego
-            </Link>
-          </section>
-        ) : (
-          <>
-            <section className="summary" aria-label="Summary">
-              <span className="big" aria-hidden="true">
-                {stats.likelyAvailable}
-              </span>
-              <div>
-                <p className="summary-line">
-                  Of {stats.total} {insurer} listings in {city},{" "}
-                  {stats.likelyAvailable} look reachable.
-                </p>
-                <p className="soft">
-                  {
-                    "If you've hit dead numbers before, it's not you. Insurance company lists are often out of date."
-                  }
-                </p>
-              </div>
-            </section>
-
-            <p className="progress">
-              You narrowed {stats.total} listings to {stats.likelyAvailable}{" "}
-              worth calling.
-            </p>
-
-            {filtering && (
-              <p className="showing">
-                <span>
-                  Showing {listings.length} of {stats.total}
-                </span>
-                <Link className="link" href={`/?${base}`}>
-                  Clear filters
-                </Link>
-              </p>
-            )}
-
-            {listings.length === 0 ? (
-              <p className="empty">
-                No listings match all of these. Try removing one.
-              </p>
-            ) : (
-              <>
-                <ShareShortlist
-                  insurer={insurer}
-                  city={city}
-                  top={[...startWith, ...alsoTry, ...deadEnds]
-                    .slice(0, 3)
-                    .map(({ listing: { id, name, label, phone } }) => ({
-                      id,
-                      name,
-                      label,
-                      phone,
-                    }))}
-                  url={shareUrl}
-                />
-                <p className="print-only print-title">
-                  Therapists most likely to pick up ({insurer}, {city})
-                </p>
-
-                {startWith.length > 0 && (
-                  <section className="start" aria-labelledby="start-h">
-                    <h2 id="start-h">
-                      Start with{" "}
-                      {startWith.length === 1
-                        ? "this one"
-                        : `these ${startWith.length}`}
-                    </h2>
-                    <CardList
-                      items={startWith}
-                      variant="full"
-                      insurer={insurer}
-                      query={query.toString()}
-                    />
-                  </section>
-                )}
-
-                {alsoTry.length > 0 && (
-                  <section aria-labelledby="also-h">
-                    <h2 id="also-h">Also worth a try</h2>
-                    <CardList
-                      items={alsoTry}
-                      variant="full"
-                      insurer={insurer}
-                      query={query.toString()}
-                    />
-                  </section>
-                )}
-
-                {deadEnds.length > 0 && (
-                  <section aria-labelledby="dead-h">
-                    <h2 id="dead-h">Likely dead end</h2>
-                    <CardList
-                      items={deadEnds}
-                      variant="compact"
-                      insurer={insurer}
-                      query={query.toString()}
-                    />
-                  </section>
-                )}
-              </>
-            )}
-          </>
-        )}
-
-        <p className="honest">
-          <Icon name="info" />
-          <span>Based on public web pages. Only the office can confirm.</span>
+    <main id="main">
+      <section className="intro">
+        <h1>Find a therapist who will actually pick up.</h1>
+        <p className="lede">
+          Finding care should be easier. We rank listings using public web
+          pages, so you can call the offices most likely to answer first.
         </p>
-      </main>
-    </div>
+      </section>
+
+      <SearchForm
+        insurer={insurer}
+        city={city}
+        collapsed={stats.total > 0}
+        fit={fit}
+        languages={languages}
+      />
+
+      {stats.total === 0 ? (
+        <section className="empty">
+          <p>
+            {
+              "We don't have listings for that insurer and city yet. Try Aetna in San Diego."
+            }
+          </p>
+          <Link className="btn" href="/?insurer=Aetna&city=San+Diego">
+            Show Aetna in San Diego
+          </Link>
+        </section>
+      ) : (
+        <>
+          <section className="summary" aria-label="Summary">
+            <span className="big" aria-hidden="true">
+              {stats.likelyAvailable}
+            </span>
+            <div>
+              <p className="summary-line">
+                Of {stats.total} {insurer} listings in {city},{" "}
+                {stats.likelyAvailable} look reachable.
+              </p>
+              <p className="soft">
+                {
+                  "If you've hit dead numbers before, it's not you. Insurance company lists are often out of date."
+                }
+              </p>
+            </div>
+          </section>
+
+          <p className="progress">
+            You narrowed {stats.total} listings to {stats.likelyAvailable} worth
+            calling.
+          </p>
+
+          {filtering && (
+            <p className="showing">
+              <span>
+                Showing {listings.length} of {stats.total}
+              </span>
+              <Link className="link" href={`/?${base}`}>
+                Clear filters
+              </Link>
+            </p>
+          )}
+
+          {listings.length === 0 ? (
+            <p className="empty">
+              No listings match all of these. Try removing one.
+            </p>
+          ) : (
+            <>
+              <ShareShortlist
+                insurer={insurer}
+                city={city}
+                top={[...startWith, ...alsoTry, ...deadEnds]
+                  .slice(0, 3)
+                  .map(({ listing: { id, name, label, phone } }) => ({
+                    id,
+                    name,
+                    label,
+                    phone,
+                  }))}
+                url={shareUrl}
+              />
+              <p className="print-only print-title">
+                Therapists most likely to pick up ({insurer}, {city})
+              </p>
+
+              {startWith.length > 0 && (
+                <section className="start" aria-labelledby="start-h">
+                  <h2 id="start-h">
+                    Start with{" "}
+                    {startWith.length === 1
+                      ? "this one"
+                      : `these ${startWith.length}`}
+                  </h2>
+                  <CardList
+                    items={startWith}
+                    variant="full"
+                    insurer={insurer}
+                    query={query.toString()}
+                  />
+                </section>
+              )}
+
+              {alsoTry.length > 0 && (
+                <section aria-labelledby="also-h">
+                  <h2 id="also-h">Also worth a try</h2>
+                  <CardList
+                    items={alsoTry}
+                    variant="full"
+                    insurer={insurer}
+                    query={query.toString()}
+                  />
+                </section>
+              )}
+
+              {deadEnds.length > 0 && (
+                <section aria-labelledby="dead-h">
+                  <h2 id="dead-h">Likely dead end</h2>
+                  <CardList
+                    items={deadEnds}
+                    variant="compact"
+                    insurer={insurer}
+                    query={query.toString()}
+                  />
+                </section>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </main>
   );
 }

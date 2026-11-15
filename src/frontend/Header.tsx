@@ -3,9 +3,6 @@ import Link from "next/link";
 export function Header() {
   return (
     <header className="bar">
-      <a className="skip" href="#main">
-        Skip to main content
-      </a>
       <Link className="logo" href="/">
         {/* Sunrise: a half-sun above a horizon bar. */}
         <svg width="32" height="32" viewBox="0 0 36 36" aria-hidden="true">
@@ -14,6 +11,13 @@ export function Header() {
         </svg>
         TheraCheck
       </Link>
+      <nav className="bar-nav" aria-label="Main">
+        <Link href="/">Find therapists</Link>
+        <Link href="/how-it-works">How it works</Link>
+      </nav>
+      <p className="crisis">
+        In crisis? Call or text <a href="tel:988">988</a>
+      </p>
     </header>
   );
 }
