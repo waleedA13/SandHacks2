@@ -93,6 +93,8 @@ describe("VoiceWidget", () => {
         listing_id: "l-1",
         therapist_name: "Dr. Ana Ruiz",
         insurer: "Aetna",
+        connect_patient: "no",
+        patient_number: "",
       },
     });
   });
