@@ -5,13 +5,41 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-> Our project for **SanD Hacks Fall 2026**. TheraCheck ranks an insurer's therapist listings by how likely each one is to answer and take new patients, and a voice agent confirms by asking the office.
+> Built at **SanD Hacks Fall 2026** by Waleed A, Aditya Jadhav and Tracy (Qinggin).
 
-## Overview
+**Live demo:** <https://theracheck.vercel.app>
 
-- **Problem:** insurance directories list therapists who have moved, retired, stopped taking the plan or are not taking new patients ("ghost networks"). People seeking care burn their energy calling dead ends.
-- **Solution:** pick an insurer and city and get the listings ranked by evidence from the therapist's own web pages, with a one-line reason and sources for each. A voice agent can ask the office the two questions that matter. During the hackathon every call goes to a teammate, never a real office.
-- **Tracks:** Bright Data (main), Gemini API, ElevenLabs, Neon.
+## What it does
+
+TheraCheck takes an insurer and a California city and re-orders that insurer's therapist directory. Listings with evidence that the therapist answers the phone and takes new patients go to the top. Each listing shows a one-line reason and links to the pages behind it.
+
+## Why
+
+Insurer directories list therapists who moved, retired, left the plan or closed their practice to new patients. A [2023 study of California regulator data](https://www.ajmc.com/view/provider-directory-inaccuracy-and-timely-access-for-mental-health-care) found about 1 in 3 mental health listings wrong in 2018. You call down the list and reach dead numbers.
+
+## Try the demo
+
+1. Open the [live demo](https://theracheck.vercel.app) and search Cigna in San Diego.
+2. Open the first result. Read the reason, then follow the evidence and licence links.
+3. Press "Ask the assistant" on a listing. The voice agent phones a teammate, asks whether the office takes the plan and takes new patients, and saves the answers.
+
+## How it works
+
+- **Bright Data** scrapes Cigna's directory, then finds and reads each therapist's own pages with the Browser API, Web Unlocker and SERP API.
+- **Gemini** reads those pages and returns facts: still practising here, lists the insurer, takes new patients, specialties, languages and posted fee.
+- **A score** built from those facts ranks the listings as Likely available, Unclear or Likely dead end.
+- **ElevenLabs** runs the voice agent.
+- **Neon** stores the listings, evidence, verdicts and call results.
+
+## What is real and what is staged
+
+- **Real:** the Cigna listings, the evidence pages, the verdicts, and licence records from California DCA files.
+- **Staged:** the phone calls. The agent dials teammates' phones from an allow-list and no real office. The page labels those results as demo calls.
+- **Limits:** web pages suggest and the office confirms. At submission, 45 of 50 San Diego listings read Unclear, because many therapists publish nothing about insurance or openings. We have not validated the ranking against real offices.
+
+## Tracks
+
+Bright Data "Data for Good" (main), ElevenLabs, Gemini API, Neon.
 
 ## Tech stack
 
@@ -24,7 +52,7 @@
 | Licence data     | California DCA monthly licensee files, downloaded by hand into `data/` (gitignored), matched by licence number from the NPI Registry API or by name and city; `src/backend/collector/license.ts` |
 | Reading evidence | Gemini API, Flash tier with structured output (`src/backend/verifier/gemini.ts` only)                                                                                                            |
 | Voice            | ElevenLabs Agents (`src/frontend/VoiceWidget.tsx` only)                                                                                                                                          |
-| Tests            | Vitest                                                                                                                                                                                           |
+| Tests            | Vitest and Playwright                                                                                                                                                                            |
 | Scripts          | `tsx` runs the TypeScript pipeline scripts by hand                                                                                                                                               |
 | Runtime          | Node.js 24, npm                                                                                                                                                                                  |
 
