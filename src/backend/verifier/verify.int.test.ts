@@ -118,6 +118,7 @@ describe("verifyListing", () => {
       stillPractising: "yes",
       listsInsurer: "no",
       acceptingNew: "unknown",
+      seesSelfPay: "unknown",
     } as const;
     mocked.mockResolvedValue({
       ...base,
