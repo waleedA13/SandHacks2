@@ -29,7 +29,10 @@ export function LiveBadge({ label }: { label: Label }) {
   const [fresh] = use(LabelState) ?? [null];
   return (
     <div aria-live="polite" aria-atomic="true" className="live-badge">
-      <LabelBadge label={fresh ?? label} />
+      {/* A new key only after a call or report, so the highlight never plays on page load. */}
+      <span key={fresh ?? ""} className={fresh ? "badge-changed" : undefined}>
+        <LabelBadge label={fresh ?? label} />
+      </span>
     </div>
   );
 }
