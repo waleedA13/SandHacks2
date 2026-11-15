@@ -882,6 +882,7 @@ h2 {
 
   .card {
     break-inside: avoid;
+    border-radius: 0;
     border-bottom: 1px solid var(--line);
   }
 
@@ -889,9 +890,10 @@ h2 {
   .card .btn {
     min-height: 0;
     padding: 0;
-    background: none;
+    background: none !important;
     box-shadow: none;
-    color: var(--ink);
+    transition: none;
+    color: var(--ink) !important;
   }
 }
 
