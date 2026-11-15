@@ -43,3 +43,8 @@ Thumbs.db
 !.vscode/extensions.json
 *.swp
 .neon
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
