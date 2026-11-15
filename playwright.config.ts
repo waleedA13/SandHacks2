@@ -1,6 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
+import { isLocalNeonHost } from "./lib/neon-local";
 
 process.loadEnvFile(".env.test");
+// loadEnvFile does not override a DATABASE_URL already set in the shell.
+if (!isLocalNeonHost(process.env.DATABASE_URL ?? "http://unset"))
+  throw new Error(
+    "E2E tests only run against the local Docker database. Unset DATABASE_URL in this shell.",
+  );
 
 export default defineConfig({
   testDir: "e2e",

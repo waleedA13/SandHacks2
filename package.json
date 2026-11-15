@@ -18,7 +18,7 @@
     "test:int": "npm run db:test:reset && vitest run --project int",
     "db:test:up": "docker compose -f docker-compose.test.yml up -d --wait --wait-timeout 60",
     "db:test:down": "docker compose -f docker-compose.test.yml down -v",
-    "db:test:reset": "tsx --env-file=.env.test db/reset.ts"
+    "db:test:reset": "tsx --env-file=.env.test db/reset.ts --local-only"
   },
   "dependencies": {
     "@neon/config": "^1.14.0",
