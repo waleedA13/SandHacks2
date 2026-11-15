@@ -83,6 +83,18 @@ Save the tool.
 3. **End conversation after silence:** 20 seconds. The prompt says goodbye after about 10 seconds of silence; this ends the call if the agent never does.
 4. **Take turn after silence:** 7 seconds, so "let me check" gets time before the agent speaks again.
 
+## 7a. Privacy settings
+
+The agent tells the office the call is transcribed. Keep no more than that:
+
+1. **Audio storage** (in **Privacy** or **Advanced**, sometimes "Store call audio" or "Save audio"): **off** for the confirm agent. ElevenLabs keeps no recording of the office's voice.
+2. **Transcript retention** ("Conversation retention" or "Data retention"): the shortest period the dashboard offers. The app needs only the four fields `save_call_result` posts; the transcript is for debugging.
+3. **Data sharing / model training** (any setting that lets ElevenLabs use conversations to improve its models): **off**.
+
+The opt-out works without any dashboard setting. When the office says it does not want these calls, the agent saves the summary `Opted out of calls.`, and `/api/calls/result` puts the listing's phone on the `do_not_call` table. From then on `POST /api/calls/start` refuses that listing with `403 { error: "This office asked not to be called." }`. The table matches on the last 10 digits, so `(619) 555-0101` and `+1 619 555 0101` count as one number. Nothing in the app removes a number; delete the row in the database by hand if an office asks to be called again.
+
+On an existing database, add the table with `src/backend/db/migrations/003-do-not-call.sql`. It is safe to run twice. `db:reset` creates it from `schema.sql`.
+
 The ending runs in this order: save, then one goodbye, then `end_call`. If the agent says goodbye before it saves, the model speaks again after the tool returns and the caller hears goodbye twice. If it never calls `end_call`, the line stays open until the silence limit. **Tools → System tools → End conversation** must be on.
 
 ## 8. Test in the dashboard
@@ -94,8 +106,9 @@ You need issue #10's `/api/calls/result` deployed, the env variables set, and a 
    - "Yes we take that plan, and yes we're taking new patients" → the listing shows `Demo call: available`.
    - "We take it, but we're full" → `Demo call: unavailable`, and the listing drops to the bottom.
    - "You'd have to call back Monday" → both `unknown`; the score stays the same.
-3. Check that the first sentence says it is an automated assistant.
-4. Open the conversation under **Call history** and check that `save_call_result` returned `200` with `{ score, label }`. A `401` means the header secret and `CALLS_WEBHOOK_SECRET` differ.
+3. Check that the first sentence contains "AI voice", "TheraCheck" and "transcribed".
+4. Say "please don't call us again". The agent says "Understood. We won't call this number again. Goodbye." once and hangs up. Under **Call history** `save_call_result` shows summary `Opted out of calls.`, and `POST /api/calls/start` for that listing now returns `403`.
+5. Open the conversation under **Call history** and check that `save_call_result` returned `200` with `{ score, label }`. A `401` means the header secret and `CALLS_WEBHOOK_SECRET` differ.
 
 ## 9. Test from the app
 
@@ -134,7 +147,7 @@ Add these in Vercel (Production and Preview) next to the ones in step 1, then re
 | ------ | -------------------------------------------------------------------- |
 | `200`  | `{ ok: true, callSid, conversationId }`. The phone is ringing.       |
 | `400`  | The body is malformed or `listingId` is not a UUID.                  |
-| `403`  | `toNumber` is not on the allow-list.                                 |
+| `403`  | `toNumber` is not on the allow-list, or the office opted out.        |
 | `404`  | No listing with that id.                                             |
 | `429`  | Another call started less than 60 seconds ago. Wait and press again. |
 | `500`  | An env variable is missing.                                          |
@@ -168,9 +181,9 @@ The page cannot learn the allow-list; the presenter types or picks their own num
    ```
    Expect `403`.
 3. Send the same request with the teammate's number. Their phone rings within a few seconds.
-4. The first thing the agent says is that it is an automated assistant. The teammate answers the two questions as the receptionist.
+4. The agent's first sentence says it is an AI voice from TheraCheck and that the call is transcribed. The teammate answers the two questions as the receptionist.
 5. After the call, reload the listing. Its badge reads `Demo call: ...`. Under **Call history** the conversation shows `save_call_result` returning `200`.
-6. Save the recording of one good call from **Call history** as the backup for the video.
+6. Audio storage is off (step 7a), so **Call history** has no recording. For the video backup, record one good call on a second device or with screen and audio capture, with the teammate's agreement.
 
 After the demo, set `DEMO_CALL_ALLOWLIST` to empty in Vercel and redeploy. The route is public, so anyone who knows a listed number could otherwise ring it once a minute.
 

@@ -246,7 +246,12 @@ export type CallInput = {
   summary?: string | null;
 };
 
-// Inserts a done call and nothing else. Returns the listing's final score, or null if the listing does not exist.
+// The voice agent saves exactly this summary when the office asks not to be called again.
+export const OPT_OUT_SUMMARY = "Opted out of calls.";
+
+// Inserts a done call; an opt-out also puts the listing's own phone on do_not_call.
+// Phones are keyed by their last 10 digits, so "(619) 555-0101" and "+1 619 555 0101" match.
+// Returns the listing's final score, or null if the listing does not exist.
 export async function recordCall(input: CallInput) {
   if (!isUuid(input.listingId)) return null;
   const inserted = await sql`
@@ -255,6 +260,12 @@ export async function recordCall(input: CallInput) {
     from listings where id = ${input.listingId}
     returning id`;
   if (!inserted.length) return null;
+  if (input.summary?.trim() === OPT_OUT_SUMMARY)
+    await sql`
+      insert into do_not_call (phone)
+      select right(regexp_replace(phone, '[^0-9]', '', 'g'), 10) from listings
+      where id = ${input.listingId} and phone ~ '[0-9]'
+      on conflict do nothing`;
   const [s] = await summaryRows({ id: input.listingId });
   return finalScore(s);
 }
@@ -287,13 +298,20 @@ export async function getJob(
   return row ? { status: row.status } : null;
 }
 
-// Name and insurer only: the phone is never read here, so it can never be dialled.
+// Name, insurer and the opt-out flag only: the phone is never returned, so it can never be dialled.
 export async function getCallTarget(
   id: string,
-): Promise<{ name: string; insurer: string } | null> {
+): Promise<{ name: string; insurer: string; optedOut: boolean } | null> {
   if (!isUuid(id)) return null;
-  const [row] = await sql`select name, insurer from listings where id = ${id}`;
-  return row ? { name: row.name, insurer: row.insurer } : null;
+  const [row] = await sql`
+    select name, insurer, exists (
+      select 1 from do_not_call
+      where phone = right(regexp_replace(listings.phone, '[^0-9]', '', 'g'), 10)
+    ) as opted_out
+    from listings where id = ${id}`;
+  return row
+    ? { name: row.name, insurer: row.insurer, optedOut: row.opted_out }
+    : null;
 }
 
 // Each outbound call costs money and rings a phone, so at most one starts per 60 seconds.

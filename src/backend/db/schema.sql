@@ -66,6 +66,13 @@ create table jobs (
   finished_at timestamptz
 );
 
+-- Keyed by the last 10 digits of a listing phone. Also in migrations/003-do-not-call.sql.
+drop table if exists do_not_call;
+create table do_not_call (
+  phone text primary key,
+  created_at timestamptz not null default now()
+);
+
 create index on evidence (listing_id);
 create index on calls (listing_id, called_at desc);
 create index on listings (insurer, city);
