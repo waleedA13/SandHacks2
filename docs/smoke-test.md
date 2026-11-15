@@ -6,12 +6,12 @@ Run: `npx tsx --env-file=.env.local collector/smoke.ts [browser|unlock|serp]`. R
 
 ## 1. Browser API on insurer directories
 
-| Insurer                   | Result      | Seconds | Notes                                                                                                                                                                                                    |
-| ------------------------- | ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aetna                     | **Blocked** | –       | The public search (`health.aetna.com/ahpublic/...`) is disallowed by Aetna's robots.txt, and Bright Data refuses those URLs unless the account passes their KYC check. The old `dsepublic` URL is a 404. |
-| Cigna                     | **Pass**    | 15–17   | 20 phone numbers on page 1, 8,000 total. Stopped here, as the issue says.                                                                                                                                |
-| Blue Shield of California | Not tried   | –       | Landing page loads (24 s)                                                                                                                                                                                |
-| Anthem                    | Not tried   | –       | Landing page loads (39 s)                                                                                                                                                                                |
+| Insurer                   | Result      | Seconds | Notes                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------- | ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aetna                     | **Blocked** | –       | The public search (`health.aetna.com/ahpublic/...`) is disallowed by Aetna's robots.txt, and Bright Data refuses those URLs unless the account passes their KYC check. The old `dsepublic` URL is a 404.                                                                                                                                                 |
+| Cigna                     | **Pass**    | 15–17   | 20 phone numbers on page 1, 8,000 total. Stopped here, as the issue says.                                                                                                                                                                                                                                                                                |
+| Blue Shield of California | **Fail**    | 70–120  | After accepting the tracking pop-up (with the user's OK): ZIP and plan pickers work, but a "psychologist" search never shows results; the location resets when "Search all plans" is chosen. A site banner says Blue Shield Behavioral Health has run the behavioral health benefit since 1 Jan 2026, so therapists may not be in this directory at all. |
+| Anthem                    | **Fail**    | 150–180 | Guest search works up to the results page, then the list spins forever. No provider-search request is ever sent (3 tries, waits up to 40 s).                                                                                                                                                                                                             |
 
 **Working search steps (Cigna).** Click-through, about 2.5 minutes through the Browser API:
 
@@ -22,6 +22,10 @@ Run: `npx tsx --env-file=.env.local collector/smoke.ts [browser|unlock|serp]`. R
 5. **View 8000 Results** under Licensed Therapists → **Continue** → **Open Access Plus, Open Access Plus Tiered**.
 
 **Shortcut:** the final results URL opens directly in about 16 seconds, skipping all the clicks. It is `CIGNA_RESULTS` in `collector/smoke.ts`. Other plans swap `medicalProductCode`/`medicalEcnCode` in that URL.
+
+**Anthem steps, for the record.** `https://findcare.anthem.com/` (wait about 15 s for it to render) → **Basic search as a guest** → plan type **Medical Plan or Network** → state **California** → **Medical (Employer-Sponsored)** → plan **Advantage PPO** → **Continue** → **Update Location** `92101` → **Behavioral Health**. The dropdowns are type-ahead fields, not `<select>`s. Anthem also links a [machine-readable provider directory](https://www22.anthem.com/cms-data-index.json/index.html), a possible no-scraping source not tested here.
+
+**Blue Shield notes.** The search-bar fields (`#location`, `#choose-plan`, `#searchSpclty`) only respond to clicks made through page JavaScript; Playwright reports the ZIP box as hidden even when it is on screen.
 
 Page-driving notes for issue 03: plan options and "View … Results" are `<button>`s, not links. The search box's button is named "Submit search"; a plain "Search" button belongs to the site-wide search. Fields are found by placeholder, not label.
 
